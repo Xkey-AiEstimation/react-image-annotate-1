@@ -2,7 +2,7 @@
 
 import type { Action, MainLayoutState } from "./types"
 import { FullScreen, useFullScreenHandle } from "react-full-screen"
-import React, { useCallback, useRef } from "react"
+import React, { useCallback, useRef, useState } from "react"
 import { makeStyles, styled } from "@material-ui/core/styles"
 
 import ClassSelectionMenu from "../ClassSelectionMenu"
@@ -18,7 +18,7 @@ import RegionSelector from "../RegionSelectorSidebarBox"
 import SettingsDialog from "../SettingsDialog"
 import TagsSidebarBox from "../TagsSidebarBox"
 import TaskDescription from "../TaskDescriptionSidebarBox"
-import Workspace from "react-material-workspace-layout/Workspace"
+import Workspace from "@xkey-aiestimation/react-material-workspace-layout/Workspace"
 import classnames from "classnames"
 import getActiveImage from "../Annotator/reducers/get-active-image"
 import getHotkeyHelpText from "../utils/get-hotkey-help-text"
@@ -30,7 +30,8 @@ import useImpliedVideoRegions from "./use-implied-video-regions"
 import useKey from "use-key-hook"
 import { useSettings } from "../SettingsProvider"
 import { withHotKeys } from "react-hotkeys"
-
+import { Input } from "@material-ui/core"
+import favicon from "../../public/images/favicon.png"
 // import Fullscreen from "../Fullscreen"
 
 const emptyArr = []
@@ -102,7 +103,8 @@ export const MainLayout = ({
     return fn
   }
 
-  const { currentImageIndex, pathToActiveImage, activeImage } = getActiveImage(state)
+  const { currentImageIndex, pathToActiveImage, activeImage } =
+    getActiveImage(state)
   let nextImage
   if (currentImageIndex !== null) {
     nextImage = state.images[currentImageIndex + 1]
@@ -173,7 +175,11 @@ export const MainLayout = ({
       onCloseRegionEdit={action("CLOSE_REGION_EDITOR", "region")}
       onDeleteRegion={action("DELETE_REGION", "region")}
       onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
-      finishMatchRegionTemplate={action("MATCH_REGION_FINISHED", "region", "page_properties")}
+      finishMatchRegionTemplate={action(
+        "MATCH_REGION_FINISHED",
+        "region",
+        "page_properties"
+      )}
       onBeginBoxTransform={action("BEGIN_BOX_TRANSFORM", "box", "directions")}
       onBeginMovePolygonPoint={action(
         "BEGIN_MOVE_POLYGON_POINT",
@@ -216,6 +222,9 @@ export const MainLayout = ({
     dispatch({ type: "HEADER_BUTTON_CLICKED", buttonName: item.name })
   })
 
+  const [pageName, setPageName] = useState(activeImage ? activeImage.name : "")
+  const title = "Xkey AiE Annotation Tool"
+
   const debugModeOn = Boolean(window.localStorage.$ANNOTATE_DEBUG_MODE && state)
   const nextImageHasRegions =
     !nextImage || (nextImage.regions && nextImage.regions.length > 0)
@@ -257,7 +266,27 @@ export const MainLayout = ({
                   keyframes={state.keyframes}
                 />
               ) : activeImage ? (
-                <div className={classes.headerTitle}>{activeImage.name}</div>
+                <div
+                  className={classes.headerTitle}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <img src={favicon} title={activeImage.name} />
+                  <div>{title}</div>
+                  <Input
+                    style={{
+                      marginLeft: "16px",
+                      color: "white",
+                    }}
+                    defaultValue={pageName}
+                    onChange={(e) => {
+                      e.preventDefault()
+                      setPageName(pageName)
+                    }}
+                  ></Input>
+                </div>
               ) : null,
             ].filter(Boolean)}
             headerItems={[
