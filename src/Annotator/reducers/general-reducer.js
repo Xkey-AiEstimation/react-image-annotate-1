@@ -1188,8 +1188,9 @@ export default (state: MainLayoutState, action: Action) => {
             highlighted: true,
             editingLabels: false,
             color: "#C4A484",
-            cls: 1,
+            cls: "1",
             id: getRandomId(),
+            visible: true,
             breakout: undefined,
           }
           state = setIn(state, ["mode"], {
