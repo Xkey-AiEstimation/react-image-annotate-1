@@ -472,7 +472,7 @@ export const RegionLabel = ({
                         user_id: 80808080,
                         doc_id: 80808080,
                         page_id: 80808080,
-                        threshold: 0.7,
+                        threshold: 0.8,
                         page_index: pageIndex,
                       }
                       const region_coords = {
