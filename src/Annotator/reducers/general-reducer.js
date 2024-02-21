@@ -1421,9 +1421,13 @@ export default (state: MainLayoutState, action: Action) => {
     case "CLOSE_REGION_EDITOR": {
       const { region } = action
       const regionIndex = getRegionIndex(action.region)
+
       if (regionIndex === null) return state
+      let regionColor = getColor(region.cls)
+
       return setIn(state, [...pathToActiveImage, "regions", regionIndex], {
         ...(activeImage.regions || [])[regionIndex],
+        color: regionColor,
         editingLabels: false,
         isOCR: false,
       })
