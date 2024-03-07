@@ -1446,71 +1446,8 @@ export default (state: MainLayoutState, action: Action) => {
               }),
         }
       )
-      // const regions = [...(activeImage.regions || [])].map((r) => ({
-      //   ...r,
-      //   highlighted: false,
-      //   editingLabels: false,
-      //   visible: true,
-      //   ...(!r.breakout && selectedBreakoutIdAutoAdd && r.id === region.id
-      //     ? {
-      //         breakout: {
-      //           is_breakout: true,
-      //           name: state.breakouts.find(
-      //             (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-      //           ).name,
-      //           id: selectedBreakoutIdAutoAdd,
-      //           visible: false,
-      //         },
-      //       }
-      //     : {
-      //         breakout: r.breakout || undefined,
-      //       }),
-      // }))
       return setIn(state, [...pathToActiveImage, "regions"], newRegions)
-      // return setIn(state, [...pathToActiveImage, "regions"], regions)
-      // const { region } = action
-      // const regionIndex = getRegionIndex(action.region)
-      // if (regionIndex === null) return state
 
-      // const newRegions = setIn(
-      //   activeImage.regions.map((r) => ({
-      //     ...r,
-      //     highlighted: false,
-      //     editingLabels: false,
-      //     visible: true,
-      //   })),
-      //   [regionIndex],
-      //   {
-      //     ...(activeImage.regions || [])[regionIndex],
-      //     highlighted: true,
-      //     editingLabels: true,
-      //   }
-      // )
-      // // check if there is a breakout auto-add selected and if so add the region to the breakout if it doesn't already have one
-      // //  const selectedBreakoutIdAutoAdd = getIn(state, [
-      // //   "selectedBreakoutIdAutoAdd",
-      // // ])
-      // // if (selectedBreakoutIdAutoAdd) {
-      // //   const region = activeImage.regions[regionIndex]
-      // //   if (!region.breakout) {
-      // //     state = saveToHistory(state, "Add Region to Breakout")
-      // //     return setIn(
-      // //       state,
-      // //       [...pathToActiveImage, "regions", regionIndex, "breakout"],
-      // //       {
-      // //         is_breakout: true,
-      // //         name: state.breakouts.find(
-      // //           (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-      // //         ).name,
-      // //         id: selectedBreakoutIdAutoAdd,
-      // //         visible: false,
-      // //       }
-      // //     )
-      // //   }
-      // // }
-
-      // return setIn(state, [...pathToActiveImage, "regions"], newRegions)
-      // return setIn(state, [...pathToActiveImage, "regions"], newRegions)
     }
     case "CLOSE_REGION_EDITOR": {
       const { region } = action
