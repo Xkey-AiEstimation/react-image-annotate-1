@@ -225,7 +225,6 @@ export default (state: MainLayoutState, action: Action) => {
       let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
       let excludedCategories = getIn(newState, ["excludedCategories"]) || []
       let selectedBreakoutToggle = getIn(newState, ["selectedBreakoutToggle"])
-      console.log(action.isVisible)
       let newExcludedCategories = excludedCategories.includes(action.category)
         ? excludedCategories.filter((category) => category !== action.category)
         : [...excludedCategories, action.category]
@@ -304,20 +303,16 @@ export default (state: MainLayoutState, action: Action) => {
         "selectedBreakoutIdAutoAdd",
       ])
 
-      console.log("selectedBreakoutIdAutoAdd BEFORE", selectedBreakoutIdAutoAdd)
       if (selectedBreakoutIdAutoAdd === action.breakoutId) {
         selectedBreakoutIdAutoAdd = null
       } else {
         selectedBreakoutIdAutoAdd = action.breakoutId
       }
-      console.log("selectedBreakoutIdAutoAdd AFTER ", selectedBreakoutIdAutoAdd)
 
       newState = merge(newState, [
         { selectedBreakoutIdAutoAdd: selectedBreakoutIdAutoAdd },
       ])
-      console.log("newState after merge", newState)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
-      console.log("newState after setIn", newState)
       return newState
     }
     case "TOGGLE_BREAKOUT_VISIBILITY":
@@ -326,11 +321,9 @@ export default (state: MainLayoutState, action: Action) => {
       if (!currentImage || !currentImage.regions) {
         return state
       }
-      console.log("TOGGLE_BREAKOUT_VISIBILITY")
       // get the eccluded categories
       let excludedCategories = getIn(state, ["excludedCategories"]) || []
       let selectedBreakoutToggle = getIn(state, ["selectedBreakoutToggle"])
-      console.log("selectedBreakoutToggle", selectedBreakoutToggle)
 
       if (selectedBreakoutToggle === action.breakoutId) {
         selectedBreakoutToggle = null
@@ -679,10 +672,27 @@ export default (state: MainLayoutState, action: Action) => {
       const { region } = action
       const regionIndex = getRegionIndex(action.region)
       if (regionIndex === null) return state
+      const selectedBreakoutIdAutoAdd = getIn(state, [
+        "selectedBreakoutIdAutoAdd",
+      ])
       const regions = [...(activeImage.regions || [])].map((r) => ({
         ...r,
         highlighted: r.id === region.id,
         editingLabels: r.id === region.id,
+        ...(selectedBreakoutIdAutoAdd && r.id === region.id
+          ? {
+              breakout: {
+                is_breakout: true,
+                name: state.breakouts.find(
+                  (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+                ).name,
+                id: selectedBreakoutIdAutoAdd,
+                visible: false,
+              },
+            }
+          : {
+              breakout: r.breakout || undefined,
+            }),
       }))
       return setIn(state, [...pathToActiveImage, "regions"], regions)
     }
@@ -1402,6 +1412,9 @@ export default (state: MainLayoutState, action: Action) => {
       const { region } = action
       const regionIndex = getRegionIndex(action.region)
       if (regionIndex === null) return state
+      const selectedBreakoutIdAutoAdd = getIn(state, [
+        "selectedBreakoutIdAutoAdd",
+      ])
       const newRegions = setIn(
         activeImage.regions.map((r) => ({
           ...r,
@@ -1414,9 +1427,90 @@ export default (state: MainLayoutState, action: Action) => {
           ...(activeImage.regions || [])[regionIndex],
           highlighted: true,
           editingLabels: true,
+          ...(selectedBreakoutIdAutoAdd &&
+          (activeImage.regions || [])[regionIndex].id === region.id
+            ? {
+                breakout: {
+                  is_breakout: true,
+                  name: state.breakouts.find(
+                    (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+                  ).name,
+                  id: selectedBreakoutIdAutoAdd,
+                  visible: false,
+                },
+              }
+            : {
+                breakout:
+                  (activeImage.regions || [])[regionIndex].breakout ||
+                  undefined,
+              }),
         }
       )
+      // const regions = [...(activeImage.regions || [])].map((r) => ({
+      //   ...r,
+      //   highlighted: false,
+      //   editingLabels: false,
+      //   visible: true,
+      //   ...(!r.breakout && selectedBreakoutIdAutoAdd && r.id === region.id
+      //     ? {
+      //         breakout: {
+      //           is_breakout: true,
+      //           name: state.breakouts.find(
+      //             (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+      //           ).name,
+      //           id: selectedBreakoutIdAutoAdd,
+      //           visible: false,
+      //         },
+      //       }
+      //     : {
+      //         breakout: r.breakout || undefined,
+      //       }),
+      // }))
       return setIn(state, [...pathToActiveImage, "regions"], newRegions)
+      // return setIn(state, [...pathToActiveImage, "regions"], regions)
+      // const { region } = action
+      // const regionIndex = getRegionIndex(action.region)
+      // if (regionIndex === null) return state
+
+      // const newRegions = setIn(
+      //   activeImage.regions.map((r) => ({
+      //     ...r,
+      //     highlighted: false,
+      //     editingLabels: false,
+      //     visible: true,
+      //   })),
+      //   [regionIndex],
+      //   {
+      //     ...(activeImage.regions || [])[regionIndex],
+      //     highlighted: true,
+      //     editingLabels: true,
+      //   }
+      // )
+      // // check if there is a breakout auto-add selected and if so add the region to the breakout if it doesn't already have one
+      // //  const selectedBreakoutIdAutoAdd = getIn(state, [
+      // //   "selectedBreakoutIdAutoAdd",
+      // // ])
+      // // if (selectedBreakoutIdAutoAdd) {
+      // //   const region = activeImage.regions[regionIndex]
+      // //   if (!region.breakout) {
+      // //     state = saveToHistory(state, "Add Region to Breakout")
+      // //     return setIn(
+      // //       state,
+      // //       [...pathToActiveImage, "regions", regionIndex, "breakout"],
+      // //       {
+      // //         is_breakout: true,
+      // //         name: state.breakouts.find(
+      // //           (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+      // //         ).name,
+      // //         id: selectedBreakoutIdAutoAdd,
+      // //         visible: false,
+      // //       }
+      // //     )
+      // //   }
+      // // }
+
+      // return setIn(state, [...pathToActiveImage, "regions"], newRegions)
+      // return setIn(state, [...pathToActiveImage, "regions"], newRegions)
     }
     case "CLOSE_REGION_EDITOR": {
       const { region } = action
