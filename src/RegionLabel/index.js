@@ -284,7 +284,6 @@ export const RegionLabel = ({
             }}
             disabled={scaleInputVal < 0}
             onClick={() => {
-              console.log("save scale")
               onChange({ ...region, cls: scaleInputVal.toString() })
               if (onClose) {
                 onClose(region)

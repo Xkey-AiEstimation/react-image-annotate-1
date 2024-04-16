@@ -128,6 +128,7 @@ export const Annotator = ({
     })
   }
 
+
   // Converting Set back to an array before returning
   const breakouts = Array.from(uniqueBreakouts)
 
@@ -170,6 +171,7 @@ export const Annotator = ({
       toggleList: [],
       selectedBreakoutIdAutoAdd: null,
       breakouts: breakouts,
+      counts: [],
       filters: filters,
       excludedCategories: [],
       selectedBreakoutToggle: null,

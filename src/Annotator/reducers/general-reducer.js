@@ -1447,7 +1447,6 @@ export default (state: MainLayoutState, action: Action) => {
         }
       )
       return setIn(state, [...pathToActiveImage, "regions"], newRegions)
-
     }
     case "CLOSE_REGION_EDITOR": {
       const { region } = action

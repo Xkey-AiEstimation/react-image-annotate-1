@@ -33,6 +33,7 @@ import favicon from "../../public/images/favicon.png"
 // import favicon from "./favicon.png"
 import { action } from "@storybook/addon-actions"
 import BreakoutSidebarBox from "../BreakoutSidebarBox"
+import { AnnotationCountSidebarBox } from "../AnnotationCountSidebarBox"
 // import Fullscreen from "../Fullscreen"
 
 const emptyArr = []
@@ -489,6 +490,9 @@ export const MainLayout = ({
                   keyframes={state.keyframes}
                 />
               ),
+              <AnnotationCountSidebarBox
+                regions={activeImage ? activeImage.regions : emptyArr}
+              />,
               <HistorySidebarBox
                 history={state.history}
                 onRestoreHistory={action("RESTORE_HISTORY")}
