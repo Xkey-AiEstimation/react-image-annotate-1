@@ -696,30 +696,6 @@ export default (state: MainLayoutState, action: Action) => {
       }))
       return setIn(state, [...pathToActiveImage, "regions"], regions)
     }
-
-    case "GET_COUNTS": {
-      let newState = { ...state }
-      let newImage = getIn(newState, ["images", currentImageIndex])
-      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
-      if (!newRegions) {
-        return state
-      }
-      let counts = {}
-      newRegions.forEach((region) => {
-        if (region.cls) {
-          if (counts[region.cls]) {
-            counts[region.cls] += 1
-          } else {
-            counts[region.cls] = 1
-          }
-        }
-      })
-
-      newImage = setIn(newImage, ["counts"], counts)
-      newState = setIn(newState, ["images", currentImageIndex], newImage)
-      return newState
-    }
-
     case "BEGIN_MOVE_POINT": {
       state = closeEditors(state)
       return setIn(state, ["mode"], {

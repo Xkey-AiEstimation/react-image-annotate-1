@@ -5,10 +5,11 @@ import List from "@material-ui/core/List"
 import ListItem from "@material-ui/core/ListItem"
 import ListItemText from "@material-ui/core/ListItemText"
 import { makeStyles } from "@material-ui/core/styles"
-import HistoryIcon from "@material-ui/icons/History"
+import FormatListNumbered from "@material-ui/icons/FormatListNumbered"
 import isEqual from "lodash/isEqual"
 import React, { memo } from "react"
 import SidebarBoxContainer from "../SidebarBoxContainer"
+import { useMemo } from "react"
 
 const useStyles = makeStyles({
   emptyText: {
@@ -22,19 +23,36 @@ const useStyles = makeStyles({
 
 const listItemTextStyle = { paddingLeft: 16, color: "white" }
 
-export const AnnotationCountSidebarBox = ({ counts }) => {
+export const AnnotationCountSidebarBox = ({ regions }) => {
   const classes = useStyles()
+
+  const counts = useMemo(() => {
+    return regions.reduce(
+      (acc, region) => {
+        if (region.cls && region.type === 'box') {
+          if (acc[region.cls]) {
+            acc[region.cls] += 1
+          } else {
+            acc[region.cls] = 1
+          }
+        }
+        return acc
+      },
+
+      {}
+    )
+  }, [regions])
 
   return (
     <SidebarBoxContainer
       title="Counts"
-      icon={<HistoryIcon style={{ color: "white" }} />}
+      icon={<FormatListNumbered style={{ color: "white" }} />}
     >
       <List>
         {counts.length === 0 && (
           <div className={classes.emptyText}>No History Yet</div>
         )}
-        {counts.map(({ name, count }, i) => (
+        {Object.keys(counts).map((name, i) => (
           <ListItem button dense key={i}>
             <ListItemText
               style={listItemTextStyle}
@@ -46,21 +64,10 @@ export const AnnotationCountSidebarBox = ({ counts }) => {
               }
               secondary={
                 <Typography variant="body2" style={{ color: "#FFFFFF" }}>
-                  {count}
+                Number:  {counts[name]}
                 </Typography>
               }
             />
-            {/* {i === 0 && (
-              <ListItemSecondaryAction onClick={() => onRestoreHistory()}>
-                <IconButton
-                  style={{
-                    color: "white",
-                  }}
-                >
-                  <UndoIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
-            )} */}
           </ListItem>
         ))}
       </List>
