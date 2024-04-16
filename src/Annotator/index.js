@@ -117,6 +117,7 @@ export const Annotator = ({
 
   const uniqueBreakouts = new Set()
   if (images) {
+    console.log("images", images)
     images.forEach((image) => {
       if (image.regions) {
         image.regions.forEach((region) => {
@@ -127,6 +128,7 @@ export const Annotator = ({
       }
     })
   }
+
 
   // Converting Set back to an array before returning
   const breakouts = Array.from(uniqueBreakouts)
@@ -170,6 +172,7 @@ export const Annotator = ({
       toggleList: [],
       selectedBreakoutIdAutoAdd: null,
       breakouts: breakouts,
+      counts: [],
       filters: filters,
       excludedCategories: [],
       selectedBreakoutToggle: null,
