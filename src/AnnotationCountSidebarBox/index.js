@@ -29,7 +29,7 @@ export const AnnotationCountSidebarBox = ({ regions }) => {
   const counts = useMemo(() => {
     return regions.reduce(
       (acc, region) => {
-        if (region.cls && region.type === 'box') {
+        if (region.cls && region.type === "box") {
           if (acc[region.cls]) {
             acc[region.cls] += 1
           } else {
@@ -45,12 +45,12 @@ export const AnnotationCountSidebarBox = ({ regions }) => {
 
   return (
     <SidebarBoxContainer
-      title="Counts"
+      title="Device Counts"
       icon={<FormatListNumbered style={{ color: "white" }} />}
     >
       <List>
-        {counts.length === 0 && (
-          <div className={classes.emptyText}>No History Yet</div>
+        {Object.keys(counts).length === 0 && (
+          <div className={classes.emptyText}>No Counts Yet</div>
         )}
         {Object.keys(counts).map((name, i) => (
           <ListItem button dense key={i}>
@@ -64,7 +64,7 @@ export const AnnotationCountSidebarBox = ({ regions }) => {
               }
               secondary={
                 <Typography variant="body2" style={{ color: "#FFFFFF" }}>
-                Number:  {counts[name]}
+                  Number: {counts[name]}
                 </Typography>
               }
             />
