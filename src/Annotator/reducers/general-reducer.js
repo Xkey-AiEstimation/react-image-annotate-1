@@ -260,6 +260,59 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+
+    case "TOGGLE_DEVICE_VISIBILITY": {
+      // GIVEN A DEVICE NAME, TOGGLE THE VISIBILITY OF ALL REGIONS WITH THAT DEVICE NAME (CLS). MULTIPLE DEVICES CAN BE TOGGLED AT ONCE.
+      // SET THE STATE OF THE CATEGORY TO THE OPPOSITE OF ITS CURRENT STATE
+      // ALSO RESET BREAKOUT VISIBILITY AND TOGGLE STATE TO FALSE
+      // ALSO RESET BREAKOUT AUTO ADD STATE TO NULL
+      // ALSO RESET TOGGLE STATE TO NULL
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      let newExcludedCategories = []
+      let newSelectedBreakoutToggle = null
+      let newSelectedBreakoutIdAutoAdd = null
+      if (!newRegions) {
+        return state
+      }
+
+      console.log(action.deviceName)
+      // TOGGLE THE VISIBILITY OF THE DEVICE NAME
+      newRegions = newRegions.map((region) => {
+        const isCategoryMatch = region.cls === action.deviceName
+        if (isCategoryMatch) {
+          return { ...region, visible: true }
+        } else {
+          return { ...region, visible: false }
+        }
+      })
+
+      // RESET BREAKOUT VISIBILITY AND TOGGLE STATE TO FALSE
+      newRegions = newRegions.map((region) => {
+        return {
+          ...region,
+          breakout: region.breakout
+            ? { ...region.breakout, visible: false }
+            : undefined,
+        }
+      })
+
+      newState = setIn(newState, ["excludedCategories"], newExcludedCategories)
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      newState = setIn(
+        newState,
+        ["selectedBreakoutToggle"],
+        newSelectedBreakoutToggle
+      )
+      newState = setIn(
+        newState,
+        ["selectedBreakoutIdAutoAdd"],
+        newSelectedBreakoutIdAutoAdd
+      )
+      return newState
+    }
     case "ON_NEXT_OR_PREV_BREAKOUT_RESET": {
       let newState = { ...state }
       let newImage = getIn(newState, ["images", currentImageIndex])
