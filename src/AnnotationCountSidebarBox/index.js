@@ -1,15 +1,19 @@
 // @flow
 
-import { Typography } from "@material-ui/core"
+import {
+  IconButton,
+  ListItemSecondaryAction,
+  Typography,
+} from "@material-ui/core"
 import List from "@material-ui/core/List"
 import ListItem from "@material-ui/core/ListItem"
 import ListItemText from "@material-ui/core/ListItemText"
 import { makeStyles } from "@material-ui/core/styles"
+import Visibility from "@material-ui/icons/Visibility"
 import FormatListNumbered from "@material-ui/icons/FormatListNumbered"
 import isEqual from "lodash/isEqual"
-import React, { memo } from "react"
+import React, { memo, useMemo } from "react"
 import SidebarBoxContainer from "../SidebarBoxContainer"
-import { useMemo } from "react"
 
 const useStyles = makeStyles({
   emptyText: {
@@ -23,7 +27,11 @@ const useStyles = makeStyles({
 
 const listItemTextStyle = { paddingLeft: 16, color: "white" }
 
-export const AnnotationCountSidebarBox = ({ regions }) => {
+export const AnnotationCountSidebarBox = ({
+  regions,
+  onToggleDevice,
+  selectedDeviceToggle,
+}) => {
   const classes = useStyles()
 
   const counts = useMemo(() => {
@@ -43,31 +51,92 @@ export const AnnotationCountSidebarBox = ({ regions }) => {
     )
   }, [regions])
 
+  const onToggle = (cls) => {
+    onToggleDevice(cls)
+  }
+
   return (
     <SidebarBoxContainer
       title="Device Counts"
       icon={<FormatListNumbered style={{ color: "white" }} />}
     >
       <List>
-        {Object.keys(counts).length === 0 && (
+        {/* {Object.keys(counts).length === 0 && (
           <div className={classes.emptyText}>No Counts Yet</div>
-        )}
+        )} */}
+        <ListItem>
+          <ListItemText
+            style={listItemTextStyle}
+            disableTypography
+            primary={
+              <Typography
+                variant="body2"
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  color: "#FFFFFF",
+                }}
+              >
+                All Devices
+              </Typography>
+            }
+          />
+          <ListItemSecondaryAction>
+            <IconButton
+              edge="end"
+              aria-label="comments"
+              onClick={() => onToggle("ALL")}
+            >
+              <Visibility
+                style={{
+                  color: selectedDeviceToggle === "ALL" ? "green" : "white",
+                }}
+              />
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+
         {Object.keys(counts).map((name, i) => (
-          <ListItem button dense key={i}>
+          <ListItem dense key={i}>
             <ListItemText
               style={listItemTextStyle}
               disableTypography
               primary={
-                <Typography variant="body2" style={{ color: "#FFFFFF" }}>
+                <Typography
+                  variant="body2"
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    color: "#FFFFFF",
+                  }}
+                >
                   {name}
                 </Typography>
               }
               secondary={
-                <Typography variant="body2" style={{ color: "#FFFFFF" }}>
+                <Typography
+                  style={{
+                    fontSize: "14px",
+                    color: "#FFFFFF",
+                  }}
+                >
                   Number: {counts[name]}
                 </Typography>
               }
             />
+            <ListItemSecondaryAction>
+              <IconButton
+                edge="end"
+                aria-label="comments"
+                onClick={() => onToggle(name)}
+              >
+                <Visibility
+                  style={{
+                    color: selectedDeviceToggle === name ? "green" : "white",
+                  }}
+                />
+              </IconButton>
+            </ListItemSecondaryAction>
           </ListItem>
         ))}
       </List>

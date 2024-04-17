@@ -260,6 +260,63 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+
+    case "TOGGLE_DEVICE_VISIBILITY": {
+      // GIVEN A DEVICE NAME, TOGGLE THE VISIBILITY OF ALL REGIONS WITH THAT DEVICE NAME (CLS). MULTIPLE DEVICES CAN BE TOGGLED AT ONCE.
+      // SET THE STATE OF THE CATEGORY TO THE OPPOSITE OF ITS CURRENT STATE
+      // if the device name is "ALL" then set the visibility of all regions to true
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      let newSelectedBreakoutToggle = getIn(newState, [
+        "selectedBreakoutToggle",
+      ])
+      let newSelectedBreakoutIdAutoAdd = getIn(newState, [
+        "selectedBreakoutIdAutoAdd",
+      ])
+
+      if (!newRegions) {
+        return state
+      }
+      // TOGGLE THE VISIBILITY OF THE DEVICE NAME
+      newRegions = newRegions.map((region) => {
+        if (action.deviceName === "ALL") {
+          if (newSelectedBreakoutToggle) {
+            if (
+              region.breakout &&
+              region.breakout.id === newSelectedBreakoutToggle
+            ) {
+              return { ...region, visible: true }
+            } else {
+              return { ...region, visible: false }
+            }
+          } else {
+            return { ...region, visible: true }
+          }
+        } else {
+          if (region.cls === action.deviceName) {
+            if (newSelectedBreakoutToggle) {
+              if (
+                region.breakout &&
+                region.breakout.id === newSelectedBreakoutToggle
+              ) {
+                return { ...region, visible: true }
+              } else {
+                return { ...region, visible: false }
+              }
+            } else {
+              return { ...region, visible: true }
+            }
+          } else {
+            return { ...region, visible: false }
+          }
+        }
+      })
+      newState = merge(newState, [{ selectedDeviceToggle: action.deviceName }])
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      return newState
+    }
     case "ON_NEXT_OR_PREV_BREAKOUT_RESET": {
       let newState = { ...state }
       let newImage = getIn(newState, ["images", currentImageIndex])

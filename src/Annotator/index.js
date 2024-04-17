@@ -128,7 +128,6 @@ export const Annotator = ({
     })
   }
 
-
   // Converting Set back to an array before returning
   const breakouts = Array.from(uniqueBreakouts)
 
@@ -175,6 +174,7 @@ export const Annotator = ({
       filters: filters,
       excludedCategories: [],
       selectedBreakoutToggle: null,
+      selectedDeviceToggle: 'ALL',
       ...(annotationType === "image"
         ? {
             selectedImage,
