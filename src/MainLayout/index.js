@@ -473,6 +473,14 @@ export const MainLayout = ({
                 selectedBreakoutIdAutoAdd={state.selectedBreakoutIdAutoAdd}
                 breakouts={state.breakouts}
               />,
+              <AnnotationCountSidebarBox
+                regions={activeImage ? activeImage.regions : emptyArr}
+                onToggleDevice={action(
+                  "TOGGLE_DEVICE_VISIBILITY",
+                  "deviceName"
+                )}
+                selectedDeviceToggle={state.selectedDeviceToggle}
+              />,
               <RegionSelector
                 regions={activeImage ? activeImage.regions : emptyArr}
                 onSelectRegion={action("SELECT_REGION", "region")}
@@ -490,14 +498,6 @@ export const MainLayout = ({
                   keyframes={state.keyframes}
                 />
               ),
-              <AnnotationCountSidebarBox
-                regions={activeImage ? activeImage.regions : emptyArr}
-                onToggleDevice={action(
-                  "TOGGLE_DEVICE_VISIBILITY",
-                  "deviceName"
-                )}
-                selectedDeviceToggle={state.selectedDeviceToggle}
-              />,
               <HistorySidebarBox
                 history={state.history}
                 onRestoreHistory={action("RESTORE_HISTORY")}
