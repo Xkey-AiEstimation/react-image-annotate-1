@@ -492,7 +492,11 @@ export const MainLayout = ({
               ),
               <AnnotationCountSidebarBox
                 regions={activeImage ? activeImage.regions : emptyArr}
-                onToggleDevice={action("TOGGLE_DEVICE_VISIBILITY",'deviceName')}
+                onToggleDevice={action(
+                  "TOGGLE_DEVICE_VISIBILITY",
+                  "deviceName"
+                )}
+                selectedDeviceToggle={state.selectedDeviceToggle}
               />,
               <HistorySidebarBox
                 history={state.history}

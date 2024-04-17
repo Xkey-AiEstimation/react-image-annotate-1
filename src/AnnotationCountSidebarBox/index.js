@@ -27,7 +27,11 @@ const useStyles = makeStyles({
 
 const listItemTextStyle = { paddingLeft: 16, color: "white" }
 
-export const AnnotationCountSidebarBox = ({ regions, onToggleDevice }) => {
+export const AnnotationCountSidebarBox = ({
+  regions,
+  onToggleDevice,
+  selectedDeviceToggle,
+}) => {
   const classes = useStyles()
 
   const counts = useMemo(() => {
@@ -57,9 +61,41 @@ export const AnnotationCountSidebarBox = ({ regions, onToggleDevice }) => {
       icon={<FormatListNumbered style={{ color: "white" }} />}
     >
       <List>
-        {Object.keys(counts).length === 0 && (
+        {/* {Object.keys(counts).length === 0 && (
           <div className={classes.emptyText}>No Counts Yet</div>
-        )}
+        )} */}
+        <ListItem>
+          <ListItemText
+            style={listItemTextStyle}
+            disableTypography
+            primary={
+              <Typography
+                variant="body2"
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  color: "#FFFFFF",
+                }}
+              >
+                All Devices
+              </Typography>
+            }
+          />
+          <ListItemSecondaryAction>
+            <IconButton
+              edge="end"
+              aria-label="comments"
+              onClick={() => onToggle("ALL")}
+            >
+              <Visibility
+                style={{
+                  color: selectedDeviceToggle === "ALL" ? "green" : "white",
+                }}
+              />
+            </IconButton>
+          </ListItemSecondaryAction>
+        </ListItem>
+
         {Object.keys(counts).map((name, i) => (
           <ListItem dense key={i}>
             <ListItemText
@@ -96,7 +132,7 @@ export const AnnotationCountSidebarBox = ({ regions, onToggleDevice }) => {
               >
                 <Visibility
                   style={{
-                    color: "white",
+                    color: selectedDeviceToggle === name ? "green" : "white",
                   }}
                 />
               </IconButton>
