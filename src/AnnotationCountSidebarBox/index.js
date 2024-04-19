@@ -37,7 +37,7 @@ export const AnnotationCountSidebarBox = ({
   const counts = useMemo(() => {
     return regions.reduce(
       (acc, region) => {
-        if ((region.cls && region.type === "box") || region.type === "point") {
+        if (region.cls && (region.type === "box" || region.type === "point")) {
           if (acc[region.cls]) {
             acc[region.cls] += 1
           } else {
