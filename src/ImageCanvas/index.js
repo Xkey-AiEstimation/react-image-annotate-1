@@ -147,6 +147,7 @@ export const ImageCanvas = ({
   breakouts,
   dispatch,
   selectedBreakoutIdAutoAdd,
+  selectedDeviceToggle,
 }: Props) => {
   const classes = useStyles()
 
@@ -448,6 +449,7 @@ export const ImageCanvas = ({
             editing
             region={highlightedRegion}
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
+            selectedDeviceToggle={selectedDeviceToggle}
           />
         </PreventScrollToParents>
       )}

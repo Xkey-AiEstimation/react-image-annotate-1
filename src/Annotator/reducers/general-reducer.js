@@ -271,16 +271,22 @@ export default (state: MainLayoutState, action: Action) => {
       let newSelectedBreakoutToggle = getIn(newState, [
         "selectedBreakoutToggle",
       ])
-      let newSelectedBreakoutIdAutoAdd = getIn(newState, [
-        "selectedBreakoutIdAutoAdd",
-      ])
+      let newSelectedDeviceToggle = getIn(newState, ["selectedDeviceToggle"])
+
+      if (newSelectedDeviceToggle === action.deviceName) {  
+        newSelectedDeviceToggle = 'ALL'
+      }
+      else {
+        newSelectedDeviceToggle = action.deviceName
+      }
+      
 
       if (!newRegions) {
         return state
       }
       // TOGGLE THE VISIBILITY OF THE DEVICE NAME
       newRegions = newRegions.map((region) => {
-        if (action.deviceName === "ALL") {
+        if (newSelectedDeviceToggle === "ALL") {
           if (newSelectedBreakoutToggle) {
             if (
               region.breakout &&
@@ -294,7 +300,7 @@ export default (state: MainLayoutState, action: Action) => {
             return { ...region, visible: true }
           }
         } else {
-          if (region.cls === action.deviceName) {
+          if (region.cls === newSelectedDeviceToggle) {
             if (newSelectedBreakoutToggle) {
               if (
                 region.breakout &&
@@ -312,7 +318,7 @@ export default (state: MainLayoutState, action: Action) => {
           }
         }
       })
-      newState = merge(newState, [{ selectedDeviceToggle: action.deviceName }])
+      newState = merge(newState, [{ selectedDeviceToggle: newSelectedDeviceToggle }])
       newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
