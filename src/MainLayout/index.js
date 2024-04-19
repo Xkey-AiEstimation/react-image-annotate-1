@@ -149,6 +149,7 @@ export const MainLayout = ({
       regionTagList={state.regionTagList}
       breakouts={state.breakouts}
       selectedBreakoutIdAutoAdd={state.selectedBreakoutIdAutoAdd}
+      selectedDeviceToggle={state.selectedDeviceToggle}
       regions={
         state.annotationType === "image"
           ? activeImage.regions || []
