@@ -9,8 +9,9 @@ import List from "@material-ui/core/List"
 import ListItem from "@material-ui/core/ListItem"
 import ListItemText from "@material-ui/core/ListItemText"
 import { makeStyles } from "@material-ui/core/styles"
-import Visibility from "@material-ui/icons/Visibility"
+import TrashIcon from "@material-ui/icons/Delete"
 import FormatListNumbered from "@material-ui/icons/FormatListNumbered"
+import Visibility from "@material-ui/icons/Visibility"
 import isEqual from "lodash/isEqual"
 import React, { memo, useMemo } from "react"
 import SidebarBoxContainer from "../SidebarBoxContainer"
@@ -30,6 +31,7 @@ const listItemTextStyle = { paddingLeft: 16, color: "white" }
 export const AnnotationCountSidebarBox = ({
   regions,
   onToggleDevice,
+  onDeleteDevices,
   selectedDeviceToggle,
 }) => {
   const classes = useStyles()
@@ -55,6 +57,10 @@ export const AnnotationCountSidebarBox = ({
     onToggleDevice(cls)
   }
 
+  const onDelete = (cls) => {
+    onDeleteDevices(cls)
+  }
+
   return (
     <SidebarBoxContainer
       title="Device Counts"
@@ -66,6 +72,17 @@ export const AnnotationCountSidebarBox = ({
           <div className={classes.emptyText}>No Counts Yet</div>
         )} */}
         <ListItem>
+          <IconButton
+            edge="start"
+            aria-label="comments"
+            onClick={() => onToggle("ALL")}
+          >
+            <Visibility
+              style={{
+                color: selectedDeviceToggle === "ALL" ? "green" : "white",
+              }}
+            />
+          </IconButton>
           <ListItemText
             style={listItemTextStyle}
             disableTypography
@@ -82,23 +99,22 @@ export const AnnotationCountSidebarBox = ({
               </Typography>
             }
           />
-          <ListItemSecondaryAction>
-            <IconButton
-              edge="end"
-              aria-label="comments"
-              onClick={() => onToggle("ALL")}
-            >
-              <Visibility
-                style={{
-                  color: selectedDeviceToggle === "ALL" ? "green" : "white",
-                }}
-              />
-            </IconButton>
-          </ListItemSecondaryAction>
         </ListItem>
 
         {Object.keys(counts).map((name, i) => (
           <ListItem dense key={i}>
+            <IconButton
+              edge="start"
+              aria-label="comments"
+              onClick={() => onToggle(name)}
+            >
+              <Visibility
+                style={{
+                  color: selectedDeviceToggle === name ? "green" : "white",
+                }}
+              />
+            </IconButton>
+
             <ListItemText
               style={listItemTextStyle}
               disableTypography
@@ -129,9 +145,9 @@ export const AnnotationCountSidebarBox = ({
               <IconButton
                 edge="end"
                 aria-label="comments"
-                onClick={() => onToggle(name)}
+                onClick={() => onDelete(name)}
               >
-                <Visibility
+                <TrashIcon
                   style={{
                     color: selectedDeviceToggle === name ? "green" : "white",
                   }}
