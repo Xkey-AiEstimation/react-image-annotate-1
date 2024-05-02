@@ -480,6 +480,7 @@ export const MainLayout = ({
                   "TOGGLE_DEVICE_VISIBILITY",
                   "deviceName"
                 )}
+                onDeleteDevices={action("DELETE_DEVICES_WITH_DEVICENAME", "deviceName")}
                 selectedDeviceToggle={state.selectedDeviceToggle}
               />,
               <RegionSelector

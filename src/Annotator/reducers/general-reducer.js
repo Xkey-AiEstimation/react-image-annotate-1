@@ -273,13 +273,11 @@ export default (state: MainLayoutState, action: Action) => {
       ])
       let newSelectedDeviceToggle = getIn(newState, ["selectedDeviceToggle"])
 
-      if (newSelectedDeviceToggle === action.deviceName) {  
-        newSelectedDeviceToggle = 'ALL'
-      }
-      else {
+      if (newSelectedDeviceToggle === action.deviceName) {
+        newSelectedDeviceToggle = "ALL"
+      } else {
         newSelectedDeviceToggle = action.deviceName
       }
-      
 
       if (!newRegions) {
         return state
@@ -318,7 +316,9 @@ export default (state: MainLayoutState, action: Action) => {
           }
         }
       })
-      newState = merge(newState, [{ selectedDeviceToggle: newSelectedDeviceToggle }])
+      newState = merge(newState, [
+        { selectedDeviceToggle: newSelectedDeviceToggle },
+      ])
       newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
@@ -480,6 +480,22 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+
+    case "DELETE_DEVICES_WITH_DEVICENAME": {
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      if (!newRegions) {
+        return state
+      }
+      newRegions = newRegions.filter(
+        (region) => region.cls !== action.deviceName
+      )
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      return newState
+    }
+
     case "ADD_NEW_BREAKOUT_BY_CATEGORY": {
       let newState = { ...state }
       let images = getIn(newState, ["images"])
