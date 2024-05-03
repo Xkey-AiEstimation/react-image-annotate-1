@@ -481,6 +481,7 @@ export const MainLayout = ({
                   "deviceName"
                 )}
                 onDeleteDevices={action("DELETE_DEVICES_WITH_DEVICENAME", "deviceName")}
+                onDeleteAll={action("DELETE_ALL_DEVICES")}
                 selectedDeviceToggle={state.selectedDeviceToggle}
               />,
               <RegionSelector

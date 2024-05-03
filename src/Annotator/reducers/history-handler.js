@@ -8,6 +8,9 @@ const typesToSaveWithHistory = {
   BEGIN_BOX_TRANSFORM: "Transform/Move Box",
   BEGIN_MOVE_POINT: "Move Point",
   DELETE_REGION: "Delete Region",
+  DELETE_SELECTED_REGION: "Delete Selected Region",
+  DELETE_DEVICES_WITH_DEVICENAME: "Delete Devices: ",
+  DELETE_ALL_DEVICES: "Delete All Devices",
 }
 
 export const saveToHistory = (state: MainLayoutState, name: string) =>
@@ -39,6 +42,17 @@ export default (reducer) => {
         prevState !== nextState &&
         Object.keys(typesToSaveWithHistory).includes(action.type)
       ) {
+        let name = typesToSaveWithHistory[action.type] || action.type
+        if (
+          action.type === "DELETE_DEVICES_WITH_DEVICENAME" &&
+          action.deviceName !== undefined &&
+          action.deviceName !== ""
+        ) {
+          name = typesToSaveWithHistory[action.type] + " " + action.deviceName
+        } else {
+          name = typesToSaveWithHistory[action.type] || action.type
+        }
+
         return setIn(
           nextState,
           ["history"],
@@ -46,7 +60,7 @@ export default (reducer) => {
             {
               time: moment().toDate(),
               state: without(prevState, "history"),
-              name: typesToSaveWithHistory[action.type] || action.type,
+              name,
             },
           ]
             .concat(nextState.history || [])

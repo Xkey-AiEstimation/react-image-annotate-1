@@ -493,6 +493,26 @@ export default (state: MainLayoutState, action: Action) => {
       )
       newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
+      // save to history
+      // newState = saveToHistory(
+      //   newState,
+      //   "Delete Devices with Device Name: " + action.deviceName
+      // )
+      return newState
+    }
+
+    case "DELETE_ALL_DEVICES": {
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      if (!newRegions) {
+        return state
+      }
+      newRegions = newRegions.filter((region) => region.cls === undefined)
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      // save to history
+      // newState = saveToHistory(newState, "Delete All Devices")
       return newState
     }
 
