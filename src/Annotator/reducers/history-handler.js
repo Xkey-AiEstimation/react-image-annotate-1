@@ -28,9 +28,6 @@ export default (reducer) => {
   return (state: MainLayoutState, action: Action) => {
     const prevState = state
     const nextState = reducer(state, action)
-    console.log("DBG: nextState")
-    console.log(state.history.length)
-
     if (action.type === "RESTORE_HISTORY") {
       if (state.history.length > 0) {
         return setIn(
