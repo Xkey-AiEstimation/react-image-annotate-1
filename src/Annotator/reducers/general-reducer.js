@@ -1014,6 +1014,7 @@ export default (state: MainLayoutState, action: Action) => {
           })
         }
         case "ASSIGN_SCALE": {
+          console.log("ASSIGN_SCALE above")
           const { regionId } = state.mode
           const [region, regionIndex] = getRegion(regionId)
           if (!region) return setIn(state, ["mode"], null)
@@ -1097,7 +1098,21 @@ export default (state: MainLayoutState, action: Action) => {
           }
           case "DRAW_LINE": {
             const [line, regionIndex] = getRegion(state.mode.regionId)
+
             if (!line) break
+            if (line.type !== "line") return state
+            // check if x1 and y1 are set. also check if x1 != x and y1 != y to prevent setting a scale of 0. if x1 and x2 are not set or x1 == x2 and y1 == y2 then remove the scale
+            if (line.x1 === undefined || line.y1 === undefined) {
+              return state
+            }
+            if (line.x1 === x && line.y1 === y) {
+              // remove the region
+              return setIn(
+                state,
+                [...pathToActiveImage, "regions"],
+                activeImage.regions.filter((r) => r.id !== line.id)
+              )
+            }
             const scales = activeImage.regions.filter(
               (region) => region.type === "scale"
             )
@@ -1122,7 +1137,7 @@ export default (state: MainLayoutState, action: Action) => {
               )
               relativeLineLengthFt = relativeLineLength / average_total_scale
             }
-
+            state = saveToHistory(state, "Create Line")
             setIn(state, [...pathToActiveImage, "regions", regionIndex], {
               ...line,
               x2: x,
@@ -1134,6 +1149,22 @@ export default (state: MainLayoutState, action: Action) => {
           case "ASSIGN_SCALE": {
             const [line, regionIndex] = getRegion(state.mode.regionId)
             if (!line) break
+            if (line.type !== "scale") return state
+            // check if x1 and y1 are set. also check if x1 != x and y1 != y to prevent setting a scale of 0. if x1 and x2 are not set or x1 == x2 and y1 == y2 then remove the scale
+
+            if (line.x1 === undefined || line.y1 === undefined) {
+              return state
+            }
+            if (line.x1 === x && line.y1 === y) {
+              // remove the region
+              return setIn(
+                state,
+                [...pathToActiveImage, "regions"],
+                activeImage.regions.filter((r) => r.id !== line.id)
+              )
+            }
+            state = saveToHistory(state, "Create scale")
+
             setIn(state, [...pathToActiveImage, "regions", regionIndex], {
               ...line,
               x2: x,
@@ -1327,7 +1358,6 @@ export default (state: MainLayoutState, action: Action) => {
         }
         case "create-line": {
           if (state.mode && state.mode.mode === "DRAW_LINE") break
-          state = saveToHistory(state, "Create Line")
           let newRegionBreakout = undefined
           const { selectedBreakoutIdAutoAdd } = state
           if (selectedBreakoutIdAutoAdd !== null) {
@@ -1359,7 +1389,6 @@ export default (state: MainLayoutState, action: Action) => {
         }
         case "create-scale": {
           if (state.mode && state.mode.mode == "ASSIGN_SCALE") break
-          state = saveToHistory(state, "Create scale")
           newRegion = {
             type: "scale",
             x1: x,
@@ -1367,7 +1396,7 @@ export default (state: MainLayoutState, action: Action) => {
             x2: x,
             y2: y,
             unit: "ft",
-            length: 0,
+            length: 1,
             highlighted: true,
             editingLabels: false,
             color: "#C4A484",
