@@ -32,6 +32,7 @@ export const AnnotationCountSidebarBox = ({
   regions,
   onToggleDevice,
   onDeleteDevices,
+  onDeleteAll,
   selectedDeviceToggle,
 }) => {
   const classes = useStyles()
@@ -68,9 +69,6 @@ export const AnnotationCountSidebarBox = ({
       expandedByDefault={true}
     >
       <List>
-        {/* {Object.keys(counts).length === 0 && (
-          <div className={classes.emptyText}>No Counts Yet</div>
-        )} */}
         <ListItem>
           <IconButton
             edge="start"
@@ -99,6 +97,19 @@ export const AnnotationCountSidebarBox = ({
               </Typography>
             }
           />
+          <ListItemSecondaryAction>
+            <IconButton
+              edge="end"
+              aria-label="comments"
+              onClick={() => onDeleteAll()}
+            >
+              <TrashIcon
+                style={{
+                  color: "rgb(245, 0, 87)",
+                }}
+              />
+            </IconButton>
+          </ListItemSecondaryAction>
         </ListItem>
 
         {Object.keys(counts).map((name, i) => (
@@ -149,7 +160,7 @@ export const AnnotationCountSidebarBox = ({
               >
                 <TrashIcon
                   style={{
-                    color: selectedDeviceToggle === name ? "green" : "white",
+                    color: "rgb(245, 0, 87)",
                   }}
                 />
               </IconButton>
