@@ -11,9 +11,6 @@ export const NewDeviceRegionLabel = (
   onSelectCategory,
   isNewDevice
 ) => {
-  console.log("DBG: NewDeviceRegionLabel")
-  console.log(region)
-  console.log(deviceOptions.length)
   const [selectedCategory, setSelectedCategory] = useState(null)
   return (
     <>

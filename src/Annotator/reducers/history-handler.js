@@ -21,13 +21,15 @@ export const saveToHistory = (state: MainLayoutState, name: string) =>
         state: without(state, "history"),
         name,
       },
-    ].concat((h || []).slice(0, 9))
+    ].concat((h || []))
   )
 
 export default (reducer) => {
   return (state: MainLayoutState, action: Action) => {
     const prevState = state
     const nextState = reducer(state, action)
+    console.log("DBG: nextState")
+    console.log(state.history.length)
 
     if (action.type === "RESTORE_HISTORY") {
       if (state.history.length > 0) {
@@ -62,9 +64,8 @@ export default (reducer) => {
               state: without(prevState, "history"),
               name,
             },
-          ]
-            .concat(nextState.history || [])
-            .slice(0, 9)
+          ].concat(nextState.history || [])
+          // .slice(0, 9)
         )
       }
     }
