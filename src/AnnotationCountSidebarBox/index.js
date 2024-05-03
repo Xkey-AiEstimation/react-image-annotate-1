@@ -69,7 +69,12 @@ export const AnnotationCountSidebarBox = ({
       expandedByDefault={true}
     >
       <List>
-        <ListItem>
+        <ListItem
+          style={{
+            // add a white border to the bottom of the list item
+            borderBottom: "1px solid white",
+          }}
+        >
           <IconButton
             edge="start"
             aria-label="comments"
@@ -94,6 +99,23 @@ export const AnnotationCountSidebarBox = ({
                 }}
               >
                 All Devices
+              </Typography>
+            }
+            secondary={
+              <Typography
+                style={{
+                  fontSize: "14px",
+                  color: "#FFFFFF",
+                }}
+              >
+                Total:
+                {
+                  regions.filter(
+                    (region) =>
+                      region.cls &&
+                      (region.type === "box" || region.type === "point")
+                  ).length
+                }
               </Typography>
             }
           />
