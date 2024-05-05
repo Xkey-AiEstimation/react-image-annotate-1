@@ -1014,7 +1014,6 @@ export default (state: MainLayoutState, action: Action) => {
           })
         }
         case "ASSIGN_SCALE": {
-          console.log("ASSIGN_SCALE above")
           const { regionId } = state.mode
           const [region, regionIndex] = getRegion(regionId)
           if (!region) return setIn(state, ["mode"], null)
@@ -1638,6 +1637,8 @@ export default (state: MainLayoutState, action: Action) => {
         .concat(action.region ? [...action.region] : [])
       let newState = { ...state }
       newState = setIn(newState, ["loadingTemplateMatching"], false)
+      // svae to history
+      newState = saveToHistory(newState, `RAN OCR Matching`)
       return setIn(newState, [..._pathToActiveImage, "regions"], regions)
     }
     case "HEADER_BUTTON_CLICKED": {
