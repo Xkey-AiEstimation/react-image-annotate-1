@@ -111,6 +111,7 @@ export const ImageCanvas = ({
   zoomWithPrimary = false,
   createWithPrimary = false,
   pointDistancePrecision = 0,
+  deviceList,
   regionClsList,
   regionTagList,
   showCrosshairs,
@@ -150,7 +151,6 @@ export const ImageCanvas = ({
   selectedDeviceToggle,
 }: Props) => {
   const classes = useStyles()
-
   const canvasEl = useRef(null)
   const layoutParams = useRef({})
   const [dragging, changeDragging] = useRafState(false)
@@ -205,7 +205,6 @@ export const ImageCanvas = ({
   )
 
   const excludePattern = useExcludePattern()
-
   const canvas = canvasEl.current
   if (canvas && imageLoaded) {
     const { clientWidth, clientHeight } = canvas
@@ -423,6 +422,7 @@ export const ImageCanvas = ({
           /> */}
 
           <RegionTags
+            deviceList={deviceList}
             regions={regions}
             projectRegionBox={projectRegionBox}
             mouseEvents={mouseEvents}
@@ -456,6 +456,7 @@ export const ImageCanvas = ({
       {!showTags && highlightedRegion && (
         <div key="topLeftTag" className={classes.fixedRegionLabel}>
           <RegionLabel
+            deviceList={deviceList}
             disableClose
             // allowedClasses is overriden in RegionLabel class to filter conduits, devices, etc.
             allowedClasses={regionClsList}

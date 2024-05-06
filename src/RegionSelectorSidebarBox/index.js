@@ -18,7 +18,6 @@ import classnames from "classnames"
 import isEqual from "lodash/isEqual"
 import Tooltip from "@material-ui/core/Tooltip"
 import { FormControlLabel, FormGroup, Switch } from "@material-ui/core"
-import DeviceList from "../RegionLabel/DeviceList"
 import { action } from "@storybook/addon-actions"
 
 const useStyles = makeStyles(styles)
@@ -29,7 +28,6 @@ const HeaderSep = styled("div")({
   marginBottom: 2,
 })
 
-const DEVICE_LIST = [...new Set(DeviceList.map((item) => item.category))]
 
 const Chip = ({ color, text }) => {
   const classes = useStyles()

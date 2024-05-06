@@ -47,12 +47,15 @@ const RegionComponents = {
   box: memo(({ region, iw, ih }) => (
     <g transform={`translate(${region.x * iw} ${region.y * ih})`}>
       <rect
-        strokeWidth={region.isOCR?1.5:2}
+        strokeWidth={region.isOCR ? 1.5 : 2}
         x={0}
         y={0}
         width={Math.max(region.w * iw, 0)}
         height={Math.max(region.h * ih, 0)}
-        stroke={colorAlpha(region.isOCR?"#080808":region.color, region.isOCR?0.75:0.75)}
+        stroke={colorAlpha(
+          region.isOCR ? "#080808" : region.color,
+          region.isOCR ? 0.75 : 0.75
+        )}
         fill={colorAlpha(region.color, 0.5)}
       />
     </g>
@@ -217,6 +220,11 @@ export const RegionShapes = ({
   keypointDefinitions,
   fullSegmentationMode,
 }) => {
+  console.log("DBG: RegionShapes")
+  console.log(regions)
+  console.log(keypointDefinitions)
+  console.log(fullSegmentationMode)
+  console.log(mat)
   const iw = imagePosition.bottomRight.x - imagePosition.topLeft.x
   const ih = imagePosition.bottomRight.y - imagePosition.topLeft.y
   if (isNaN(iw) || isNaN(ih)) return null

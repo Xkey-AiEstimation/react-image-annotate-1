@@ -1,12 +1,6 @@
 // @flow
 
-import {
-  Grid,
-  Input,
-  InputAdornment,
-  TextField,
-  Typography,
-} from "@material-ui/core"
+import { Grid, TextField, Typography } from "@material-ui/core"
 import Button from "@material-ui/core/Button"
 import IconButton from "@material-ui/core/IconButton"
 import Paper from "@material-ui/core/Paper"
@@ -26,10 +20,12 @@ import type { Region } from "../ImageCanvas/region-tools.js"
 import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
+import { useMemo } from "react"
 
 const useStyles = makeStyles(styles)
 
 type Props = {
+  deviceList: Array<any>,
   region: Region,
   editing?: boolean,
   allowedClasses?: Array<string>,
@@ -49,34 +45,8 @@ type Props = {
   allowComments?: boolean,
 }
 
-const all_types = [...new Set(DeviceList.map((pair) => pair.category))]
-const all_symbols = [...new Set(DeviceList.map((pair) => pair.symbol_name))]
-const allowed_conduit_type = [
-  "FEEDERS",
-  "CABLE",
-  "TRAY",
-  "WIREMOLD",
-  "CONDUIT AND WIRE",
-]
-const allowed_device_type = all_types.filter(
-  (x) => !allowed_conduit_type.includes(x)
-)
-const conduit_symbols = DeviceList.filter((i) =>
-  allowed_conduit_type.includes(i.category)
-).map((symbol) => symbol.symbol_name)
-const device_symbols = DeviceList.filter((i) =>
-  allowed_device_type.includes(i.category)
-).map((symbol) => symbol.symbol_name)
-const getRandomId = () => Math.random().toString().split(".")[1]
-
-const encodeAzureURL = (url) => {
-  var first = url.substring(0, url.lastIndexOf("/"))
-  var parts = url.split("/")
-  var part = parts[parts.length - 1]
-  return first + "/" + encodeURIComponent(part)
-}
-
 export const RegionLabel = ({
+  deviceList,
   region,
   regions,
   editing,
@@ -96,8 +66,35 @@ export const RegionLabel = ({
   breakoutList,
   selectedBreakoutIdAutoAdd,
   dispatch,
-}: Props) => {
+}) => {
   const classes = useStyles()
+  const all_types = [...new Set(deviceList.map((pair) => pair.category))]
+  const all_symbols = [...new Set(deviceList.map((pair) => pair.symbol_name))]
+  const allowed_conduit_type = [
+    "FEEDERS",
+    "CABLE",
+    "TRAY",
+    "WIREMOLD",
+    "CONDUIT AND WIRE",
+  ]
+  const allowed_device_type = all_types.filter(
+    (x) => !allowed_conduit_type.includes(x)
+  )
+  const conduit_symbols = deviceList
+    .filter((i) => allowed_conduit_type.includes(i.category))
+    .map((symbol) => symbol.symbol_name)
+  const device_symbols = deviceList
+    .filter((i) => allowed_device_type.includes(i.category))
+    .map((symbol) => symbol.symbol_name)
+  const getRandomId = () => Math.random().toString().split(".")[1]
+
+  const encodeAzureURL = (url) => {
+    var first = url.substring(0, url.lastIndexOf("/"))
+    var parts = url.split("/")
+    var part = parts[parts.length - 1]
+    return first + "/" + encodeURIComponent(part)
+  }
+
   const [open, setOpen] = React.useState(false)
 
   const commentInputRef = useRef(null)
@@ -131,6 +128,54 @@ export const RegionLabel = ({
 
   const min = 1
   const max = 1000
+  // TODO: This is where the the new device is added qctiosn
+  const [isNewDevice, setIsNewDevice] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState(null)
+  const [isCategoryChangeable, setIsCategoryChangeable] = useState(false)
+
+  const onSelectCategory = (e) => {
+    setSelectedCategory(e)
+  }
+
+  const onNewDeviceAdded = (isNew, value) => {
+    if (isNew) {
+      onRegionClassAdded(value)
+      setIsNewDevice(true)
+    } else {
+      setIsNewDevice(false)
+    }
+  }
+
+  const onChangeDevice = (region) => {
+    setRegionDevice({
+      symbol_name: region.cls,
+      category: region.category,
+    })
+    const device = DeviceList.find((x) => x.symbol_name === region.cls)
+    if (device) {
+      setIsCategoryChangeable(true)
+    } else {
+      setIsCategoryChangeable(false)
+    }
+    return onChange(region)
+  }
+
+  useEffect(() => {
+    if (region.type === "box" || region.type === "point") {
+      // look at DeviceList, if it is in the list, then set the isCategoryChangeable to false
+      // else set it to true
+      setRegionDevice({
+        symbol_name: region.cls,
+        category: region.category,
+      })
+      const device = DeviceList.find((x) => x.symbol_name === region.cls)
+      if (device) {
+        setIsCategoryChangeable(true)
+      } else {
+        setIsCategoryChangeable(false)
+      }
+    }
+  }, [region])
 
   useEffect(() => {
     if (region.type === "line") {
@@ -328,28 +373,51 @@ export const RegionLabel = ({
     } else {
       // do device
       return (
-        <CreatableSelect
-          placeholder="Device"
-          onChange={(o, actionMeta) => {
-            if (actionMeta.action === "create-option") {
-              onRegionClassAdded(o.value)
-            }
-            return onChange({
-              ...(region: any),
-              cls: o.value,
-            })
-          }}
-          value={region.cls ? { label: region.cls, value: region.cls } : null}
-          options={asMutable(
-            allowedClasses
-              .filter((x) => !all_symbols.includes(x))
-              .concat(device_symbols)
-              .map((c) => ({ value: c, label: c }))
-          )}
-        />
+        <>
+          <CreatableSelect
+            placeholder="Device"
+            onChange={(o, actionMeta) => {
+              if (actionMeta.action === "create-option") {
+                onRegionClassAdded(o.value)
+              }
+              return onChange({
+                ...(region: any),
+                cls: o.value,
+              })
+            }}
+            value={region.cls ? { label: region.cls, value: region.cls } : null}
+            options={asMutable(
+              allowedClasses
+                .filter((x) => !all_symbols.includes(x))
+                .concat(device_symbols)
+                .map((c) => ({ value: c, label: c }))
+            )}
+          />
+        </>
       )
     }
   }
+
+  const [regionDevice, setRegionDevice] = useState({
+    symbol_name: region.cls,
+    category: region.category,
+  })
+
+  const systemOptions = useMemo(() => {
+    const systems = [...new Set(deviceList.map((item) => item.category))]
+    return asMutable(systems.map((c) => ({ value: c, label: c })))
+  }, [deviceList])
+
+  const deviceOptions = useMemo(() => {
+    return asMutable(
+      allowedClasses
+        .filter((x) => !all_symbols.includes(x))
+        .concat(device_symbols)
+        .map((c) => ({ value: c, label: c }))
+    )
+  }, [device_symbols, allowedClasses, all_symbols])
+
+  console.log("RegionLabel", region)
 
   return (
     <>
@@ -538,7 +606,7 @@ export const RegionLabel = ({
                               (region && region.breakout)
                             new_region["category"] =
                               region?.category ||
-                              DeviceList.find(
+                              deviceList.find(
                                 (x) => x.symbol_name === region.cls
                               )?.category ||
                               "NOT CLASSIFIED"
@@ -600,11 +668,98 @@ export const RegionLabel = ({
                 </IconButton>
               </div>
             </div>
-            {(allowedClasses || []).length > 0 && (
-              <div style={{ marginTop: 6 }}>
-                {conditionalRegionTextField(region, region.type)}
-              </div>
-            )}
+            {/*  TODO: This is where the new region selector is */}
+            {(region.type === "box" || region.type === "point") &&
+              (deviceOptions || []).length > 0 && (
+                <div
+                  sx={{
+                    paddingTop: 8,
+                    paddingBottom: 8,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    gutterBottom
+                    style={{
+                      fontWeight: "bold",
+                      fontSize: "12px",
+                      wordBreak: "break-word",
+                    }}
+                  >
+                    Device:
+                  </Typography>
+                  <CreatableSelect
+                    placeholder="Device"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault()
+                        e.stopPropagation()
+                      }
+                    }}
+                    onChange={(o, actionMeta) => {
+                      let isActionCreate = false
+                      if (actionMeta.action === "create-option") {
+                        isActionCreate = true
+                      }
+                      onNewDeviceAdded(isActionCreate, o.value)
+                      return onChangeDevice({
+                        ...region,
+                        cls: o.value,
+                      })
+                    }}
+                    value={
+                      regionDevice.symbol_name
+                        ? {
+                            label: regionDevice.symbol_name,
+                            value: regionDevice.symbol_name,
+                          }
+                        : null
+                    }
+                    options={deviceOptions}
+                  />
+                  <div style={{ marginTop: 8 }}>
+                    <Typography
+                      variant="body2"
+                      gutterBottom
+                      style={{
+                        paddingTop: 8,
+                        fontWeight: "bold",
+                        fontSize: "12px",
+                        wordBreak: "break-word",
+                      }}
+                    >
+                      Select System:
+                    </Typography>
+                    <Select
+                      placeholder="System"
+                      onChange={(e) => {
+                        onSelectCategory(e)
+                        return onChangeDevice({
+                          ...region,
+                          category: e.value,
+                        })
+                      }}
+                      isDisabled={!isCategoryChangeable}
+                      options={systemOptions}
+                      value={
+                        regionDevice.category
+                          ? {
+                              label: regionDevice.category,
+                              value: regionDevice.category,
+                            }
+                          : null
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+            {region.type !== "box" &&
+              region.type !== "point" &&
+              (allowedClasses || []).length > 0 && (
+                <div style={{ marginTop: 6 }}>
+                  {conditionalRegionTextField(region, region.type)}
+                </div>
+              )}
             {(allowedTags || []).length > 0 && (
               <div style={{ marginTop: 4 }}>
                 <Select
@@ -731,6 +886,7 @@ export const RegionLabel = ({
 export default memo(
   RegionLabel,
   (prevProps, nextProps) =>
+    prevProps.deviceList === nextProps.deviceList &&
     prevProps.editing === nextProps.editing &&
     prevProps.region === nextProps.region &&
     prevProps.selectedBreakoutIdAutoAdd === nextProps.selectedBreakoutIdAutoAdd

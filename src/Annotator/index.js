@@ -1,30 +1,22 @@
 // @flow
 
-import type {
-  Action,
-  Image,
-  MainLayoutState,
-  Mode,
-  ToolEnum,
-} from "../MainLayout/types"
-import React, { useEffect, useMemo, useReducer } from "react"
-import makeImmutable, { without, setIn, getIn } from "seamless-immutable"
+import React, { useEffect, useReducer } from "react"
+import makeImmutable, { without } from "seamless-immutable"
+import type { Action, Image } from "../MainLayout/types"
 
+import type { Node } from "react"
+import { HotKeys } from "react-hotkeys"
+import useEventCallback from "use-event-callback"
 import type { KeypointsDefinition } from "../ImageCanvas/region-tools"
 import MainLayout from "../MainLayout"
-import type { Node } from "react"
 import SettingsProvider from "../SettingsProvider"
+import { defaultKeyMap } from "../ShortcutsManager"
+import getFromLocalStorage from "../utils/get-from-local-storage"
 import combineReducers from "./reducers/combine-reducers.js"
 import generalReducer from "./reducers/general-reducer.js"
-import getFromLocalStorage from "../utils/get-from-local-storage"
 import historyHandler from "./reducers/history-handler.js"
 import imageReducer from "./reducers/image-reducer.js"
-import useEventCallback from "use-event-callback"
 import videoReducer from "./reducers/video-reducer.js"
-import { HotKeys } from "react-hotkeys"
-import { defaultKeyMap } from "../ShortcutsManager"
-import getActiveImage from "../Annotator/reducers/get-active-image"
-import DeviceList from "../RegionLabel/DeviceList.js"
 
 const getRandomId = () => Math.random().toString().split(".")[1]
 
@@ -85,6 +77,8 @@ export const Annotator = ({
   regionTagList = [],
   regionClsList = [],
   imageTagList = [],
+  deviceList = [],
+  onAddDeviceToDeviceList,
   imageClsList = [],
   keyframes = {},
   taskDescription = "",
@@ -132,7 +126,7 @@ export const Annotator = ({
   const breakouts = Array.from(uniqueBreakouts)
 
   const filters = {
-    categories: [...new Set(DeviceList.map((item) => item.category))],
+    categories: [...new Set(deviceList.map((item) => item.category))],
     breakoutNames: new Set(),
   }
 
@@ -158,6 +152,8 @@ export const Annotator = ({
       labelImages: imageClsList.length > 0 || imageTagList.length > 0,
       regionClsList,
       regionTagList,
+      deviceList,
+      onAddDeviceToDeviceList,
       imageClsList,
       imageTagList,
       currentVideoTime: videoTime,
@@ -174,7 +170,7 @@ export const Annotator = ({
       filters: filters,
       excludedCategories: [],
       selectedBreakoutToggle: null,
-      selectedDeviceToggle: 'ALL',
+      selectedDeviceToggle: "ALL",
       ...(annotationType === "image"
         ? {
             selectedImage,

@@ -146,6 +146,7 @@ export const MainLayout = ({
       allowedArea={state.allowedArea}
       modifyingAllowedArea={state.selectedTool === "modify-allowed-area"}
       regionClsList={state.regionClsList}
+      deviceList={state.deviceList}
       regionTagList={state.regionTagList}
       breakouts={state.breakouts}
       selectedBreakoutIdAutoAdd={state.selectedBreakoutIdAutoAdd}
@@ -440,6 +441,7 @@ export const MainLayout = ({
               //   />
               // ),
               <ToggleSidebarBox
+                deviceList={state.deviceList}
                 regions={activeImage ? activeImage.regions : emptyArr}
                 excludedCategories={state.excludedCategories}
                 onRegionToggle={(event) => {

@@ -14,6 +14,7 @@ const copyWithout = (obj, ...args) => {
 }
 
 export const RegionTags = ({
+  deviceList,
   regions,
   projectRegionBox,
   mouseEvents,
@@ -119,6 +120,7 @@ export const RegionTags = ({
               : {})}
           >
             <RegionLabel
+              deviceList={deviceList}
               allowedClasses={regionClsList}
               allowedTags={regionTagList}
               onOpen={onBeginRegionEdit}

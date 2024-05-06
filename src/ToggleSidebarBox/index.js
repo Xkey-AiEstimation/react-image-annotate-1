@@ -3,29 +3,24 @@ import {
   FormControlLabel,
   FormGroup,
   IconButton,
-  Modal,
   Switch,
-  Tooltip,
   createTheme,
 } from "@material-ui/core"
 import Grid from "@material-ui/core/Grid"
 import { makeStyles } from "@material-ui/core/styles"
+import DashboardIcon from "@material-ui/icons/Dashboard"
 import TrashIcon from "@material-ui/icons/Delete"
 import LockIcon from "@material-ui/icons/Lock"
 import PieChartIcon from "@material-ui/icons/PieChart"
-import DashboardIcon from "@material-ui/icons/Dashboard"
 import ReorderIcon from "@material-ui/icons/SwapVert"
 import ToggleOnIcon from "@material-ui/icons/ToggleOn"
 import isEqual from "lodash/isEqual"
 import React, { memo, useCallback, useMemo, useState } from "react"
 import { ColorMapping } from "../RegionLabel/ColorMapping"
-import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 import styles from "./styles"
 
 const useStyles = makeStyles(styles)
-
-const DEVICE_LIST = [...new Set(DeviceList.map((item) => item.category))]
 
 const theme = createTheme({
   overrides: {
@@ -96,13 +91,14 @@ const RowLayout = ({ visible, onClick }) => {
 }
 
 const RowHeader = ({
+  deviceList,
   onRegionToggle,
   regions,
   onRegionBreakout,
   excludedCategories,
 }) => {
   const [checkedList, setCheckedList] = useState(
-    DEVICE_LIST.map((item) => {
+    deviceList.map((item) => {
       if (regions !== undefined && regions.length > 0) {
         let matchedObject = regions.find((region) => {
           return region.category === item
@@ -122,7 +118,7 @@ const RowHeader = ({
 
   useMemo(() => {
     setCheckedList(
-      DEVICE_LIST.map((item) => {
+      deviceList.map((item) => {
         if (regions !== undefined && regions.length > 0) {
           let matchedObject = regions.find((region) => {
             return region.category === item
@@ -219,7 +215,7 @@ const RowHeader = ({
       visible={
         <div>
           <FormGroup>
-            {DEVICE_LIST.map((device, index) => {
+            {deviceList.map((device, index) => {
               return (
                 <div key={index}>
                   <FormControlLabel
@@ -333,8 +329,11 @@ export const ToggleSidebarBox = ({
   regions,
   onRegionToggle,
   onRegionBreakout,
+  deviceList,
 }) => {
   const classes = useStyles()
+  const DEVICE_LIST = [...new Set(deviceList.map((item) => item.category))]
+
   return (
     <SidebarBoxContainer
       title="Toggles"
@@ -343,6 +342,7 @@ export const ToggleSidebarBox = ({
     >
       <div className={classes.container}>
         <RowHeader
+          deviceList={DEVICE_LIST}
           onRegionToggle={onRegionToggle}
           regions={regions}
           onRegionBreakout={onRegionBreakout}

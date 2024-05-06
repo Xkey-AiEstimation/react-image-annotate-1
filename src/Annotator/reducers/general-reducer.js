@@ -4,7 +4,6 @@ import isEqual from "lodash/isEqual"
 import { getIn, merge, setIn } from "seamless-immutable"
 import { moveRegion } from "../../ImageCanvas/region-tools.js"
 import type { Action, MainLayoutState } from "../../MainLayout/types"
-import DeviceList from "../../RegionLabel/DeviceList"
 import getLandmarksWithTransform from "../../utils/get-landmarks-with-transform"
 import setInLocalStorage from "../../utils/set-in-local-storage"
 import convertExpandingLineToPolygon from "./convert-expanding-line-to-polygon"
@@ -64,14 +63,6 @@ const color_mapping = {
   WARNING: "#FFA500", // orange
 }
 
-const getColor = (device_name) => {
-  let device_type = DeviceList.find((o) => o.symbol_name === device_name)
-  if (device_type) {
-    return color_mapping[device_type["category"]]
-  } else {
-    return "#C4A484"
-  }
-}
 export default (state: MainLayoutState, action: Action) => {
   if (
     state.allowedArea &&
@@ -165,14 +156,33 @@ export default (state: MainLayoutState, action: Action) => {
   }
 
   const getCategoryBySymbolName = (symbolName) => {
-    const filteredDevice = DeviceList.find(
+    const filteredDevice = state.deviceList.find(
       (device) => device.symbol_name === symbolName
     )
     if (filteredDevice) {
       return filteredDevice.category
     } else {
-      return undefined
+      return "NOT CLASSIFIED"
     }
+  }
+
+  const getColor = (device_name) => {
+    let device_type = state.deviceList.find(
+      (o) => o.symbol_name === device_name
+    )
+    if (device_type) {
+      return color_mapping[device_type["category"]]
+    } else {
+      return "#C4A484"
+    }
+  }
+
+  const getColorByCategory = (category) => {
+    if (color_mapping[category] === undefined) {
+      return "#C4A484"
+    }
+
+    return color_mapping[category]
   }
 
   const setNewImage = (img: string | Object, index: number) => {
@@ -183,6 +193,7 @@ export default (state: MainLayoutState, action: Action) => {
       frameTime
     )
   }
+
 
   switch (action.type) {
     case "@@INIT": {
@@ -735,6 +746,7 @@ export default (state: MainLayoutState, action: Action) => {
         action.region.visible = true
         action.region.category = getCategoryBySymbolName(action.region.cls)
         state = saveToHistory(state, "Change Region Classification")
+
         const clsIndex = state.regionClsList.indexOf(action.region.cls)
         if (clsIndex !== -1) {
           state = setIn(state, ["selectedCls"], action.region.cls)
@@ -1222,7 +1234,6 @@ export default (state: MainLayoutState, action: Action) => {
             break
         }
       }
-
       let newRegion
       let defaultRegionCls = state.selectedCls,
         defaultRegionColor = "#C4A484",
