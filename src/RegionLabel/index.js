@@ -164,11 +164,13 @@ export const RegionLabel = ({
     if (region.type === "box" || region.type === "point") {
       // look at DeviceList, if it is in the list, then set the isCategoryChangeable to false
       // else set it to true
+       console.log('region is: ', region)
       setRegionDevice({
         symbol_name: region.cls,
         category: region.category,
       })
       const device = DeviceList.find((x) => x.symbol_name === region.cls)
+      console.log('device is found: ', device)
       if (device) {
         setIsCategoryChangeable(true)
       } else {
@@ -416,9 +418,7 @@ export const RegionLabel = ({
         .map((c) => ({ value: c, label: c }))
     )
   }, [device_symbols, allowedClasses, all_symbols])
-
-  console.log("RegionLabel", region)
-
+  
   return (
     <>
       <Paper

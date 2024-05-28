@@ -420,7 +420,11 @@ export const MainLayout = ({
               )}
             rightSidebarItems={[
               debugModeOn && (
-                <DebugBox state={debugModeOn} lastAction={state.lastAction} />
+                <DebugBox
+                  key="debug"
+                  state={debugModeOn}
+                  lastAction={state.lastAction}
+                />
               ),
               // state.taskDescription && (
               //   <TaskDescription description={state.taskDescription} />
@@ -482,7 +486,10 @@ export const MainLayout = ({
                   "TOGGLE_DEVICE_VISIBILITY",
                   "deviceName"
                 )}
-                onDeleteDevices={action("DELETE_DEVICES_WITH_DEVICENAME", "deviceName")}
+                onDeleteDevices={action(
+                  "DELETE_DEVICES_WITH_DEVICENAME",
+                  "deviceName"
+                )}
                 onDeleteAll={action("DELETE_ALL_DEVICES")}
                 selectedDeviceToggle={state.selectedDeviceToggle}
               />,

@@ -220,11 +220,6 @@ export const RegionShapes = ({
   keypointDefinitions,
   fullSegmentationMode,
 }) => {
-  console.log("DBG: RegionShapes")
-  console.log(regions)
-  console.log(keypointDefinitions)
-  console.log(fullSegmentationMode)
-  console.log(mat)
   const iw = imagePosition.bottomRight.x - imagePosition.topLeft.x
   const ih = imagePosition.bottomRight.y - imagePosition.topLeft.y
   if (isNaN(iw) || isNaN(ih)) return null
