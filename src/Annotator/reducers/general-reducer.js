@@ -170,11 +170,11 @@ export default (state: MainLayoutState, action: Action) => {
   }
 
   const getCategoryBySymbolName = (symbolName) => {
-    const filteredDevice = DeviceList.find(
+    let newDevice = getIn(state, ["deviceList"]).find(
       (device) => device.symbol_name === symbolName
     )
-    if (filteredDevice) {
-      return filteredDevice.category
+    if (newDevice) {
+      return newDevice.category
     } else {
       return undefined
     }
@@ -734,21 +734,39 @@ export default (state: MainLayoutState, action: Action) => {
     // ANCHOR
     case "CHANGE_NEW_REGION": {
       const { region } = action
-      console.log("CHANGE_NEW_REGION", region)
       const regionIndex = getRegionIndex(action.region)
-      const oldRegion = activeImage.regions[regionIndex]
       if (regionIndex === null) return state
-      action.region.color = getColorByCategory(action.region.category)
-      action.region.visible = true
+
+      region.color = getColorByCategory(region.category)
+      region.visible = true
       state = saveToHistory(state, "Add New Region")
-      const clsIndex = state.regionClsList.indexOf(action.region.cls)
+      const clsIndex = state.regionClsList.indexOf(region.cls)
       if (clsIndex !== -1) {
-        state = setIn(state, ["selectedCls"], action.region.cls)
+        state = setIn(state, ["selectedCls"], region.cls)
       }
+      const deviceList = getIn(state, ["deviceList"])
+      const newDevicesToSave = getIn(state, ["newDevicesToSave"])
+
+      const deviceIndex = deviceList.indexOf(region.cls)
+      if (deviceIndex === -1) {
+        // concat the new device to the device list with name and category
+        const newDevice = {
+          symbol_name: region.cls,
+          category: region.category,
+        }
+        state = setIn(state, ["deviceList"], [...deviceList, newDevice])
+
+        state = setIn(
+          state,
+          ["newDevicesToSave"],
+          [...newDevicesToSave, newDevice]
+        )
+      }
+
       return setIn(
         state,
         [...pathToActiveImage, "regions", regionIndex],
-        action.region
+        region
       )
     }
     case "CHANGE_REGION": {
@@ -756,9 +774,9 @@ export default (state: MainLayoutState, action: Action) => {
       if (regionIndex === null) return state
       const oldRegion = activeImage.regions[regionIndex]
       if (oldRegion.cls !== action.region.cls) {
-        action.region.color = getColor(action.region.cls)
         action.region.visible = true
         action.region.category = getCategoryBySymbolName(action.region.cls)
+        action.region.color = getColorByCategory(action.region.category)
         state = saveToHistory(state, "Change Region Classification")
         const clsIndex = state.regionClsList.indexOf(action.region.cls)
         if (clsIndex !== -1) {

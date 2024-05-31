@@ -90,6 +90,7 @@ export const RegionLabel = ({
   breakoutList,
   selectedBreakoutIdAutoAdd,
   dispatch,
+  devices,
 }: Props) => {
   const classes = useStyles()
   const [open, setOpen] = React.useState(false)
@@ -189,31 +190,34 @@ export const RegionLabel = ({
     }
   }
 
-  const [deviceOptions, setDeviceOptions] = useState([])
+  const [deviceOptions, setDeviceOptions] = useState(undefined)
   const [isNewDevice, setIsNewDevice] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState({
     value: "NOT CLASSIFIED",
     label: "NOT CLASSIFIED",
   })
   const [selectedDevice, setSelectedDevice] = useState(null)
-  const [categories, setCategories] = useState(null)
+  const [categories, setCategories] = useState([])
 
   useEffect(() => {
-    const deviceOptions = DeviceList.map((device) => ({
-      value: device.symbol_name,
+    const mutableDeviceList = [...devices]
+
+    const deviceOptions = mutableDeviceList.map((device) => ({
       label: device.symbol_name,
+      value: device.symbol_name,
     }))
+
 
     const categoryOptions = [
       ...new Set(DeviceList.map((device) => device.category)),
     ].map((category) => ({
-      value: category,
       label: category,
+      value: category,
     }))
 
     setCategories(categoryOptions)
     setDeviceOptions(deviceOptions)
-  }, [])
+  }, [devices])
 
   const onChangeNewDevice = (newDevice) => {
     return onChange({
@@ -395,10 +399,6 @@ export const RegionLabel = ({
                 isActionCreate = true
               }
               onDeviceAdd(isActionCreate, o.value)
-              // return onChangeDevice({
-              //   ...region,
-              //   cls: o.value,
-              // })
             }}
             value={region.cls ? { label: region.cls, value: region.cls } : null}
             options={deviceOptions}

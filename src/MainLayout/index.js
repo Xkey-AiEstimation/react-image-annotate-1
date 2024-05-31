@@ -164,6 +164,7 @@ export const MainLayout = ({
       dragWithPrimary={state.selectedTool === "pan"}
       zoomWithPrimary={state.selectedTool === "zoom"}
       showPointDistances={state.showPointDistances}
+      deviceList={state.deviceList}
       videoTime={
         state.annotationType === "image"
           ? state.selectedImageFrameTime
@@ -480,7 +481,10 @@ export const MainLayout = ({
                   "TOGGLE_DEVICE_VISIBILITY",
                   "deviceName"
                 )}
-                onDeleteDevices={action("DELETE_DEVICES_WITH_DEVICENAME", "deviceName")}
+                onDeleteDevices={action(
+                  "DELETE_DEVICES_WITH_DEVICENAME",
+                  "deviceName"
+                )}
                 onDeleteAll={action("DELETE_ALL_DEVICES")}
                 selectedDeviceToggle={state.selectedDeviceToggle}
               />,

@@ -84,6 +84,7 @@ export const Annotator = ({
   selectedTool = "select",
   regionTagList = [],
   regionClsList = [],
+  deviceList = [],
   imageTagList = [],
   imageClsList = [],
   keyframes = {},
@@ -170,11 +171,13 @@ export const Annotator = ({
       toggleList: [],
       selectedBreakoutIdAutoAdd: null,
       breakouts: breakouts,
+      deviceList: deviceList || [],
+      newDevicesToSave: [],
       counts: [],
       filters: filters,
       excludedCategories: [],
       selectedBreakoutToggle: null,
-      selectedDeviceToggle: 'ALL',
+      selectedDeviceToggle: "ALL",
       ...(annotationType === "image"
         ? {
             selectedImage,

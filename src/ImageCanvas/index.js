@@ -113,6 +113,7 @@ export const ImageCanvas = ({
   pointDistancePrecision = 0,
   regionClsList,
   regionTagList,
+  deviceList,
   showCrosshairs,
   showHighlightBox = true,
   showPointDistances,
@@ -466,6 +467,7 @@ export const ImageCanvas = ({
                 region,
               })
             }}
+            devices={deviceList}
             onChange={onChangeRegion}
             onDelete={onDeleteRegion}
             onMatchTemplate={onMatchRegionTemplate}
