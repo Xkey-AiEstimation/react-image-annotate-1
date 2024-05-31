@@ -72,6 +72,11 @@ const getColor = (device_name) => {
     return "#C4A484"
   }
 }
+
+const getColorByCategory = (category) => {
+  return color_mapping[category] || "#C4A484"
+}
+
 export default (state: MainLayoutState, action: Action) => {
   if (
     state.allowedArea &&
@@ -725,6 +730,26 @@ export default (state: MainLayoutState, action: Action) => {
       newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
+    }
+    // ANCHOR
+    case "CHANGE_NEW_REGION": {
+      const { region } = action
+      console.log("CHANGE_NEW_REGION", region)
+      const regionIndex = getRegionIndex(action.region)
+      const oldRegion = activeImage.regions[regionIndex]
+      if (regionIndex === null) return state
+      action.region.color = getColorByCategory(action.region.category)
+      action.region.visible = true
+      state = saveToHistory(state, "Add New Region")
+      const clsIndex = state.regionClsList.indexOf(action.region.cls)
+      if (clsIndex !== -1) {
+        state = setIn(state, ["selectedCls"], action.region.cls)
+      }
+      return setIn(
+        state,
+        [...pathToActiveImage, "regions", regionIndex],
+        action.region
+      )
     }
     case "CHANGE_REGION": {
       const regionIndex = getRegionIndex(action.region)

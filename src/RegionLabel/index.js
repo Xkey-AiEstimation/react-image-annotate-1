@@ -1,12 +1,5 @@
 // @flow
-
-import {
-  Grid,
-  Input,
-  InputAdornment,
-  TextField,
-  Typography,
-} from "@material-ui/core"
+import { Grid, TextField, Typography } from "@material-ui/core"
 import Button from "@material-ui/core/Button"
 import IconButton from "@material-ui/core/IconButton"
 import Paper from "@material-ui/core/Paper"
@@ -87,6 +80,7 @@ export const RegionLabel = ({
   regionTemplateMatchingDisabled,
   onDelete,
   onChange,
+  onChangeNewRegion,
   onClose,
   onOpen,
   onMatchTemplate,
@@ -193,6 +187,70 @@ export const RegionLabel = ({
     } else {
       setScaleInputVal(Number(e.value))
     }
+  }
+
+  const [deviceOptions, setDeviceOptions] = useState([])
+  const [isNewDevice, setIsNewDevice] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState({
+    value: "NOT CLASSIFIED",
+    label: "NOT CLASSIFIED",
+  })
+  const [selectedDevice, setSelectedDevice] = useState(null)
+  const [categories, setCategories] = useState(null)
+
+  useEffect(() => {
+    const deviceOptions = DeviceList.map((device) => ({
+      value: device.symbol_name,
+      label: device.symbol_name,
+    }))
+
+    const categoryOptions = [
+      ...new Set(DeviceList.map((device) => device.category)),
+    ].map((category) => ({
+      value: category,
+      label: category,
+    }))
+
+    setCategories(categoryOptions)
+    setDeviceOptions(deviceOptions)
+  }, [])
+
+  const onChangeNewDevice = (newDevice) => {
+    return onChange({
+      ...region,
+      cls: newDevice.symbol_name,
+      category: newDevice.category,
+    })
+  }
+
+  const onDeviceAdd = (isActionCreate, value) => {
+    if (isActionCreate) {
+      setIsNewDevice(true)
+      const newDevice = {
+        symbol_name: value,
+        category: "NOT CLASSIFIED",
+      }
+      return onChangeNewDevice(newDevice)
+    } else {
+      setIsNewDevice(false)
+      return onChange({
+        ...region,
+        cls: value,
+      })
+    }
+  }
+
+  const onSelectCategory = (e) => {
+    setSelectedCategory(e)
+  }
+
+  const onSaveNewDevice = () => {
+    setIsNewDevice(false)
+    return onChangeNewRegion({
+      ...region,
+      symbol_name: selectedDevice,
+      category: selectedCategory.value,
+    })
   }
 
   const conditionalRegionTextField = (region, regionType) => {
@@ -328,25 +386,46 @@ export const RegionLabel = ({
     } else {
       // do device
       return (
-        <CreatableSelect
-          placeholder="Device"
-          onChange={(o, actionMeta) => {
-            if (actionMeta.action === "create-option") {
-              onRegionClassAdded(o.value)
-            }
-            return onChange({
-              ...(region: any),
-              cls: o.value,
-            })
-          }}
-          value={region.cls ? { label: region.cls, value: region.cls } : null}
-          options={asMutable(
-            allowedClasses
-              .filter((x) => !all_symbols.includes(x))
-              .concat(device_symbols)
-              .map((c) => ({ value: c, label: c }))
+        <>
+          <CreatableSelect
+            placeholder="Device"
+            onChange={(o, actionMeta) => {
+              let isActionCreate = false
+              if (actionMeta.action === "create-option") {
+                isActionCreate = true
+              }
+              onDeviceAdd(isActionCreate, o.value)
+              // return onChangeDevice({
+              //   ...region,
+              //   cls: o.value,
+              // })
+            }}
+            value={region.cls ? { label: region.cls, value: region.cls } : null}
+            options={deviceOptions}
+          />
+          {isNewDevice && (
+            <>
+              <Select
+                placeholder="Select System"
+                onChange={(e) => {
+                  onSelectCategory(e)
+                }}
+                value={selectedCategory}
+                options={categories}
+              />
+              <Button
+                onClick={() => onSaveNewDevice()}
+                tabIndex={-1}
+                style={{ fontSize: "8px" }}
+                size="small"
+                variant="outlined"
+                color="secondary"
+              >
+                Save New device
+              </Button>
+            </>
           )}
-        />
+        </>
       )
     }
   }

@@ -460,6 +460,12 @@ export const ImageCanvas = ({
             // allowedClasses is overriden in RegionLabel class to filter conduits, devices, etc.
             allowedClasses={regionClsList}
             allowedTags={regionTagList}
+            onChangeNewRegion={(region) => {
+              dispatch({
+                type: "CHANGE_NEW_REGION",
+                region,
+              })
+            }}
             onChange={onChangeRegion}
             onDelete={onDeleteRegion}
             onMatchTemplate={onMatchRegionTemplate}
