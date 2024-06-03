@@ -1,12 +1,5 @@
 // @flow
-
-import {
-  Grid,
-  Input,
-  InputAdornment,
-  TextField,
-  Typography,
-} from "@material-ui/core"
+import { Grid, TextField, Typography } from "@material-ui/core"
 import Button from "@material-ui/core/Button"
 import IconButton from "@material-ui/core/IconButton"
 import Paper from "@material-ui/core/Paper"
@@ -87,6 +80,7 @@ export const RegionLabel = ({
   regionTemplateMatchingDisabled,
   onDelete,
   onChange,
+  onChangeNewRegion,
   onClose,
   onOpen,
   onMatchTemplate,
@@ -96,6 +90,8 @@ export const RegionLabel = ({
   breakoutList,
   selectedBreakoutIdAutoAdd,
   dispatch,
+  devices,
+  disableAddingClasses = false,
 }: Props) => {
   const classes = useStyles()
   const [open, setOpen] = React.useState(false)
@@ -193,6 +189,94 @@ export const RegionLabel = ({
     } else {
       setScaleInputVal(Number(e.value))
     }
+  }
+
+  const [deviceOptions, setDeviceOptions] = useState(undefined)
+  const [isNewDevice, setIsNewDevice] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState({
+    value: "NOT CLASSIFIED",
+    label: "NOT CLASSIFIED",
+  })
+  const [selectedDevice, setSelectedDevice] = useState(null)
+  const [categories, setCategories] = useState([])
+
+  useEffect(() => {
+    const mutableDeviceList = [...devices]
+
+    const deviceOptions = mutableDeviceList.map((device) => ({
+      label: device.symbol_name,
+      value: device.id,
+      id: device.id,
+    }))
+
+    const categoryOptions = [
+      ...new Set(DeviceList.map((device) => device.category)),
+    ].map((category) => ({
+      label: category,
+      value: category,
+    }))
+
+    const device = mutableDeviceList.find(
+      (device) => device.symbol_name === region.cls
+    )
+    if (device)
+      setSelectedDevice({
+        label: device.symbol_name,
+        value: device.id || null,
+      })
+    else {
+      setSelectedDevice({
+        label: region.cls,
+        value: region.cls,
+      })
+    }
+
+    setCategories(categoryOptions)
+    setDeviceOptions(deviceOptions)
+  }, [devices])
+
+  const onChangeNewDevice = (newDevice) => {
+    return onChange({
+      ...region,
+      cls: newDevice.symbol_name,
+      category: newDevice.category,
+    })
+  }
+
+  const onDeviceAdd = (isActionCreate, label, value) => {
+    if (isActionCreate) {
+      setIsNewDevice(true)
+      const newDevice = {
+        symbol_name: label,
+        category: "NOT CLASSIFIED",
+        id: getRandomId(),
+      }
+      return onChangeNewDevice(newDevice)
+    } else {
+      setIsNewDevice(false)
+      setSelectedDevice({
+        label: label,
+        value: value,
+      })
+
+      return onChange({
+        ...region,
+        cls: label,
+      })
+    }
+  }
+
+  const onSelectCategory = (e) => {
+    setSelectedCategory(e)
+  }
+
+  const onSaveNewDevice = () => {
+    setIsNewDevice(false)
+    return onChangeNewRegion({
+      ...region,
+      symbol_name: selectedDevice,
+      category: selectedCategory.value,
+    })
   }
 
   const conditionalRegionTextField = (region, regionType) => {
@@ -328,25 +412,45 @@ export const RegionLabel = ({
     } else {
       // do device
       return (
-        <CreatableSelect
-          placeholder="Device"
-          onChange={(o, actionMeta) => {
-            if (actionMeta.action === "create-option") {
-              onRegionClassAdded(o.value)
-            }
-            return onChange({
-              ...(region: any),
-              cls: o.value,
-            })
-          }}
-          value={region.cls ? { label: region.cls, value: region.cls } : null}
-          options={asMutable(
-            allowedClasses
-              .filter((x) => !all_symbols.includes(x))
-              .concat(device_symbols)
-              .map((c) => ({ value: c, label: c }))
+        <>
+          <CreatableSelect
+            isValidNewOption={(inputValue, selectValue, selectOptions) => {
+              return disableAddingClasses ? false : true
+            }}
+            placeholder="Device"
+            onChange={(o, actionMeta) => {
+              let isActionCreate = false
+              if (actionMeta.action === "create-option") {
+                isActionCreate = true
+              }
+              onDeviceAdd(isActionCreate, o.label, o.value)
+            }}
+            value={selectedDevice}
+            options={deviceOptions}
+          />
+          {isNewDevice && (
+            <>
+              <Select
+                placeholder="Select System"
+                onChange={(e) => {
+                  onSelectCategory(e)
+                }}
+                value={selectedCategory}
+                options={categories}
+              />
+              <Button
+                onClick={() => onSaveNewDevice()}
+                tabIndex={-1}
+                style={{ fontSize: "8px" }}
+                size="small"
+                variant="outlined"
+                color="secondary"
+              >
+                Save New device
+              </Button>
+            </>
           )}
-        />
+        </>
       )
     }
   }

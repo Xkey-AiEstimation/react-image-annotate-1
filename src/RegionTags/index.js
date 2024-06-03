@@ -40,6 +40,7 @@ export const RegionTags = ({
   editing,
   region,
   selectedBreakoutIdAutoAdd,
+  deviceList,
 }) => {
   const RegionLabel = DefaultRegionLabel
   return regions
@@ -138,6 +139,16 @@ export const RegionTags = ({
               dispatch={dispatch}
               breakoutList={breakoutList}
               selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
+              // allowedClasses is overriden in RegionLabel class to filter conduits, devices, etc.
+
+              onChangeNewRegion={(region) => {
+                dispatch({
+                  type: "CHANGE_NEW_REGION",
+                  region,
+                })
+              }}
+              devices={deviceList}
+              disableAddingClasses
             />
           </div>
         </div>
