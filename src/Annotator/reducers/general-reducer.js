@@ -754,7 +754,7 @@ export default (state: MainLayoutState, action: Action) => {
           symbol_name: region.cls,
           category: region.category,
         }
-        state = setIn(state, ["deviceList"], [...deviceList, newDevice])
+        state = setIn(state, ["deviceList"], [newDevice, ...deviceList])
 
         state = setIn(
           state,

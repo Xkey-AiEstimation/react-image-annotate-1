@@ -204,9 +204,9 @@ export const RegionLabel = ({
 
     const deviceOptions = mutableDeviceList.map((device) => ({
       label: device.symbol_name,
-      value: device.symbol_name,
+      value: device.id,
+      id: device.id,
     }))
-
 
     const categoryOptions = [
       ...new Set(DeviceList.map((device) => device.category)),
@@ -214,6 +214,21 @@ export const RegionLabel = ({
       label: category,
       value: category,
     }))
+
+    const device = mutableDeviceList.find(
+      (device) => device.symbol_name === region.cls
+    )
+    if (device)
+      setSelectedDevice({
+        label: device.symbol_name,
+        value: device.id || null,
+      })
+    else {
+      setSelectedDevice({
+        label: region.cls,
+        value: region.cls,
+      })
+    }
 
     setCategories(categoryOptions)
     setDeviceOptions(deviceOptions)
@@ -227,19 +242,25 @@ export const RegionLabel = ({
     })
   }
 
-  const onDeviceAdd = (isActionCreate, value) => {
+  const onDeviceAdd = (isActionCreate, label, value) => {
     if (isActionCreate) {
       setIsNewDevice(true)
       const newDevice = {
-        symbol_name: value,
+        symbol_name: label,
         category: "NOT CLASSIFIED",
+        id: getRandomId(),
       }
       return onChangeNewDevice(newDevice)
     } else {
       setIsNewDevice(false)
+      setSelectedDevice({
+        label: label,
+        value: value,
+      })
+
       return onChange({
         ...region,
-        cls: value,
+        cls: label,
       })
     }
   }
@@ -398,9 +419,9 @@ export const RegionLabel = ({
               if (actionMeta.action === "create-option") {
                 isActionCreate = true
               }
-              onDeviceAdd(isActionCreate, o.value)
+              onDeviceAdd(isActionCreate, o.label, o.value)
             }}
-            value={region.cls ? { label: region.cls, value: region.cls } : null}
+            value={selectedDevice}
             options={deviceOptions}
           />
           {isNewDevice && (

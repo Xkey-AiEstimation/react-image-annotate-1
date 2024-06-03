@@ -131,6 +131,9 @@ export const MainLayout = ({
     }
   }, [])
 
+
+  
+
   const canvas = (
     <ImageCanvas
       {...settings}

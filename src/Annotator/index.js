@@ -171,7 +171,7 @@ export const Annotator = ({
       toggleList: [],
       selectedBreakoutIdAutoAdd: null,
       breakouts: breakouts,
-      deviceList: deviceList || [],
+      deviceList,
       newDevicesToSave: [],
       counts: [],
       filters: filters,
