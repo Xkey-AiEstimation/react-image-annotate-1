@@ -91,6 +91,7 @@ export const RegionLabel = ({
   selectedBreakoutIdAutoAdd,
   dispatch,
   devices,
+  disableAddingClasses = false,
 }: Props) => {
   const classes = useStyles()
   const [open, setOpen] = React.useState(false)
@@ -413,6 +414,9 @@ export const RegionLabel = ({
       return (
         <>
           <CreatableSelect
+            isValidNewOption={(inputValue, selectValue, selectOptions) => {
+              return disableAddingClasses ? false : true
+            }}
             placeholder="Device"
             onChange={(o, actionMeta) => {
               let isActionCreate = false

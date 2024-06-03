@@ -451,6 +451,7 @@ export const ImageCanvas = ({
             region={highlightedRegion}
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
             selectedDeviceToggle={selectedDeviceToggle}
+            deviceList={deviceList}
           />
         </PreventScrollToParents>
       )}
