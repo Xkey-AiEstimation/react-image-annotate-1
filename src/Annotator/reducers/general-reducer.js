@@ -753,6 +753,7 @@ export default (state: MainLayoutState, action: Action) => {
         const newDevice = {
           symbol_name: region.cls,
           category: region.category,
+          user_defined: true,
         }
         state = setIn(state, ["deviceList"], [newDevice, ...deviceList])
 

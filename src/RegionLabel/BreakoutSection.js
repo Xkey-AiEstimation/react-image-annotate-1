@@ -24,8 +24,9 @@ const style = {
 export default function BreakoutSection({
   region,
   dispatch,
-  setOpen,
+  setOpenBreakout,
   breakoutList,
+  closeBreakout,
 }) {
   const [breakoutName, setBreakoutName] = React.useState("")
   const [selectedBreakout, setSelectedBreakout] = React.useState(
@@ -100,10 +101,23 @@ export default function BreakoutSection({
               breakoutName: selectedBreakout.label,
               region: region,
             })
-            setOpen(false)
+            setOpenBreakout(false)
           }}
         >
           Save Breakout
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          style={{
+            fontSize: "10px",
+            marginTop: 16,
+          }}
+          onClick={() => {
+            setOpenBreakout(false)
+          }}
+        >
+          Close
         </Button>
       </div>
     )
@@ -174,10 +188,23 @@ export default function BreakoutSection({
               name: breakoutName,
               region: region,
             })
-            setOpen(false)
+            setOpenBreakout(false)
           }}
         >
           Save Breakout
+        </Button>
+        <Button
+          variant="contained"
+          color="secondary"
+          style={{
+            fontSize: "10px",
+            marginTop: 16,
+          }}
+          onClick={() => {
+            setOpenBreakout(false)
+          }}
+        >
+          Close
         </Button>
       </div>
     )
