@@ -73,7 +73,7 @@ const getColor = (device_name) => {
   }
 }
 
-const getColorByCategory = (category) => {
+export const getColorByCategory = (category) => {
   return color_mapping[category] || "#C4A484"
 }
 

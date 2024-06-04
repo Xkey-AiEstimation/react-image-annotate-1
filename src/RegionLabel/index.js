@@ -19,6 +19,7 @@ import type { Region } from "../ImageCanvas/region-tools.js"
 import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
+import { getColorByCategory } from "../Annotator/reducers/general-reducer.js"
 
 const useStyles = makeStyles(styles)
 
@@ -267,7 +268,15 @@ export const RegionLabel = ({
   }
 
   const onSelectCategory = (e) => {
+    let category = e.value
     setSelectedCategory(e)
+    onChangeNewRegion({
+      ...region,
+      symbol_name: selectedDevice,
+      category: category,
+      // color: getColorByCategory(category),
+    })
+    setIsNewDevice(false)
   }
 
   const onSaveNewDevice = () => {
@@ -276,6 +285,7 @@ export const RegionLabel = ({
       ...region,
       symbol_name: selectedDevice,
       category: selectedCategory.value,
+      color: getColorByCategory(category),
     })
   }
 
@@ -438,16 +448,6 @@ export const RegionLabel = ({
                 value={selectedCategory}
                 options={categories}
               />
-              <Button
-                onClick={() => onSaveNewDevice()}
-                tabIndex={-1}
-                style={{ fontSize: "8px" }}
-                size="small"
-                variant="outlined"
-                color="secondary"
-              >
-                Save New device
-              </Button>
             </>
           )}
         </>
