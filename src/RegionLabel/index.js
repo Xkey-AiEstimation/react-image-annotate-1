@@ -1,5 +1,5 @@
 // @flow
-import { Grid, TextField, Typography } from "@material-ui/core"
+import { Grid, TextField, Tooltip, Typography } from "@material-ui/core"
 import Button from "@material-ui/core/Button"
 import IconButton from "@material-ui/core/IconButton"
 import Paper from "@material-ui/core/Paper"
@@ -9,17 +9,18 @@ import AddIcon from "@material-ui/icons/Add"
 import CheckIcon from "@material-ui/icons/Check"
 import TrashIcon from "@material-ui/icons/Delete"
 import ImageSearchIcon from "@material-ui/icons/ImageSearch"
+import InfoIcon from "@material-ui/icons/Info"
 import LinearScaleIcon from "@material-ui/icons/LinearScale"
 import classnames from "classnames"
 import React, { memo, useEffect, useRef, useState } from "react"
 import Select from "react-select"
 import CreatableSelect from "react-select/creatable"
 import { asMutable } from "seamless-immutable"
+import { getColorByCategory } from "../Annotator/reducers/general-reducer.js"
 import type { Region } from "../ImageCanvas/region-tools.js"
 import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
-import { getColorByCategory } from "../Annotator/reducers/general-reducer.js"
 
 const useStyles = makeStyles(styles)
 
@@ -95,7 +96,7 @@ export const RegionLabel = ({
   disableAddingClasses = false,
 }: Props) => {
   const classes = useStyles()
-  const [open, setOpen] = React.useState(false)
+  const [openBreakout, setOpenBreakout] = React.useState(false)
 
   const commentInputRef = useRef(null)
   const onCommentInputClick = (_) => {
@@ -201,14 +202,43 @@ export const RegionLabel = ({
   const [selectedDevice, setSelectedDevice] = useState(null)
   const [categories, setCategories] = useState([])
 
+  const [canChangeCategory, setCanChangeCategory] = useState(false)
+
+  // cam only change category if the region is user defined
   useEffect(() => {
     const mutableDeviceList = [...devices]
 
-    const deviceOptions = mutableDeviceList.map((device) => ({
+    const userDefinedDevices = mutableDeviceList.filter(
+      (device) => device.user_defined
+    )
+    const nonUserDefinedDevices = mutableDeviceList.filter(
+      (device) => !device.user_defined
+    )
+
+    const userDefinedDeviceOptions = userDefinedDevices.map((device) => ({
       label: device.symbol_name,
       value: device.id,
       id: device.id,
+      user_defined: device.user_defined,
     }))
+
+    const nonUserDefinedDeviceOptions = nonUserDefinedDevices.map((device) => ({
+      label: device.symbol_name,
+      value: device.id,
+      id: device.id,
+      user_defined: device.user_defined,
+    }))
+
+    const deviceOptions = [
+      {
+        label: "User Defined",
+        options: userDefinedDeviceOptions,
+      },
+      {
+        label: "Xkey Standard Devices",
+        options: nonUserDefinedDeviceOptions,
+      },
+    ]
 
     const categoryOptions = [
       ...new Set(DeviceList.map((device) => device.category)),
@@ -220,21 +250,74 @@ export const RegionLabel = ({
     const device = mutableDeviceList.find(
       (device) => device.symbol_name === region.cls
     )
-    if (device)
+    if (device) {
       setSelectedDevice({
         label: device.symbol_name,
         value: device.id || null,
+        id: device.id,
+        user_defined: device.user_defined,
       })
-    else {
+      setSelectedCategory({
+        label: device.category || "NOT CLASSIFIED",
+        value: device.category || "NOT CLASSIFIED",
+      })
+      setCanChangeCategory(device.user_defined)
+    } else {
       setSelectedDevice({
         label: region.cls,
         value: region.cls,
+        id: region.id,
+        user_defined: false,
       })
     }
 
     setCategories(categoryOptions)
     setDeviceOptions(deviceOptions)
   }, [devices])
+  // useEffect(() => {
+  //   const mutableDeviceList = [...devices]
+
+  //   const deviceOptions = mutableDeviceList.map((device) => ({
+  //     label: device.symbol_name,
+  //     value: device.id,
+  //     id: device.id,
+  //     user_defined: device?.user_defined || false,
+  //   }))
+
+  //   const categoryOptions = [
+  //     ...new Set(DeviceList.map((device) => device.category)),
+  //   ].map((category) => ({
+  //     label: category,
+  //     value: category,
+  //   }))
+
+  //   const device = mutableDeviceList.find(
+  //     (device) => device.symbol_name === region.cls
+  //   )
+  //   if (device) {
+  //     setSelectedDevice({
+  //       label: device.symbol_name,
+  //       value: device.id || null,
+  //       id: device.id,
+  //       user_defined: device?.user_defined || false,
+  //     })
+  //     setSelectedCategory({
+  //       label: device?.category || "NOT CLASSIFIED",
+  //       value: device?.category || "NOT CLASSIFIED",
+  //     })
+  //     setCanChangeCategory(device?.user_defined || false)
+  //   } else {
+  //     setSelectedDevice({
+  //       label: region.cls,
+  //       value: region.cls,
+  //       id: region.id,
+  //       user_defined: false,
+  //     })
+  //   }
+
+  //   setCategories(categoryOptions)
+  //   setDeviceOptions(deviceOptions)
+  // }, [devices])
 
   const onChangeNewDevice = (newDevice) => {
     return onChange({
@@ -244,22 +327,37 @@ export const RegionLabel = ({
     })
   }
 
+  const createNewDevice = (label) => ({
+    symbol_name: label,
+    category: "NOT CLASSIFIED",
+    id: getRandomId(),
+  })
+
+  const setCategory = (category) =>
+    setSelectedCategory({
+      value: category,
+      label: category,
+    })
+
   const onDeviceAdd = (isActionCreate, label, value) => {
+    setSelectedDevice({
+      label: label,
+      value: value,
+    })
+
     if (isActionCreate) {
       setIsNewDevice(true)
-      const newDevice = {
-        symbol_name: label,
-        category: "NOT CLASSIFIED",
-        id: getRandomId(),
-      }
+      const newDevice = createNewDevice(label)
+      setCategory("NOT CLASSIFIED")
+      setCanChangeCategory(true)
       return onChangeNewDevice(newDevice)
     } else {
       setIsNewDevice(false)
-      setSelectedDevice({
-        label: label,
-        value: value,
-      })
-
+      const device = devices.find((device) => device.symbol_name === label)
+      if (device) {
+        setCategory(device.category)
+        setCanChangeCategory(device.user_defined)
+      }
       return onChange({
         ...region,
         cls: label,
@@ -270,13 +368,20 @@ export const RegionLabel = ({
   const onSelectCategory = (e) => {
     let category = e.value
     setSelectedCategory(e)
-    onChangeNewRegion({
-      ...region,
-      symbol_name: selectedDevice,
-      category: category,
-      // color: getColorByCategory(category),
-    })
-    setIsNewDevice(false)
+    if (isNewDevice) {
+      onChangeNewRegion({
+        ...region,
+        symbol_name: selectedDevice,
+        category: category,
+        // color: getColorByCategory(category),
+      })
+    } else {
+      onChange({
+        ...region,
+        category: category,
+        color: getColorByCategory(category),
+      })
+    }
   }
 
   const onSaveNewDevice = () => {
@@ -288,6 +393,11 @@ export const RegionLabel = ({
       color: getColorByCategory(category),
     })
   }
+
+  const regionLabelDescription = ` Note: If you don't see the device you are looking for, please add it
+  to the list. If you are unsure of the category, please select "NOT
+  CLASSIFIED". Only user defined devices can have their category
+  changed.`
 
   const conditionalRegionTextField = (region, regionType) => {
     if (regionType === "scale") {
@@ -423,6 +533,17 @@ export const RegionLabel = ({
       // do device
       return (
         <>
+          <Tooltip
+            title={regionLabelDescription}
+            PopperProps={{
+              style: { zIndex: 9999999 },
+            }}
+          >
+            <IconButton size="small">
+              <InfoIcon />
+            </IconButton>
+          </Tooltip>
+          <div>Device:</div>
           <CreatableSelect
             isValidNewOption={(inputValue, selectValue, selectOptions) => {
               return disableAddingClasses ? false : true
@@ -438,18 +559,16 @@ export const RegionLabel = ({
             value={selectedDevice}
             options={deviceOptions}
           />
-          {isNewDevice && (
-            <>
-              <Select
-                placeholder="Select System"
-                onChange={(e) => {
-                  onSelectCategory(e)
-                }}
-                value={selectedCategory}
-                options={categories}
-              />
-            </>
-          )}
+          <div>Category</div>
+          <Select
+            placeholder="Select Category"
+            isDisabled={!canChangeCategory}
+            onChange={(e) => {
+              onSelectCategory(e)
+            }}
+            value={selectedCategory}
+            options={categories}
+          />
         </>
       )
     }
@@ -547,7 +666,7 @@ export const RegionLabel = ({
                           marginTop: -2,
                         },
                       }}
-                      onClick={() => setOpen((open) => !open)}
+                      onClick={() => setOpenBreakout((open) => !open)}
                     >
                       <AddIcon
                         style={{
@@ -820,11 +939,11 @@ export const RegionLabel = ({
         )}
       </Paper>
 
-      {open && (
+      {openBreakout && (
         <BreakoutSection
           region={region}
           dispatch={dispatch}
-          setOpen={setOpen}
+          setOpenBreakout={setOpenBreakout}
           breakoutList={breakoutList}
         />
       )}
