@@ -751,6 +751,8 @@ export default (state: MainLayoutState, action: Action) => {
         }
       })
       newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["selectedCls"], action.symbol_name)
+      newState = setIn(newState, ["selectedCategory"], action.category)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
@@ -763,10 +765,7 @@ export default (state: MainLayoutState, action: Action) => {
       region.color = getColorByCategory(region.category)
       region.visible = true
       state = saveToHistory(state, "Add New Region")
-      const clsIndex = state.regionClsList.indexOf(region.cls)
-      if (clsIndex !== -1) {
-        state = setIn(state, ["selectedCls"], region.cls)
-      }
+
       const deviceList = getIn(state, ["deviceList"])
       const newDevicesToSave = getIn(state, ["newDevicesToSave"])
 
@@ -779,12 +778,13 @@ export default (state: MainLayoutState, action: Action) => {
           user_defined: true,
         }
         state = setIn(state, ["deviceList"], [newDevice, ...deviceList])
-
         state = setIn(
           state,
           ["newDevicesToSave"],
           [...newDevicesToSave, newDevice]
         )
+        state = setIn(state, ["selectedCls"], region.cls)
+        state = setIn(state, ["selectedCategory"], region.category)
       }
 
       return setIn(
@@ -805,6 +805,7 @@ export default (state: MainLayoutState, action: Action) => {
         const clsIndex = state.regionClsList.indexOf(action.region.cls)
         if (clsIndex !== -1) {
           state = setIn(state, ["selectedCls"], action.region.cls)
+          state = setIn(state, ["selectedCategory"], action.region.category)
         }
       }
       if (!isEqual(oldRegion.tags, action.region.tags)) {
@@ -1289,17 +1290,17 @@ export default (state: MainLayoutState, action: Action) => {
             break
         }
       }
-
       let newRegion
       let defaultRegionCls =
         state.selectedCls ??
         (Array.isArray(state.regionClsList) && state.regionClsList.length > 0
           ? state.regionClsList[0]
           : undefined)
-      let defaultRegionCategory = defaultRegionCls
-        ? getCategoryBySymbolName(defaultRegionCls)
-        : undefined
-
+      let defaultRegionCategory =
+        state.selectedCategory ??
+        (defaultRegionCls
+          ? getCategoryBySymbolName(defaultRegionCls)
+          : undefined)
       let defaultPointAndBoxColor = getColorByCategory(defaultRegionCategory)
       let defaultRegionColor = "#C4A484"
       const clsIndex = (state.regionClsList || []).indexOf(defaultRegionCls)
