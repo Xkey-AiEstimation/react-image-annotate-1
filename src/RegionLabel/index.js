@@ -258,8 +258,8 @@ export const RegionLabel = ({
         user_defined: device.user_defined,
       })
       setSelectedCategory({
-        label: device.category || "NOT CLASSIFIED",
-        value: device.category || "NOT CLASSIFIED",
+        label: region.category || "NOT CLASSIFIED",
+        value: region.category || "NOT CLASSIFIED",
       })
       setCanChangeCategory(device.user_defined)
     } else {
