@@ -231,7 +231,7 @@ export const RegionLabel = ({
 
     const deviceOptions = [
       {
-        label: "User Defined",
+        label: "User Defined Devices",
         options: userDefinedDeviceOptions,
       },
       {
@@ -273,51 +273,7 @@ export const RegionLabel = ({
 
     setCategories(categoryOptions)
     setDeviceOptions(deviceOptions)
-  }, [devices])
-  // useEffect(() => {
-  //   const mutableDeviceList = [...devices]
-
-  //   const deviceOptions = mutableDeviceList.map((device) => ({
-  //     label: device.symbol_name,
-  //     value: device.id,
-  //     id: device.id,
-  //     user_defined: device?.user_defined || false,
-  //   }))
-
-  //   const categoryOptions = [
-  //     ...new Set(DeviceList.map((device) => device.category)),
-  //   ].map((category) => ({
-  //     label: category,
-  //     value: category,
-  //   }))
-
-  //   const device = mutableDeviceList.find(
-  //     (device) => device.symbol_name === region.cls
-  //   )
-  //   if (device) {
-  //     setSelectedDevice({
-  //       label: device.symbol_name,
-  //       value: device.id || null,
-  //       id: device.id,
-  //       user_defined: device?.user_defined || false,
-  //     })
-  //     setSelectedCategory({
-  //       label: device?.category || "NOT CLASSIFIED",
-  //       value: device?.category || "NOT CLASSIFIED",
-  //     })
-  //     setCanChangeCategory(device?.user_defined || false)
-  //   } else {
-  //     setSelectedDevice({
-  //       label: region.cls,
-  //       value: region.cls,
-  //       id: region.id,
-  //       user_defined: false,
-  //     })
-  //   }
-
-  //   setCategories(categoryOptions)
-  //   setDeviceOptions(deviceOptions)
-  // }, [devices])
+  }, [devices, region])
 
   const onChangeNewDevice = (newDevice) => {
     return onChange({
@@ -365,9 +321,26 @@ export const RegionLabel = ({
     }
   }
 
+  const updateRegionCategory = (category) => {
+    onChange({
+      ...region,
+      category: category,
+      color: getColorByCategory(category),
+    })
+  }
+
+  const updateDeviceCategory = (category) => {
+    dispatch({
+      type: "UPDATE_DEVICE_CATEGORY_ON_ALL_REGIONS_BY_SYMBOL_NAME_AND_CATEGORY_USER_DEFINED",
+      symbol_name: selectedDevice.label,
+      category: category,
+    })
+  }
+
   const onSelectCategory = (e) => {
-    let category = e.value
+    const category = e.value
     setSelectedCategory(e)
+
     if (isNewDevice) {
       onChangeNewRegion({
         ...region,
@@ -376,11 +349,10 @@ export const RegionLabel = ({
         // color: getColorByCategory(category),
       })
     } else {
-      onChange({
-        ...region,
-        category: category,
-        color: getColorByCategory(category),
-      })
+      const device = devices.find((device) => device.symbol_name === region.cls)
+      device?.user_defined
+        ? updateDeviceCategory(category)
+        : updateRegionCategory(category)
     }
   }
 
@@ -394,10 +366,17 @@ export const RegionLabel = ({
     })
   }
 
-  const regionLabelDescription = ` Note: If you don't see the device you are looking for, please add it
+  const regionLabelDescription = ` Note: If you don't see the device you are looking for, you can add it
   to the list. If you are unsure of the category, please select "NOT
   CLASSIFIED". Only user defined devices can have their category
   changed.`
+
+  const regionDeviceInfo =
+    "If you don't see the device you are looking for, you can add it to the list simply by typing the device name."
+
+  const regionLabelCategoryInfo = `Only user defined devices can have their category changed. Changing the category will update all regions with the same device name.`
+  const regionLabelExtra =
+    "Only user defined devices can have their category changed."
 
   const conditionalRegionTextField = (region, regionType) => {
     if (regionType === "scale") {
@@ -533,21 +512,34 @@ export const RegionLabel = ({
       // do device
       return (
         <>
-          <Tooltip
-            title={regionLabelDescription}
-            PopperProps={{
-              style: { zIndex: 9999999 },
-            }}
-          >
-            <IconButton size="small">
-              <InfoIcon />
-            </IconButton>
-          </Tooltip>
-          <div>Device:</div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                paddingLeft: "8px",
+                paddingRight: "4px",
+                paddingTop: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "bold",
+              }}
+            >
+              Device:
+            </div>
+            <Tooltip
+              title={regionDeviceInfo}
+              PopperProps={{
+                style: { zIndex: 9999999 },
+              }}
+            >
+              <IconButton size="small">
+                <InfoIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
           <CreatableSelect
-            isValidNewOption={(inputValue, selectValue, selectOptions) => {
-              return disableAddingClasses ? false : true
-            }}
+            // isValidNewOption={(inputValue, selectValue, selectOptions) => {
+            //   return disableAddingClasses ? false : true
+            // }}
             placeholder="Device"
             onChange={(o, actionMeta) => {
               let isActionCreate = false
@@ -559,7 +551,31 @@ export const RegionLabel = ({
             value={selectedDevice}
             options={deviceOptions}
           />
-          <div>Category</div>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                paddingLeft: "8px",
+                paddingRight: "4px",
+                paddingTop: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "bold",
+              }}
+            >
+              Category:
+            </div>
+            <Tooltip
+              title={regionLabelCategoryInfo}
+              PopperProps={{
+                style: { zIndex: 9999999 },
+              }}
+            >
+              <IconButton size="small">
+                <InfoIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
+
           <Select
             placeholder="Select Category"
             isDisabled={!canChangeCategory}
@@ -569,6 +585,20 @@ export const RegionLabel = ({
             value={selectedCategory}
             options={categories}
           />
+          {!canChangeCategory && (
+            <div
+              style={{
+                paddingLeft: "8px",
+                paddingRight: "8px",
+                paddingTop: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "lighter",
+              }}
+            >
+              {regionLabelExtra}
+            </div>
+          )}
         </>
       )
     }
@@ -922,7 +952,7 @@ export const RegionLabel = ({
                   </Typography>
                 </div>
               )}
-            {onClose && region.type !== "scale" && (
+            {/* {onClose && region.type !== "scale" && (
               <div style={{ marginTop: 4, display: "flex" }}>
                 <div style={{ flexGrow: 1 }} />
                 <Button
@@ -934,7 +964,7 @@ export const RegionLabel = ({
                   <CheckIcon />
                 </Button>
               </div>
-            )}
+            )} */}
           </div>
         )}
       </Paper>

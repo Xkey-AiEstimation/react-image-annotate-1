@@ -731,6 +731,29 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+    case "UPDATE_DEVICE_CATEGORY_ON_ALL_REGIONS_BY_SYMBOL_NAME_AND_CATEGORY_USER_DEFINED": {
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      if (!newRegions) {
+        return state
+      }
+      const color = getColorByCategory(action.category)
+      newRegions = newRegions.map((region) => {
+        if (region.cls === action.symbol_name) {
+          return {
+            ...region,
+            category: action.category,
+            color: color,
+          }
+        } else {
+          return region
+        }
+      })
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      return newState
+    }
     // ANCHOR
     case "CHANGE_NEW_REGION": {
       const { region } = action
@@ -1268,10 +1291,17 @@ export default (state: MainLayoutState, action: Action) => {
       }
 
       let newRegion
-      let defaultRegionCls = state.selectedCls,
-        defaultRegionColor = "#C4A484",
-        category = getCategoryBySymbolName(defaultRegionCls)
+      let defaultRegionCls =
+        state.selectedCls ??
+        (Array.isArray(state.regionClsList) && state.regionClsList.length > 0
+          ? state.regionClsList[0]
+          : undefined)
+      let defaultRegionCategory = defaultRegionCls
+        ? getCategoryBySymbolName(defaultRegionCls)
+        : undefined
 
+      let defaultPointAndBoxColor = getColorByCategory(defaultRegionCategory)
+      let defaultRegionColor = "#C4A484"
       const clsIndex = (state.regionClsList || []).indexOf(defaultRegionCls)
       if (clsIndex !== -1) {
         defaultRegionColor = getColor(state.selectedCls)
@@ -1294,10 +1324,10 @@ export default (state: MainLayoutState, action: Action) => {
             y,
             highlighted: true,
             editingLabels: true,
-            color: defaultRegionColor,
+            color: defaultPointAndBoxColor,
             id: getRandomId(),
             cls: defaultRegionCls,
-            category: getCategoryBySymbolName(defaultRegionCls),
+            category: defaultRegionCategory,
             visible: true,
             breakout: newRegionBreakout,
           }
@@ -1321,10 +1351,10 @@ export default (state: MainLayoutState, action: Action) => {
             h: 0,
             highlighted: true,
             editingLabels: false,
-            color: defaultRegionColor,
+            color: defaultPointAndBoxColor,
             cls: defaultRegionCls,
             id: getRandomId(),
-            category: getCategoryBySymbolName(defaultRegionCls),
+            category: defaultRegionCategory,
             visible: true,
             breakout: newRegionBreakout,
           }
