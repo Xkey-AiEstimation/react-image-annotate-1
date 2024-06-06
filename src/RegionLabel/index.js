@@ -265,7 +265,7 @@ export const RegionLabel = ({
     } else {
       setSelectedDevice({
         label: region.cls,
-        value: region.cls,
+        value: region.id || null,
         id: region.id,
         user_defined: false,
       })
@@ -374,7 +374,7 @@ export const RegionLabel = ({
   const regionDeviceInfo =
     "If you don't see the device you are looking for, you can add it to the list simply by typing the device name."
 
-  const regionLabelCategoryInfo = `Only user defined devices can have their category changed. Changing the category will update all regions with the same device name.`
+  const regionLabelCategoryInfo = `Only user defined devices can have their system changed. Changing the system will update all regions with the same device name.`
   const regionLabelExtra =
     "Only user defined devices can have their category changed."
 
@@ -562,7 +562,7 @@ export const RegionLabel = ({
                 fontWeight: "bold",
               }}
             >
-              Category:
+              System:
             </div>
             <Tooltip
               title={regionLabelCategoryInfo}
