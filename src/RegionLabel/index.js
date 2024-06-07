@@ -265,7 +265,7 @@ export const RegionLabel = ({
     } else {
       setSelectedDevice({
         label: region.cls,
-        value: region.id || null,
+        value: region.cls,
         id: region.id,
         user_defined: false,
       })
