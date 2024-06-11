@@ -62,6 +62,7 @@ const color_mapping = {
   WIREMOLD: "#C4A484",
   BREAKERS: "#C4A484",
   WARNING: "#FFA500", // orange
+  "NOT CLASSIFIED": "#C4A484",
 }
 
 const getColor = (device_name) => {
@@ -73,6 +74,7 @@ const getColor = (device_name) => {
   }
 }
 
+export const NOT_CLASSIFED = "NOT CLASSIFIED"
 export const getColorByCategory = (category) => {
   return color_mapping[category] || "#C4A484"
 }

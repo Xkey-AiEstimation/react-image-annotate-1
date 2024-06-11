@@ -16,7 +16,10 @@ import React, { memo, useEffect, useRef, useState } from "react"
 import Select from "react-select"
 import CreatableSelect from "react-select/creatable"
 import { asMutable } from "seamless-immutable"
-import { getColorByCategory } from "../Annotator/reducers/general-reducer.js"
+import {
+  NOT_CLASSIFED,
+  getColorByCategory,
+} from "../Annotator/reducers/general-reducer.js"
 import type { Region } from "../ImageCanvas/region-tools.js"
 import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
@@ -677,6 +680,7 @@ export const RegionLabel = ({
               <div style={{ justifyContent: "" }}>
                 {region.type !== "scale" &&
                   region.cls &&
+                  region.cls !== NOT_CLASSIFED &&
                   (region.breakout === undefined ||
                     (region.breakout &&
                       region.breakout.is_breakout === false)) && (
@@ -714,7 +718,9 @@ export const RegionLabel = ({
                     </IconButton>
                   )}
 
-                {region.cls && region.type === "box" ? (
+                {region.cls &&
+                region.cls !== NOT_CLASSIFED &&
+                region.type === "box" ? (
                   <IconButton
                     disabled={isTemplateMatchingLoading}
                     onClick={() => {
@@ -897,6 +903,7 @@ export const RegionLabel = ({
             )}
             {region.type !== "scale" &&
               region.cls &&
+              region.cls !== NOT_CLASSIFED &&
               region.breakout &&
               region.breakout.is_breakout && (
                 <div
