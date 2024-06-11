@@ -349,7 +349,7 @@ export const RegionLabel = ({
         symbol_name: selectedDevice,
         category: category,
       })
-      // setIsNewDevice(false)
+      setIsNewDevice(false)
     } else {
       const device = devices.find((device) => device.symbol_name === region.cls)
       device?.user_defined
