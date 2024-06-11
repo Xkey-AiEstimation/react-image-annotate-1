@@ -198,7 +198,11 @@ export const Annotator = ({
       if (["Exit", "Done", "Complete"].includes(action.buttonName)) {
         return onExit(without(state, "history"))
       } else if (action.buttonName === "Save") {
-        return onSave(without(state, "history"))
+        onSave(without(state, "history"))
+        dispatchToReducer({
+          type: "CLEAR_NEW_DEVICES_TO_SAVE",
+        })
+        return
       } else if (action.buttonName === "Next" && onNextImage) {
         dispatchToReducer({
           type: "ON_NEXT_OR_PREV_BREAKOUT_RESET",

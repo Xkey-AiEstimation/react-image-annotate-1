@@ -731,6 +731,9 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+    case "CLEAR_NEW_DEVICES_TO_SAVE": {
+      return setIn(state, ["newDevicesToSave"], [])
+    }
     case "UPDATE_DEVICE_CATEGORY_ON_ALL_REGIONS_BY_SYMBOL_NAME_AND_CATEGORY_USER_DEFINED": {
       let newState = { ...state }
       let newImage = getIn(newState, ["images", currentImageIndex])
