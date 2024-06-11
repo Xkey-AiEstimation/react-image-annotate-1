@@ -349,6 +349,7 @@ export const RegionLabel = ({
         symbol_name: selectedDevice,
         category: category,
       })
+      // setIsNewDevice(false)
     } else {
       const device = devices.find((device) => device.symbol_name === region.cls)
       device?.user_defined
@@ -541,6 +542,23 @@ export const RegionLabel = ({
             // isValidNewOption={(inputValue, selectValue, selectOptions) => {
             //   return disableAddingClasses ? false : true
             // }}
+            // need to add a check to see if the device is already in the list of devices and if it is we cant let the user create a new device
+            isValidNewOption={(inputValue, selectValue, selectOptions) => {
+              // Check if the device already exists in the list
+
+              const deviceExists = selectOptions
+                .map((optionGroup) =>
+                  optionGroup.options.map((device) =>
+                    device.label.toLowerCase().trim()
+                  )
+                )
+                .flat()
+                .includes(inputValue.toLowerCase().trim())
+
+              // If the device exists, return false to prevent its creation
+              // If the device doesn't exist, return true to allow its creation
+              return !deviceExists
+            }}
             placeholder="Device"
             onChange={(o, actionMeta) => {
               let isActionCreate = false

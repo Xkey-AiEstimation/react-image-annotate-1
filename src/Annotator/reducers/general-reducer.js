@@ -737,29 +737,41 @@ export default (state: MainLayoutState, action: Action) => {
     }
     case "UPDATE_DEVICE_CATEGORY_ON_ALL_REGIONS_BY_SYMBOL_NAME_AND_CATEGORY_USER_DEFINED": {
       let newState = { ...state }
-      let newImage = getIn(newState, ["images", currentImageIndex])
-      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
-      if (!newRegions) {
-        return state
-      }
       const color = getColorByCategory(action.category)
-      newRegions = newRegions.map((region) => {
-        if (region.cls === action.symbol_name) {
-          return {
-            ...region,
-            category: action.category,
-            color: color,
-          }
-        } else {
-          return region
+
+      // Iterate over all images
+      newState.images = newState.images.map((image) => {
+        // Get regions of the current image
+        let newRegions = getIn(image, ["regions"])
+        if (!newRegions) {
+          return image
         }
+
+        // Iterate over all regions in the current image
+        newRegions = newRegions.map((region) => {
+          // If the region's cls property matches the symbol_name from the action, update the region's category and color
+          if (region.cls === action.symbol_name) {
+            return {
+              ...region,
+              category: action.category,
+              color: color,
+            }
+          } else {
+            return region
+          }
+        })
+
+        // Update the regions of the current image and return the updated image
+        return setIn(image, ["regions"], newRegions)
       })
+
       // update user defined devices
       let deviceList = getIn(newState, ["deviceList"])
       let newDevicesToSave = getIn(newState, ["newDevicesToSave"])
       let deviceIndex = deviceList.findIndex(
         (device) => device.symbol_name === action.symbol_name
       )
+
       // if device exists in the device list then update the category
       if (deviceIndex !== -1) {
         newState = setIn(
@@ -767,6 +779,7 @@ export default (state: MainLayoutState, action: Action) => {
           ["deviceList", deviceIndex, "category"],
           action.category
         )
+
         // update the newDevicesToSave
         let newDevicesToSaveIndex = newDevicesToSave.findIndex(
           (device) => device.symbol_name === action.symbol_name
@@ -783,15 +796,19 @@ export default (state: MainLayoutState, action: Action) => {
             ["newDevicesToSave"],
             [
               ...newDevicesToSave,
-              { symbol_name: action.symbol_name, category: action.category, user_defined: true },
+              {
+                symbol_name: action.symbol_name,
+                category: action.category,
+                user_defined: true,
+              },
             ]
           )
         }
       }
-      newImage = setIn(newImage, ["regions"], newRegions)
+
       newState = setIn(newState, ["selectedCls"], action.symbol_name)
       newState = setIn(newState, ["selectedCategory"], action.category)
-      newState = setIn(newState, ["images", currentImageIndex], newImage)
+
       return newState
     }
     // ANCHOR
