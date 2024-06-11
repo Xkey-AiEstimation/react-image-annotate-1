@@ -204,9 +204,6 @@ export const RegionLabel = ({
 
   const [canChangeCategory, setCanChangeCategory] = useState(false)
 
-  const isDeviceInDeviceList = (device) => {
-    return devices.find((d) => d.symbol_name === device.symbol_name)
-  }
 
   // cam only change category if the region is user defined
   useEffect(() => {
@@ -268,8 +265,8 @@ export const RegionLabel = ({
       setCanChangeCategory(device.user_defined)
     } else {
       setSelectedDevice({
-        label: "NOT CLASSIFIED",
-        value: "NOT CLASSIFIED",
+        label: region.cls,
+        value: region.cls,
         id: region.id,
         user_defined: false,
       })
