@@ -62,6 +62,7 @@ const color_mapping = {
   WIREMOLD: "#C4A484",
   BREAKERS: "#C4A484",
   WARNING: "#FFA500", // orange
+  "NOT CLASSIFIED": "#C4A484",
 }
 
 const getColor = (device_name) => {
