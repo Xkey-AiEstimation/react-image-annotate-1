@@ -74,6 +74,7 @@ const getColor = (device_name) => {
   }
 }
 
+export const NOT_CLASSIFED = "NOT CLASSIFIED"
 export const getColorByCategory = (category) => {
   return color_mapping[category] || "#C4A484"
 }
