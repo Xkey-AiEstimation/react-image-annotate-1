@@ -190,7 +190,6 @@ export default (state: MainLayoutState, action: Action) => {
       frameTime
     )
   }
-
   switch (action.type) {
     case "@@INIT": {
       return state
@@ -755,6 +754,40 @@ export default (state: MainLayoutState, action: Action) => {
           return region
         }
       })
+      // update user defined devices
+      let deviceList = getIn(newState, ["deviceList"])
+      let newDevicesToSave = getIn(newState, ["newDevicesToSave"])
+      let deviceIndex = deviceList.findIndex(
+        (device) => device.symbol_name === action.symbol_name
+      )
+      // if device exists in the device list then update the category
+      if (deviceIndex !== -1) {
+        newState = setIn(
+          newState,
+          ["deviceList", deviceIndex, "category"],
+          action.category
+        )
+        // update the newDevicesToSave
+        let newDevicesToSaveIndex = newDevicesToSave.findIndex(
+          (device) => device.symbol_name === action.symbol_name
+        )
+        if (newDevicesToSaveIndex !== -1) {
+          newState = setIn(
+            newState,
+            ["newDevicesToSave", newDevicesToSaveIndex, "category"],
+            action.category
+          )
+        } else {
+          newState = setIn(
+            newState,
+            ["newDevicesToSave"],
+            [
+              ...newDevicesToSave,
+              { symbol_name: action.symbol_name, category: action.category, user_defined: true },
+            ]
+          )
+        }
+      }
       newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["selectedCls"], action.symbol_name)
       newState = setIn(newState, ["selectedCategory"], action.category)
@@ -774,7 +807,11 @@ export default (state: MainLayoutState, action: Action) => {
       const deviceList = getIn(state, ["deviceList"])
       const newDevicesToSave = getIn(state, ["newDevicesToSave"])
 
-      const deviceIndex = deviceList.indexOf(region.cls)
+      // deviceList is an array of objects with symbol_name and category
+      // deviceList is an array of objects with symbol_name and category
+      const deviceIndex = deviceList.findIndex(
+        (device) => device.symbol_name === region.cls
+      )
       if (deviceIndex === -1) {
         // concat the new device to the device list with name and category
         const newDevice = {
@@ -790,6 +827,28 @@ export default (state: MainLayoutState, action: Action) => {
         )
         state = setIn(state, ["selectedCls"], region.cls)
         state = setIn(state, ["selectedCategory"], region.category)
+      } else {
+        state = setIn(state, ["selectedCls"], region.cls)
+        state = setIn(state, ["selectedCategory"], region.category)
+
+        // change the category of the device in the device list
+        state = setIn(
+          state,
+          ["deviceList", deviceIndex, "category"],
+          region.category
+        )
+
+        // change newDevicesToSave
+        const newDevicesToSaveIndex = newDevicesToSave.findIndex(
+          (device) => device.symbol_name === region.cls
+        )
+        if (newDevicesToSaveIndex !== -1) {
+          state = setIn(
+            state,
+            ["newDevicesToSave", newDevicesToSaveIndex, "category"],
+            region.category
+          )
+        }
       }
 
       return setIn(
