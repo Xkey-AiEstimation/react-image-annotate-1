@@ -754,16 +754,12 @@ export default (state: MainLayoutState, action: Action) => {
           return region
         }
       })
-      console.log(
-        "UPDATE_DEVICE_CATEGORY_ON_ALL_REGIONS_BY_SYMBOL_NAME_AND_CATEGORY_USER_DEFINED"
-      )
       // update user defined devices
       let deviceList = getIn(newState, ["deviceList"])
       let newDevicesToSave = getIn(newState, ["newDevicesToSave"])
       let deviceIndex = deviceList.findIndex(
         (device) => device.symbol_name === action.symbol_name
       )
-      console.log("deviceIndex", deviceIndex)
       // if device exists in the device list then update the category
       if (deviceIndex !== -1) {
         newState = setIn(
@@ -800,7 +796,6 @@ export default (state: MainLayoutState, action: Action) => {
     }
     // ANCHOR
     case "CHANGE_NEW_REGION": {
-      console.log("CHANGE_NEW_REGION")
       const { region } = action
       const regionIndex = getRegionIndex(action.region)
       if (regionIndex === null) return state
