@@ -6,7 +6,6 @@ import Paper from "@material-ui/core/Paper"
 
 import { makeStyles } from "@material-ui/core/styles"
 import AddIcon from "@material-ui/icons/Add"
-import CheckIcon from "@material-ui/icons/Check"
 import TrashIcon from "@material-ui/icons/Delete"
 import ImageSearchIcon from "@material-ui/icons/ImageSearch"
 import InfoIcon from "@material-ui/icons/Info"
@@ -332,7 +331,7 @@ export const RegionLabel = ({
     })
   }
 
-  const updateDeviceCategory = (category) => {
+  const updateUserCreatedDeviceCategory = (category) => {
     dispatch({
       type: "UPDATE_DEVICE_CATEGORY_ON_ALL_REGIONS_BY_SYMBOL_NAME_AND_CATEGORY_USER_DEFINED",
       symbol_name: selectedDevice.label,
@@ -349,12 +348,11 @@ export const RegionLabel = ({
         ...region,
         symbol_name: selectedDevice,
         category: category,
-        // color: getColorByCategory(category),
       })
     } else {
       const device = devices.find((device) => device.symbol_name === region.cls)
       device?.user_defined
-        ? updateDeviceCategory(category)
+        ? updateUserCreatedDeviceCategory(category)
         : updateRegionCategory(category)
     }
   }
