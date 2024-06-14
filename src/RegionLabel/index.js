@@ -679,7 +679,7 @@ export const RegionLabel = ({
                       fontSize: "12px",
                     }}
                   >
-                    `Add to device List`
+                    Add to device List
                   </div>
                 </IconButton>
               </div>
