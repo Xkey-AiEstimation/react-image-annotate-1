@@ -267,6 +267,52 @@ export default (state: MainLayoutState, action: Action) => {
       return newState
     }
 
+    case "ADD_OLD_DEVICE_TO_NEW_DEVICES": {
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      let newDevicesToSave = getIn(newState, ["newDevicesToSave"])
+      let devices = getIn(newState, ["deviceList"])
+      const { device } = action
+      if (!newRegions) {
+        return state
+      }
+
+      let deviceIndex = devices.findIndex(
+        (d) => d.symbol_name === device.symbol_name
+      )
+
+      if (deviceIndex === -1) {
+        const newDevice = {
+          symbol_name: device.symbol_name,
+          category: device.category,
+          user_defined: true,
+          id: `${device.symbol_name}-device-${device.category}`,
+        }
+        newDevicesToSave = newDevicesToSave.concat(newDevice)
+        newState = setIn(state, ["deviceList"], [newDevice, ...devices])
+      }
+
+      // iterate over all regions and add the device to the regions and set the category and set isOldDevice to false
+      newRegions = newRegions.map((region) => {
+        if (region.cls === device.symbol_name) {
+          return {
+            ...region,
+            category: device.category,
+            color: getColorByCategory(device.category),
+            isOldDevice: false,
+          }
+        } else {
+          return region
+        }
+      })
+
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      newState = setIn(newState, ["newDevicesToSave"], newDevicesToSave)
+      return newState
+    }
+
     case "TOGGLE_DEVICE_VISIBILITY": {
       // GIVEN A DEVICE NAME, TOGGLE THE VISIBILITY OF ALL REGIONS WITH THAT DEVICE NAME (CLS). MULTIPLE DEVICES CAN BE TOGGLED AT ONCE.
       // SET THE STATE OF THE CATEGORY TO THE OPPOSITE OF ITS CURRENT STATE
