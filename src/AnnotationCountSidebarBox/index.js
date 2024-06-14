@@ -1,8 +1,8 @@
 // @flow
-
 import {
   IconButton,
   ListItemSecondaryAction,
+  Tooltip,
   Typography,
 } from "@material-ui/core"
 import List from "@material-ui/core/List"
@@ -16,6 +16,7 @@ import isEqual from "lodash/isEqual"
 import React, { memo, useMemo } from "react"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 
+import InfoIcon from "@material-ui/icons/Info"
 const useStyles = makeStyles({
   emptyText: {
     fontSize: 14,
@@ -34,8 +35,11 @@ export const AnnotationCountSidebarBox = ({
   onDeleteDevices,
   onDeleteAll,
   selectedDeviceToggle,
+  deviceList,
+  onAddDeviceOldDeviceToList,
 }) => {
   const classes = useStyles()
+  const [clsStatus, setClsStatus] = React.useState({})
 
   const counts = useMemo(() => {
     return regions.reduce(
@@ -54,12 +58,42 @@ export const AnnotationCountSidebarBox = ({
     )
   }, [regions])
 
+  const newClsStatus = React.useMemo(() => {
+    return regions.reduce((acc, region) => {
+      const isOldDevice = !deviceList.some(
+        (device) => device.symbol_name === region.cls
+      )
+      acc[region.cls] = isOldDevice
+      return acc
+    }, {})
+  }, [regions, deviceList])
+
+  React.useEffect(() => {
+    setClsStatus(newClsStatus)
+  }, [newClsStatus])
+
   const onToggle = (cls) => {
     onToggleDevice(cls)
   }
 
   const onDelete = (cls) => {
     onDeleteDevices(cls)
+  }
+
+  const onAddDeviceToList = (cls) => {
+    // find device from regions
+    if (clsStatus[cls]) {
+      const region = regions.find((region) => region.cls === cls)
+      if (region) {
+        const device = {
+          symbol_name: cls,
+          category: region.category,
+          id: `${cls}-device-${region.category}`,
+          user_defined: true,
+        }
+        onAddDeviceOldDeviceToList(device)
+      }
+    }
   }
 
   return (
@@ -147,7 +181,27 @@ export const AnnotationCountSidebarBox = ({
                 }}
               />
             </IconButton>
-
+            {clsStatus[name] && (
+              <Tooltip
+                title={"This device is not in the device list. Click to add."}
+                PopperProps={{
+                  style: { zIndex: 9999999 },
+                }}
+              >
+                <IconButton
+                  onClick={() => onAddDeviceToList(name)}
+                  size="small"
+                  style={{
+                    color: "white",
+                    padding: 0,
+                    marginLeft: 5,
+                    backgroundColor: "red",
+                  }}
+                >
+                  <InfoIcon />
+                </IconButton>
+              </Tooltip>
+            )}
             <ListItemText
               style={listItemTextStyle}
               disableTypography
@@ -157,7 +211,7 @@ export const AnnotationCountSidebarBox = ({
                   style={{
                     fontSize: "14px",
                     fontWeight: "bold",
-                    color: "#FFFFFF",
+                    color: clsStatus[name] ? "red" : "#FFFFFF",
                   }}
                 >
                   {name}

@@ -271,6 +271,11 @@ export const RegionLabel = ({
         id: region.id,
         user_defined: false,
       })
+      setSelectedCategory({
+        label: region.category || "NOT CLASSIFIED",
+        value: region.category || "NOT CLASSIFIED",
+      })
+      setCanChangeCategory(region?.isOldDevice ? false : true)
     }
 
     setCategories(categoryOptions)
@@ -379,6 +384,9 @@ export const RegionLabel = ({
   const regionLabelCategoryInfo = `Only user defined devices can have their system changed. Changing the system will update all regions with the same device name.`
   const regionLabelExtra =
     "Only user defined devices can have their category changed."
+
+  const regionLabelOld =
+    "This device is not in the list. It may have been deleted, renamed, or is outdated."
 
   const conditionalRegionTextField = (region, regionType) => {
     if (regionType === "scale") {
@@ -618,6 +626,65 @@ export const RegionLabel = ({
               {regionLabelExtra}
             </div>
           )}
+          {region.isOldDevice && !canChangeCategory && (
+            <div>
+              <div
+                style={{
+                  paddingLeft: "8px",
+                  paddingRight: "8px",
+                  paddingTop: "4px",
+                  fontSize: "12px",
+                  color: "#666",
+                  fontWeight: "lighter",
+                  color: "red",
+                }}
+              >
+                {regionLabelOld}
+              </div>
+              <div>
+                <IconButton
+                  style={{
+                    backgroundColor: "#1DA1F2",
+                    color: " white",
+                    borderRadius: "4px",
+                    marginRight: "8px",
+                    height: "22px",
+                  }}
+                  classes={{
+                    label: {
+                      display: "flex",
+                      flexDirection: "row",
+                      marginTop: -2,
+                    },
+                  }}
+                  onClick={() =>
+                    dispatch({
+                      type: "ADD_OLD_DEVICE_TO_NEW_DEVICES",
+                      device: {
+                        symbol_name: region.cls,
+                        category: region.category,
+                        user_defined: true,
+                      },
+                    })
+                  }
+                >
+                  <AddIcon
+                    style={{
+                      width: 16,
+                      height: 16,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "12px",
+                    }}
+                  >
+                    `Add to device List`
+                  </div>
+                </IconButton>
+              </div>
+            </div>
+          )}
         </>
       )
     }
@@ -695,6 +762,7 @@ export const RegionLabel = ({
               {/* <div style={{ flexGrow: 1, padding: 12 }} /> */}
               <div style={{ justifyContent: "" }}>
                 {region.type !== "scale" &&
+                  !region.isOldDevice &&
                   region.cls &&
                   region.cls !== NOT_CLASSIFED &&
                   (region.breakout === undefined ||

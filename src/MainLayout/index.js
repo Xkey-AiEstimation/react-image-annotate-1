@@ -131,9 +131,6 @@ export const MainLayout = ({
     }
   }, [])
 
-
-  
-
   const canvas = (
     <ImageCanvas
       {...settings}
@@ -488,8 +485,10 @@ export const MainLayout = ({
                   "DELETE_DEVICES_WITH_DEVICENAME",
                   "deviceName"
                 )}
+                onAddDeviceOldDeviceToList={action("ADD_OLD_DEVICE_TO_NEW_DEVICES", "device")}
                 onDeleteAll={action("DELETE_ALL_DEVICES")}
                 selectedDeviceToggle={state.selectedDeviceToggle}
+                deviceList={state.deviceList}
               />,
               <RegionSelector
                 regions={activeImage ? activeImage.regions : emptyArr}
