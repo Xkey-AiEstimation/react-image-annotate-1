@@ -923,7 +923,7 @@ export const RegionLabel = ({
                         fontSize: "12px",
                       }}
                     >
-                      OCR
+                      Run AIE
                     </div>
                   </IconButton>
                 ) : null}
