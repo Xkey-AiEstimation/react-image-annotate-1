@@ -158,7 +158,11 @@ export const MainLayout = ({
       realSize={activeImage ? activeImage.realSize : undefined}
       videoPlaying={state.videoPlaying}
       imageSrc={state.annotationType === "image" ? activeImage.src : null}
+      imageSrcs={state.annotationType === "image" ? state.images.map(i => {
+        return i.src
+      }) : null}
       videoSrc={state.annotationType === "video" ? state.videoSrc : null}
+
       pointDistancePrecision={state.pointDistancePrecision}
       createWithPrimary={state.selectedTool.includes("create")}
       dragWithPrimary={state.selectedTool === "pan"}
@@ -184,7 +188,8 @@ export const MainLayout = ({
       finishMatchRegionTemplate={action(
         "MATCH_REGION_FINISHED",
         "region",
-        "page_properties"
+        "page_properties",
+        "ocr_type"
       )}
       onBeginBoxTransform={action("BEGIN_BOX_TRANSFORM", "box", "directions")}
       onBeginMovePolygonPoint={action(

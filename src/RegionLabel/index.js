@@ -34,6 +34,7 @@ type Props = {
   cls?: string,
   tags?: Array<string>,
   imageSrc?: string,
+  imageSrcs?: Array<string>,
   pageIndex: number,
   regionTemplateMatchingDisabled?: boolean,
   onDelete: (Region) => null,
@@ -41,7 +42,7 @@ type Props = {
   onClose: (Region) => null,
   onOpen: (Region) => null,
   onMatchTemplate: (Region) => null,
-  finishMatchTemplate: (Region, PageProperties) => null,
+  finishMatchTemplate: (Region, PageProperties, ocr_type) => null,
   onRegionClassAdded: (cls) => any,
   allowComments?: boolean,
 }
@@ -80,6 +81,7 @@ export const RegionLabel = ({
   allowedClasses,
   allowedTags,
   imageSrc,
+  imageSrcs,
   pageIndex,
   regionTemplateMatchingDisabled,
   onDelete,
@@ -143,7 +145,7 @@ export const RegionLabel = ({
           scaleValues.push(
             Math.sqrt(
               (scale["x1"] - scale["x2"]) ** 2 +
-                (scale["y1"] - scale["y2"]) ** 2
+              (scale["y1"] - scale["y2"]) ** 2
             ) / scaleVal
           )
         }
@@ -363,15 +365,15 @@ export const RegionLabel = ({
     }
   }
 
-  const onSaveNewDevice = () => {
-    setIsNewDevice(false)
-    return onChangeNewRegion({
-      ...region,
-      symbol_name: selectedDevice,
-      category: selectedCategory.value,
-      color: getColorByCategory(category),
-    })
-  }
+  // const onSaveNewDevice = () => {
+  //   setIsNewDevice(false)
+  //   return onChangeNewRegion({
+  //     ...region,
+  //     symbol_name: selectedDevice,
+  //     category: selectedCategory.value,
+  //     color: getColorByCategory(category),
+  //   })
+  // }
 
   const regionLabelDescription = ` Note: If you don't see the device you are looking for, you can add it
   to the list. If you are unsure of the category, please select "NOT
@@ -803,8 +805,8 @@ export const RegionLabel = ({
                   )}
 
                 {region.cls &&
-                region.cls !== NOT_CLASSIFED &&
-                region.type === "box" ? (
+                  region.cls !== NOT_CLASSIFED &&
+                  region.type === "box" ? (
                   <IconButton
                     disabled={isTemplateMatchingLoading}
                     onClick={() => {
@@ -887,12 +889,12 @@ export const RegionLabel = ({
                               "NOT CLASSIFIED"
                             return new_region
                           })
-                          finishMatchTemplate(results, page_properties)
+                          finishMatchTemplate(results, page_properties, "page")
                           setIsTemplateMatchingLoading(false)
                         })
                         .catch((error) => {
                           console.error("Error:", error)
-                          finishMatchTemplate([], page_properties)
+                          finishMatchTemplate([], page_properties, "page")
                           setIsTemplateMatchingLoading(false)
                         })
                     }}
@@ -924,6 +926,144 @@ export const RegionLabel = ({
                       }}
                     >
                       Run AIE
+                    </div>
+                  </IconButton>
+                ) : null}
+
+                {region.cls &&
+                  region.cls !== NOT_CLASSIFED &&
+                  region.type === "box" ? (
+                  <IconButton
+                    disabled={isTemplateMatchingLoading}
+                    onClick={() => {
+                      setIsTemplateMatchingLoading(true)
+                      // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
+                      let page_properties = {
+                        user_id: 80808080,
+                        doc_id: 80808080,
+                        page_id: 80808080,
+                        threshold: 0.8,
+                        page_index: pageIndex,
+                      }
+                      const region_coords = {
+                        x: region.x,
+                        y: region.y,
+                        w: region.w,
+                        h: region.h,
+                      }
+                      const region_color = region.color
+                      const endpoint =
+                        "https://htz91m7wz1.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-project-ocr"
+                      const json_data = {
+                        image_urls: imageSrcs,  // TODO: get all image urls from params
+                        image_url: imageSrc,
+                        page_index: page_properties["page_index"],
+                        template_symbol_name: region.cls,
+                        threshold: page_properties["threshold"],
+                        user_id: page_properties["user_id"],
+                        doc_id: page_properties["doc_id"],
+                        page_id: page_properties["page_id"],
+                        template_coord: region_coords,
+                        template_index: page_properties["page_index"],
+                        page_indices: [...Array(imageSrcs.length).keys()]  // TODO: get # of pages from imageSrcs
+
+                      }
+                      onMatchTemplate(region)
+                      fetch(endpoint, {
+                        method: "POST", // or 'PUT'
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          queryStringParameters: json_data,
+                        }),
+                      })
+                        .then((response) => {
+                          if (response.ok) {
+                            return response.json()
+                          }
+                          throw new Error("Backend Error")
+                        })
+                        .then((data) => {
+                          // result can be empty
+                          return data.body ? data.body.result : []
+                        })
+                        .then((res) => {
+                          // TODO: result is an array of number of pages with regions
+                          let results = []
+                          for (let i = 0; i < res.length; i++) {
+                            let single_page_regions =
+                              res[i].map((r) => {
+                                const new_region = {}
+                                new_region["isOCR"] = true
+                                new_region["x"] = r["x"]
+                                new_region["y"] = r["y"]
+                                new_region["w"] = r["w"]
+                                new_region["h"] = r["h"]
+                                new_region["editingLabels"] = false
+                                new_region["highlighted"] = false
+                                new_region["id"] = getRandomId()
+                                new_region["cls"] = region.cls
+                                new_region["type"] = "box"
+                                new_region["color"] = region.color
+                                new_region["visible"] = true
+                                new_region["breakout"] =
+                                  (selectedBreakoutIdAutoAdd &&
+                                    breakoutList &&
+                                    breakoutList.length > 0 &&
+                                    breakoutList.find(
+                                      (b) => b.id === selectedBreakoutIdAutoAdd
+                                    )) ||
+                                  (region && region.breakout)
+                                new_region["category"] =
+                                  region?.category ||
+                                  DeviceList.find(
+                                    (x) => x.symbol_name === region.cls
+                                  )?.category ||
+                                  "NOT CLASSIFIED"
+                                return new_region
+                              })
+                            results.push(single_page_regions)
+                          }
+                          console.log("DBG: results");
+                          console.log(results);
+                          finishMatchTemplate(results, page_properties, "project")
+                          setIsTemplateMatchingLoading(false)
+                        })
+                        .catch((error) => {
+                          console.error("Error:", error)
+                          finishMatchTemplate([], page_properties, "project")
+                          setIsTemplateMatchingLoading(false)
+                        })
+                    }}
+                    tabIndex={-1}
+                    style={{
+                      backgroundColor: "#4CAF50",
+                      color: "white",
+                      paddingLeft: "12px",
+                      paddingRight: "12px",
+                      borderRadius: "4px",
+                      height: "24px",
+                    }}
+                    classes={{
+                      label: {
+                        display: "flex",
+                        flexDirection: "row",
+                        marginTop: -2,
+                      },
+                    }}
+                    size="small"
+                    variant="outlined"
+                  >
+                    <ImageSearchIcon
+                      style={{ marginTop: -4, width: 16, height: 16 }}
+                    />
+                    <div
+                      style={{
+                        fontSize: "12px",
+                      }}
+                    >
+                      Project OCR
                     </div>
                   </IconButton>
                 ) : null}

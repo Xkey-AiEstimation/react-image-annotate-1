@@ -34,6 +34,7 @@ const useStyles = makeStyles(styles)
 type Props = {
   regions: Array<Region>,
   imageSrc?: string,
+  imageSrcs?: Array<string>,
   videoSrc?: string,
   videoTime?: number,
   keypointDefinitions?: KeypointDefinitions,
@@ -100,6 +101,7 @@ const getDefaultMat = (allowedArea = null, { iw, ih } = {}) => {
 export const ImageCanvas = ({
   regions,
   imageSrc,
+  imageSrcs,
   videoSrc,
   videoTime,
   realSize,
@@ -437,6 +439,7 @@ export const ImageCanvas = ({
             finishMatchTemplate={finishMatchRegionTemplate}
             layoutParams={layoutParams}
             imageSrc={imageSrc}
+            imageSrcs={imageSrcs}
             pageIndex={pageIndex}
             regionTemplateMatchingDisabled={regionTemplateMatchingDisabled}
             RegionEditLabel={RegionEditLabel}
@@ -477,6 +480,7 @@ export const ImageCanvas = ({
             region={highlightedRegion}
             regions={regions}
             imageSrc={imageSrc}
+            imageSrcs={imageSrcs}
             pageIndex={pageIndex}
             regionTemplateMatchingDisabled={regionTemplateMatchingDisabled}
             onRegionClassAdded={onRegionClassAdded}

@@ -26,6 +26,7 @@ export const RegionTags = ({
   finishMatchTemplate,
   layoutParams,
   imageSrc,
+  imageSrcs,
   pageIndex,
   regionTemplateMatchingDisabled,
   RegionEditLabel,
@@ -134,6 +135,7 @@ export const RegionTags = ({
               region={region}
               regions={regions}
               imageSrc={imageSrc}
+              imageSrcs={imageSrcs}
               onRegionClassAdded={onRegionClassAdded}
               allowComments={allowComments}
               dispatch={dispatch}

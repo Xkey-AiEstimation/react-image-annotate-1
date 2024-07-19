@@ -1814,34 +1814,64 @@ export default (state: MainLayoutState, action: Action) => {
       // we need a new _pathToActiveImage to store the path of image where the template matching is applied to,
       // to prevent the case that the user may switch to another image while the template matching is still running,
       // and the result of template matching is applied to the wrong image.
-      const page_index = action.page_properties.page_index
-      let _pathToActiveImage = [...pathToActiveImage]
-      _pathToActiveImage[_pathToActiveImage.length - 1] = page_index
-      let page_properties = action.page_properties
-      let old_regions = [...(getIn(state, _pathToActiveImage).regions || [])]
-      let new_regions = action.region
-      // remove the new regions that have IoU > 0.5 with the old regions to prevent duplicate regions
-      for (let i = 0; i < old_regions.length; i++) {
-        for (let j = 0; j < new_regions.length; j++) {
-          let iou_temp = calculateIoU(old_regions[i], new_regions[j])
-          if (iou_temp > 0.5) {
-            new_regions.splice(j, 1)
-            break
+      if (action.ocr_type === "page") {
+        const page_index = action.page_properties.page_index
+        let _pathToActiveImage = [...pathToActiveImage]
+        _pathToActiveImage[_pathToActiveImage.length - 1] = page_index
+        let page_properties = action.page_properties
+        let old_regions = [...(getIn(state, _pathToActiveImage).regions || [])]
+        let new_regions = action.region
+        // remove the new regions that have IoU > 0.5 with the old regions to prevent duplicate regions
+        for (let i = 0; i < old_regions.length; i++) {
+          for (let j = 0; j < new_regions.length; j++) {
+            let iou_temp = calculateIoU(old_regions[i], new_regions[j])
+            if (iou_temp > 0.5) {
+              new_regions.splice(j, 1)
+              break
+            }
           }
         }
+  
+        // append new regions to the old regions, and reset highlighting
+        let regions = [...(getIn(state, _pathToActiveImage).regions || [])]
+          .map((r) =>
+            setIn(r, ["editingLabels"], false).setIn(["highlighted"], false)
+          )
+          .concat(action.region ? [...action.region] : [])
+        let newState = { ...state }
+        newState = setIn(newState, ["loadingTemplateMatching"], false)
+        // save to history
+        newState = saveToHistory(newState, `RAN OCR Matching`)
+        return setIn(newState, [..._pathToActiveImage, "regions"], regions)  
       }
-
-      // append new regions to the old regions, and reset highlighting
-      let regions = [...(getIn(state, _pathToActiveImage).regions || [])]
-        .map((r) =>
-          setIn(r, ["editingLabels"], false).setIn(["highlighted"], false)
-        )
-        .concat(action.region ? [...action.region] : [])
-      let newState = { ...state }
-      newState = setIn(newState, ["loadingTemplateMatching"], false)
-      // svae to history
-      newState = saveToHistory(newState, `RAN OCR Matching`)
-      return setIn(newState, [..._pathToActiveImage, "regions"], regions)
+      else if (action.ocr_type === "project") {
+        let newState = { ...state }
+        let project_regions = action.region;
+        for (let page_index = 0; page_index < project_regions.length; page_index++ ) {
+          let old_regions = [...(getIn(state, ["images", page_index]).regions || [])]
+          let new_regions = project_regions[page_index]
+          // remove the new regions that have IoU > 0.5 with the old regions to prevent duplicate regions
+          for (let i = 0; i < old_regions.length; i++) {
+            for (let j = 0; j < new_regions.length; j++) {
+              let iou_temp = calculateIoU(old_regions[i], new_regions[j])
+              if (iou_temp > 0.5) {
+                new_regions.splice(j, 1)
+                break
+              }
+            }
+          }
+          let regions = [...(getIn(state, ["images", page_index]).regions || [])]
+            .map((r) =>
+              setIn(r, ["editingLabels"], false).setIn(["highlighted"], false)
+            )
+            .concat(new_regions ? [...new_regions] : [])
+          newState = setIn(newState, ["images", page_index, "regions"], regions)
+        }
+        newState = setIn(newState, ["loadingTemplateMatching"], false)
+        // save to history
+        newState = saveToHistory(newState, `RAN OCR Matching`)
+        return newState
+      }
     }
     case "HEADER_BUTTON_CLICKED": {
       const buttonName = action.buttonName.toLowerCase()
