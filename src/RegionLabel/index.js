@@ -1,5 +1,16 @@
 // @flow
-import { Grid, TextField, Tooltip, Typography } from "@material-ui/core"
+import {
+  Checkbox,
+  FormControlLabel,
+  Grid,
+  Icon,
+  Radio,
+  RadioGroup,
+  Switch,
+  TextField,
+  Tooltip,
+  Typography,
+} from "@material-ui/core"
 import Button from "@material-ui/core/Button"
 import IconButton from "@material-ui/core/IconButton"
 import Paper from "@material-ui/core/Paper"
@@ -145,7 +156,7 @@ export const RegionLabel = ({
           scaleValues.push(
             Math.sqrt(
               (scale["x1"] - scale["x2"]) ** 2 +
-              (scale["y1"] - scale["y2"]) ** 2
+                (scale["y1"] - scale["y2"]) ** 2
             ) / scaleVal
           )
         }
@@ -692,6 +703,207 @@ export const RegionLabel = ({
     }
   }
 
+  const ocrTypes = {
+    page: "page",
+    project: "project",
+  }
+  const [isOCRProjectChecked, setIsOCRProjectChecked] = useState(false)
+
+  const handleProjectOCR = (region) => {
+    setIsTemplateMatchingLoading(true)
+    // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
+    let page_properties = {
+      user_id: 80808080,
+      doc_id: 80808080,
+      page_id: 80808080,
+      threshold: 0.8,
+      page_index: pageIndex,
+    }
+    const region_coords = {
+      x: region.x,
+      y: region.y,
+      w: region.w,
+      h: region.h,
+    }
+    const region_color = region.color
+    const endpoint =
+      "https://htz91m7wz1.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-project-ocr"
+    const json_data = {
+      image_urls: imageSrcs, // TODO: get all image urls from params
+      image_url: imageSrc,
+      page_index: page_properties["page_index"],
+      template_symbol_name: region.cls,
+      threshold: page_properties["threshold"],
+      user_id: page_properties["user_id"],
+      doc_id: page_properties["doc_id"],
+      page_id: page_properties["page_id"],
+      template_coord: region_coords,
+      template_index: page_properties["page_index"],
+      page_indices: [...Array(imageSrcs.length).keys()], // TODO: get # of pages from imageSrcs
+    }
+    onMatchTemplate(region)
+    fetch(endpoint, {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        queryStringParameters: json_data,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json()
+        }
+        throw new Error("Backend Error")
+      })
+      .then((data) => {
+        // result can be empty
+        return data.body ? data.body.result : []
+      })
+      .then((res) => {
+        // TODO: result is an array of number of pages with regions
+        let results = []
+        for (let i = 0; i < res.length; i++) {
+          let single_page_regions = res[i].map((r) => {
+            const new_region = {}
+            new_region["isOCR"] = true
+            new_region["x"] = r["x"]
+            new_region["y"] = r["y"]
+            new_region["w"] = r["w"]
+            new_region["h"] = r["h"]
+            new_region["editingLabels"] = false
+            new_region["highlighted"] = false
+            new_region["id"] = getRandomId()
+            new_region["cls"] = region.cls
+            new_region["type"] = "box"
+            new_region["color"] = region.color
+            new_region["visible"] = true
+            new_region["breakout"] =
+              (selectedBreakoutIdAutoAdd &&
+                breakoutList &&
+                breakoutList.length > 0 &&
+                breakoutList.find((b) => b.id === selectedBreakoutIdAutoAdd)) ||
+              (region && region.breakout)
+            new_region["category"] =
+              region?.category ||
+              DeviceList.find((x) => x.symbol_name === region.cls)?.category ||
+              "NOT CLASSIFIED"
+            return new_region
+          })
+          results.push(single_page_regions)
+        }
+        console.log("DBG: results")
+        console.log(results)
+        finishMatchTemplate(results, page_properties, "project")
+        setIsTemplateMatchingLoading(false)
+      })
+      .catch((error) => {
+        console.error("Error:", error)
+        finishMatchTemplate([], page_properties, "project")
+        setIsTemplateMatchingLoading(false)
+      })
+  }
+
+  const handlePageOCR = (region) => {
+    setIsTemplateMatchingLoading(true)
+    // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
+    let page_properties = {
+      user_id: 80808080,
+      doc_id: 80808080,
+      page_id: 80808080,
+      threshold: 0.8,
+      page_index: pageIndex,
+    }
+    const region_coords = {
+      x: region.x,
+      y: region.y,
+      w: region.w,
+      h: region.h,
+    }
+    const region_color = region.color
+    const endpoint =
+      "https://6lufq8mux5.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-ocr-arbiter"
+    const json_data = {
+      image_url: imageSrc,
+      page_index: page_properties["page_index"],
+      template_symbol_name: region.cls,
+      threshold: page_properties["threshold"],
+      user_id: page_properties["user_id"],
+      doc_id: page_properties["doc_id"],
+      page_id: page_properties["page_id"],
+      template_coord: region_coords,
+    }
+    onMatchTemplate(region)
+    fetch(endpoint, {
+      method: "POST", // or 'PUT'
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        queryStringParameters: json_data,
+      }),
+    })
+      .then((response) => {
+        if (response.ok) {
+          return response.json()
+        }
+        throw new Error("Backend Error")
+      })
+      .then((data) => {
+        // result can be empty
+        return data.body ? data.body.result : []
+      })
+      .then((res) => {
+        let results = res.map((r) => {
+          const new_region = {}
+          new_region["isOCR"] = true
+          new_region["x"] = r["x"]
+          new_region["y"] = r["y"]
+          new_region["w"] = r["w"]
+          new_region["h"] = r["h"]
+          new_region["editingLabels"] = false
+          new_region["highlighted"] = false
+          new_region["id"] = getRandomId()
+          new_region["cls"] = region.cls
+          new_region["type"] = "box"
+          new_region["color"] = region.color
+          new_region["visible"] = true
+          new_region["breakout"] =
+            (selectedBreakoutIdAutoAdd &&
+              breakoutList &&
+              breakoutList.length > 0 &&
+              breakoutList.find((b) => b.id === selectedBreakoutIdAutoAdd)) ||
+            (region && region.breakout)
+          new_region["category"] =
+            region?.category ||
+            DeviceList.find((x) => x.symbol_name === region.cls)?.category ||
+            "NOT CLASSIFIED"
+          return new_region
+        })
+        finishMatchTemplate(results, page_properties, "page")
+        setIsTemplateMatchingLoading(false)
+      })
+      .catch((error) => {
+        console.error("Error:", error)
+        finishMatchTemplate([], page_properties, "page")
+        setIsTemplateMatchingLoading(false)
+      })
+  }
+
+  const handleOCRTypeChange = (event) => {
+    setIsOCRProjectChecked(event.target.checked)
+  }
+
+  const handleRunOCR = (region) => {
+    if (isOCRProjectChecked) {
+      handleProjectOCR(region)
+    }
+    if (!isOCRProjectChecked) {
+      handlePageOCR(region)
+    }
+  }
+
   return (
     <>
       <Paper
@@ -700,8 +912,8 @@ export const RegionLabel = ({
           highlighted: region.highlighted,
         })}
         style={{
-          minWidth: 300,
-          maxWidth: 300,
+          minWidth: 400,
+          maxWidth: 400,
         }}
       >
         {!editing ? (
@@ -735,7 +947,12 @@ export const RegionLabel = ({
             )}
           </div>
         ) : (
-          <div style={{ maxWidth: 300 }}>
+          <div
+            style={{
+              minWidth: 300,
+              maxWidth: 400,
+            }}
+          >
             <div
               style={{
                 display: "flex",
@@ -770,317 +987,151 @@ export const RegionLabel = ({
                   (region.breakout === undefined ||
                     (region.breakout &&
                       region.breakout.is_breakout === false)) && (
-                    <IconButton
-                      disabled={isTemplateMatchingLoading}
-                      style={{
-                        backgroundColor: "#1DA1F2",
-                        color: " white",
-                        borderRadius: "4px",
-                        marginRight: "8px",
-                        height: "22px",
+                    <Tooltip
+                      title={"Create a breakout group for this device."}
+                      PopperProps={{
+                        style: { zIndex: 9999999 },
                       }}
-                      classes={{
-                        label: {
-                          display: "flex",
-                          flexDirection: "row",
-                          marginTop: -2,
-                        },
-                      }}
-                      onClick={() => setOpenBreakout((open) => !open)}
                     >
-                      <AddIcon
+                      <IconButton
+                        disabled={isTemplateMatchingLoading}
                         style={{
-                          width: 16,
-                          height: 16,
+                          backgroundColor: "#1DA1F2",
+                          color: " white",
+                          borderRadius: "4px",
+                          marginRight: "8px",
+                          height: "22px",
                         }}
-                      />
-                      <div
-                        style={{
-                          fontSize: "12px",
+                        classes={{
+                          label: {
+                            display: "flex",
+                            flexDirection: "row",
+                            marginTop: -2,
+                          },
                         }}
+                        onClick={() => setOpenBreakout((open) => !open)}
                       >
-                        Breakout
-                      </div>
-                    </IconButton>
+                        <AddIcon
+                          style={{
+                            width: 16,
+                            height: 16,
+                          }}
+                        />
+                        <div
+                          style={{
+                            fontSize: "12px",
+                          }}
+                        >
+                          Breakout
+                        </div>
+                      </IconButton>
+                    </Tooltip>
                   )}
 
                 {region.cls &&
-                  region.cls !== NOT_CLASSIFED &&
-                  region.type === "box" ? (
-                  <IconButton
-                    disabled={isTemplateMatchingLoading}
-                    onClick={() => {
-                      setIsTemplateMatchingLoading(true)
-                      // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
-                      let page_properties = {
-                        user_id: 80808080,
-                        doc_id: 80808080,
-                        page_id: 80808080,
-                        threshold: 0.8,
-                        page_index: pageIndex,
-                      }
-                      const region_coords = {
-                        x: region.x,
-                        y: region.y,
-                        w: region.w,
-                        h: region.h,
-                      }
-                      const region_color = region.color
-                      const endpoint =
-                        "https://6lufq8mux5.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-ocr-arbiter"
-                      const json_data = {
-                        image_url: imageSrc,
-                        page_index: page_properties["page_index"],
-                        template_symbol_name: region.cls,
-                        threshold: page_properties["threshold"],
-                        user_id: page_properties["user_id"],
-                        doc_id: page_properties["doc_id"],
-                        page_id: page_properties["page_id"],
-                        template_coord: region_coords,
-                      }
-                      onMatchTemplate(region)
-                      fetch(endpoint, {
-                        method: "POST", // or 'PUT'
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          queryStringParameters: json_data,
-                        }),
-                      })
-                        .then((response) => {
-                          if (response.ok) {
-                            return response.json()
-                          }
-                          throw new Error("Backend Error")
-                        })
-                        .then((data) => {
-                          // result can be empty
-                          return data.body ? data.body.result : []
-                        })
-                        .then((res) => {
-                          let results = res.map((r) => {
-                            const new_region = {}
-                            new_region["isOCR"] = true
-                            new_region["x"] = r["x"]
-                            new_region["y"] = r["y"]
-                            new_region["w"] = r["w"]
-                            new_region["h"] = r["h"]
-                            new_region["editingLabels"] = false
-                            new_region["highlighted"] = false
-                            new_region["id"] = getRandomId()
-                            new_region["cls"] = region.cls
-                            new_region["type"] = "box"
-                            new_region["color"] = region.color
-                            new_region["visible"] = true
-                            new_region["breakout"] =
-                              (selectedBreakoutIdAutoAdd &&
-                                breakoutList &&
-                                breakoutList.length > 0 &&
-                                breakoutList.find(
-                                  (b) => b.id === selectedBreakoutIdAutoAdd
-                                )) ||
-                              (region && region.breakout)
-                            new_region["category"] =
-                              region?.category ||
-                              DeviceList.find(
-                                (x) => x.symbol_name === region.cls
-                              )?.category ||
-                              "NOT CLASSIFIED"
-                            return new_region
-                          })
-                          finishMatchTemplate(results, page_properties, "page")
-                          setIsTemplateMatchingLoading(false)
-                        })
-                        .catch((error) => {
-                          console.error("Error:", error)
-                          finishMatchTemplate([], page_properties, "page")
-                          setIsTemplateMatchingLoading(false)
-                        })
-                    }}
-                    tabIndex={-1}
-                    style={{
-                      backgroundColor: "#4CAF50",
-                      color: "white",
-                      paddingLeft: "12px",
-                      paddingRight: "12px",
-                      borderRadius: "4px",
-                      height: "24px",
-                    }}
-                    classes={{
-                      label: {
-                        display: "flex",
-                        flexDirection: "row",
-                        marginTop: -2,
-                      },
-                    }}
-                    size="small"
-                    variant="outlined"
-                  >
-                    <ImageSearchIcon
-                      style={{ marginTop: -4, width: 16, height: 16 }}
-                    />
-                    <div
-                      style={{
-                        fontSize: "12px",
+                region.cls !== NOT_CLASSIFED &&
+                region.type === "box" ? (
+                  <>
+                    <Tooltip
+                      title={"Run AiE to search for this device."}
+                      PopperProps={{
+                        style: { zIndex: 9999999 },
                       }}
                     >
-                      Run AIE
-                    </div>
-                  </IconButton>
-                ) : null}
-
-                {region.cls &&
-                  region.cls !== NOT_CLASSIFED &&
-                  region.type === "box" ? (
-                  <IconButton
-                    disabled={isTemplateMatchingLoading}
-                    onClick={() => {
-                      setIsTemplateMatchingLoading(true)
-                      // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
-                      let page_properties = {
-                        user_id: 80808080,
-                        doc_id: 80808080,
-                        page_id: 80808080,
-                        threshold: 0.8,
-                        page_index: pageIndex,
+                      <IconButton
+                        disabled={isTemplateMatchingLoading}
+                        onClick={() => {
+                          handleRunOCR(region)
+                        }}
+                        tabIndex={-1}
+                        style={{
+                          backgroundColor: "#4CAF50",
+                          color: "white",
+                          paddingLeft: "12px",
+                          paddingRight: "12px",
+                          borderRadius: "4px",
+                          height: "24px",
+                        }}
+                        classes={{
+                          label: {
+                            display: "flex",
+                            flexDirection: "row",
+                            marginTop: -2,
+                          },
+                        }}
+                        size="small"
+                        variant="outlined"
+                      >
+                        <ImageSearchIcon
+                          style={{ marginTop: -4, width: 16, height: 16 }}
+                        />
+                        <div
+                          style={{
+                            fontSize: "12px",
+                          }}
+                        >
+                          Run AiE
+                        </div>
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip
+                      title={
+                        "Allow AiE to search for this device on all pages."
                       }
-                      const region_coords = {
-                        x: region.x,
-                        y: region.y,
-                        w: region.w,
-                        h: region.h,
-                      }
-                      const region_color = region.color
-                      const endpoint =
-                        "https://htz91m7wz1.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-project-ocr"
-                      const json_data = {
-                        image_urls: imageSrcs,  // TODO: get all image urls from params
-                        image_url: imageSrc,
-                        page_index: page_properties["page_index"],
-                        template_symbol_name: region.cls,
-                        threshold: page_properties["threshold"],
-                        user_id: page_properties["user_id"],
-                        doc_id: page_properties["doc_id"],
-                        page_id: page_properties["page_id"],
-                        template_coord: region_coords,
-                        template_index: page_properties["page_index"],
-                        page_indices: [...Array(imageSrcs.length).keys()]  // TODO: get # of pages from imageSrcs
-
-                      }
-                      onMatchTemplate(region)
-                      fetch(endpoint, {
-                        method: "POST", // or 'PUT'
-                        headers: {
-                          "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({
-                          queryStringParameters: json_data,
-                        }),
-                      })
-                        .then((response) => {
-                          if (response.ok) {
-                            return response.json()
-                          }
-                          throw new Error("Backend Error")
-                        })
-                        .then((data) => {
-                          // result can be empty
-                          return data.body ? data.body.result : []
-                        })
-                        .then((res) => {
-                          // TODO: result is an array of number of pages with regions
-                          let results = []
-                          for (let i = 0; i < res.length; i++) {
-                            let single_page_regions =
-                              res[i].map((r) => {
-                                const new_region = {}
-                                new_region["isOCR"] = true
-                                new_region["x"] = r["x"]
-                                new_region["y"] = r["y"]
-                                new_region["w"] = r["w"]
-                                new_region["h"] = r["h"]
-                                new_region["editingLabels"] = false
-                                new_region["highlighted"] = false
-                                new_region["id"] = getRandomId()
-                                new_region["cls"] = region.cls
-                                new_region["type"] = "box"
-                                new_region["color"] = region.color
-                                new_region["visible"] = true
-                                new_region["breakout"] =
-                                  (selectedBreakoutIdAutoAdd &&
-                                    breakoutList &&
-                                    breakoutList.length > 0 &&
-                                    breakoutList.find(
-                                      (b) => b.id === selectedBreakoutIdAutoAdd
-                                    )) ||
-                                  (region && region.breakout)
-                                new_region["category"] =
-                                  region?.category ||
-                                  DeviceList.find(
-                                    (x) => x.symbol_name === region.cls
-                                  )?.category ||
-                                  "NOT CLASSIFIED"
-                                return new_region
-                              })
-                            results.push(single_page_regions)
-                          }
-                          console.log("DBG: results");
-                          console.log(results);
-                          finishMatchTemplate(results, page_properties, "project")
-                          setIsTemplateMatchingLoading(false)
-                        })
-                        .catch((error) => {
-                          console.error("Error:", error)
-                          finishMatchTemplate([], page_properties, "project")
-                          setIsTemplateMatchingLoading(false)
-                        })
-                    }}
-                    tabIndex={-1}
-                    style={{
-                      backgroundColor: "#4CAF50",
-                      color: "white",
-                      paddingLeft: "12px",
-                      paddingRight: "12px",
-                      borderRadius: "4px",
-                      height: "24px",
-                    }}
-                    classes={{
-                      label: {
-                        display: "flex",
-                        flexDirection: "row",
-                        marginTop: -2,
-                      },
-                    }}
-                    size="small"
-                    variant="outlined"
-                  >
-                    <ImageSearchIcon
-                      style={{ marginTop: -4, width: 16, height: 16 }}
-                    />
-                    <div
-                      style={{
-                        fontSize: "12px",
+                      PopperProps={{
+                        style: { zIndex: 9999999 },
                       }}
                     >
-                      Project OCR
-                    </div>
-                  </IconButton>
+                      <FormControlLabel
+                        style={{
+                          paddingLeft: "8px",
+                          color: "black",
+                        }}
+                        control={
+                          <Checkbox
+                            checked={isOCRProjectChecked}
+                            onChange={handleOCRTypeChange}
+                          />
+                        }
+                        label={
+                          <Typography
+                            style={{
+                              fontSize: "12px",
+                              marginLeft: "-4px",
+                              color: "black",
+                            }}
+                          >
+                            On All Pages?
+                          </Typography>
+                        }
+                        fontSize="small"
+                      />
+                    </Tooltip>
+                  </>
                 ) : null}
-
-                <IconButton
-                  disabled={isTemplateMatchingLoading}
-                  onClick={() => {
-                    onDelete(region)
+                <Tooltip
+                  title={"Delete Region"}
+                  placement="right"
+                  PopperProps={{
+                    style: { zIndex: 9999999 },
                   }}
-                  tabIndex={-1}
-                  style={{}}
-                  size="small"
-                  variant="outlined"
-                  color="secondary"
                 >
-                  <TrashIcon style={{ marginTop: -4, width: 16, height: 16 }} />
-                </IconButton>
+                  <IconButton
+                    disabled={isTemplateMatchingLoading}
+                    onClick={() => {
+                      onDelete(region)
+                    }}
+                    tabIndex={-1}
+                    style={{}}
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                  >
+                    <TrashIcon
+                      style={{ marginTop: -4, width: 16, height: 16 }}
+                    />
+                  </IconButton>
+                </Tooltip>
               </div>
             </div>
             {(allowedClasses || []).length > 0 && (
