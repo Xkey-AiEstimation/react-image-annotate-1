@@ -1033,7 +1033,9 @@ export const RegionLabel = ({
                 region.type === "box" ? (
                   <>
                     <Tooltip
-                      title={"Run AiE to search for this device."}
+                      title={
+                        "After Annotating object or text, run AiE to search for this device."
+                      }
                       PopperProps={{
                         style: { zIndex: 9999999 },
                       }}
@@ -1045,8 +1047,8 @@ export const RegionLabel = ({
                         }}
                         tabIndex={-1}
                         style={{
-                          backgroundColor: "#4CAF50",
                           color: "white",
+                          backgroundColor: "#FF0000",
                           paddingLeft: "12px",
                           paddingRight: "12px",
                           borderRadius: "4px",
@@ -1125,7 +1127,6 @@ export const RegionLabel = ({
                     style={{}}
                     size="small"
                     variant="outlined"
-                    color="secondary"
                   >
                     <TrashIcon
                       style={{ marginTop: -4, width: 16, height: 16 }}
