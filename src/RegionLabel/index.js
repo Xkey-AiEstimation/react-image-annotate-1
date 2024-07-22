@@ -1101,7 +1101,7 @@ export const RegionLabel = ({
                               color: "black",
                             }}
                           >
-                            On All Pages?
+                            All Pages
                           </Typography>
                         }
                         fontSize="small"
