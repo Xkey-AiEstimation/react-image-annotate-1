@@ -707,7 +707,7 @@ export const RegionLabel = ({
     page: "page",
     project: "project",
   }
-  const [isOCRProjectChecked, setIsOCRProjectChecked] = useState(false)
+  const [isOCRProjectChecked, setIsOCRProjectChecked] = useState(true)
 
   const handleProjectOCR = (region) => {
     setIsTemplateMatchingLoading(true)
