@@ -3,10 +3,6 @@ import {
   Checkbox,
   FormControlLabel,
   Grid,
-  Icon,
-  Radio,
-  RadioGroup,
-  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -209,12 +205,16 @@ export const RegionLabel = ({
   }
 
   const [deviceOptions, setDeviceOptions] = useState(undefined)
+  const [conduitOptions, setConduitOptions] = useState(undefined)
   const [isNewDevice, setIsNewDevice] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState({
     value: "NOT CLASSIFIED",
     label: "NOT CLASSIFIED",
   })
-  const [selectedDevice, setSelectedDevice] = useState(null)
+  const [selectedDevice, setSelectedDevice] = useState({
+    value: "NOT CLASSIFIED",
+    label: "NOT CLASSIFIED",
+  })
   const [categories, setCategories] = useState([])
 
   const [canChangeCategory, setCanChangeCategory] = useState(false)
@@ -229,6 +229,7 @@ export const RegionLabel = ({
     const nonUserDefinedDevices = mutableDeviceList.filter(
       (device) => !device.user_defined
     )
+    const nonUserDefinedConduits = [...nonUserDefinedDevices]
 
     const userDefinedDeviceOptions = userDefinedDevices.map((device) => ({
       label: device.symbol_name,
@@ -244,6 +245,15 @@ export const RegionLabel = ({
       user_defined: device.user_defined,
     }))
 
+    const nonUserDefinedConduitOptions = nonUserDefinedConduits
+      .filter((device) => conduit_symbols.includes(device.symbol_name))
+      .map((device) => ({
+        label: device.symbol_name,
+        value: device.id,
+        id: device.id,
+        user_defined: device.user_defined,
+      }))
+
     const deviceOptions = [
       {
         label: "User Defined Devices",
@@ -252,6 +262,17 @@ export const RegionLabel = ({
       {
         label: "Xkey Standard Devices",
         options: nonUserDefinedDeviceOptions,
+      },
+    ]
+
+    const xkeyConduitOptions = [
+      {
+        label: "User Defined Devices",
+        options: userDefinedDeviceOptions,
+      },
+      {
+        label: "Xkey Standard Conduits",
+        options: nonUserDefinedConduitOptions,
       },
     ]
 
@@ -265,9 +286,17 @@ export const RegionLabel = ({
     const device = mutableDeviceList.find(
       (device) => device.symbol_name === region.cls
     )
+
     if (device) {
+      const deviceName =
+        device.symbol_name === "" ||
+        device.symbol_name === null ||
+        device.symbol_name === undefined
+          ? "NOT CLASSIFIED"
+          : device.symbol_name
+
       setSelectedDevice({
-        label: device.symbol_name,
+        label: deviceName,
         value: device.id || null,
         id: device.id,
         user_defined: device.user_defined,
@@ -278,9 +307,13 @@ export const RegionLabel = ({
       })
       setCanChangeCategory(device.user_defined)
     } else {
+      const deviceName =
+        region.cls === "" || region.cls === null || region.cls === undefined
+          ? "NOT CLASSIFIED"
+          : region.cls
       setSelectedDevice({
-        label: region.cls,
-        value: region.cls,
+        label: deviceName,
+        value: deviceName,
         id: region.id,
         user_defined: false,
       })
@@ -293,6 +326,7 @@ export const RegionLabel = ({
 
     setCategories(categoryOptions)
     setDeviceOptions(deviceOptions)
+    setConduitOptions(xkeyConduitOptions)
   }, [devices, region])
 
   const onChangeNewDevice = (newDevice) => {
@@ -505,31 +539,197 @@ export const RegionLabel = ({
       // do line
       return (
         <>
-          <CreatableSelect
-            placeholder="Conduit"
-            onChange={(o, actionMeta) => {
-              if (actionMeta.action === "create-option") {
-                onRegionClassAdded(o.value)
-              }
-              return onChange({
-                ...(region: any),
-                cls: o.value,
-              })
-            }}
-            value={region.cls ? { label: region.cls, value: region.cls } : null}
-            options={asMutable(
-              allowedClasses
-                .filter((x) => !all_symbols.includes(x))
-                .concat(conduit_symbols)
-                .map((c) => ({ value: c, label: c }))
-            )}
-          />
           {relativeLineLengthFt === 0 ? (
             <div>No Scales Found</div>
           ) : (
-            <div>{relativeLineLengthFt.toFixed(2)} ft</div>
+            <div>Length: {relativeLineLengthFt.toFixed(2)} ft</div>
+          )}
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                paddingLeft: "8px",
+                paddingRight: "4px",
+                paddingTop: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "bold",
+              }}
+            >
+              Device:
+            </div>
+            <Tooltip
+              title={regionDeviceInfo}
+              PopperProps={{
+                style: { zIndex: 9999999 },
+              }}
+            >
+              <IconButton size="small">
+                <InfoIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
+          <CreatableSelect
+            // need to add a check to see if the device is already in the list of devices and if it is we cant let the user create a new device
+            isValidNewOption={(inputValue, selectValue, selectOptions) => {
+              // Check if the device already exists in the list
+
+              const deviceExists = selectOptions
+                .map((optionGroup) =>
+                  optionGroup.options.map((device) =>
+                    device.label.toLowerCase().trim()
+                  )
+                )
+                .flat()
+                .includes(inputValue.toLowerCase().trim())
+
+              // If the device exists, return false to prevent its creation
+              // If the device doesn't exist, return true to allow its creation
+              return !deviceExists
+            }}
+            placeholder="Conduit"
+            onChange={(o, actionMeta) => {
+              let isActionCreate = false
+              if (actionMeta.action === "create-option") {
+                isActionCreate = true
+              }
+              onDeviceAdd(isActionCreate, o.label, o.value)
+            }}
+            value={selectedDevice}
+            options={conduitOptions}
+          />
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <div
+              style={{
+                paddingLeft: "8px",
+                paddingRight: "4px",
+                paddingTop: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "bold",
+              }}
+            >
+              System:
+            </div>
+            <Tooltip
+              title={regionLabelCategoryInfo}
+              PopperProps={{
+                style: { zIndex: 9999999 },
+              }}
+            >
+              <IconButton size="small">
+                <InfoIcon />
+              </IconButton>
+            </Tooltip>
+          </div>
+          <Select
+            placeholder="Select Category"
+            isDisabled={!canChangeCategory}
+            onChange={(e) => {
+              onSelectCategory(e)
+            }}
+            value={selectedCategory}
+            options={categories}
+          />
+          {!canChangeCategory && (
+            <div
+              style={{
+                paddingLeft: "8px",
+                paddingRight: "8px",
+                paddingTop: "4px",
+                fontSize: "12px",
+                color: "#666",
+                fontWeight: "lighter",
+              }}
+            >
+              {regionLabelExtra}
+            </div>
+          )}
+          {region.isOldDevice && !canChangeCategory && (
+            <div>
+              <div
+                style={{
+                  paddingLeft: "8px",
+                  paddingRight: "8px",
+                  paddingTop: "4px",
+                  fontSize: "12px",
+                  color: "#666",
+                  fontWeight: "lighter",
+                  color: "red",
+                }}
+              >
+                {regionLabelOld}
+              </div>
+              <div>
+                <IconButton
+                  style={{
+                    backgroundColor: "#1DA1F2",
+                    color: " white",
+                    borderRadius: "4px",
+                    marginRight: "8px",
+                    height: "22px",
+                  }}
+                  classes={{
+                    label: {
+                      display: "flex",
+                      flexDirection: "row",
+                      marginTop: -2,
+                    },
+                  }}
+                  onClick={() =>
+                    dispatch({
+                      type: "ADD_OLD_DEVICE_TO_NEW_DEVICES",
+                      device: {
+                        symbol_name: region.cls,
+                        category: region.category,
+                        user_defined: true,
+                      },
+                    })
+                  }
+                >
+                  <AddIcon
+                    style={{
+                      width: 16,
+                      height: 16,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: "12px",
+                    }}
+                  >
+                    Add to device list
+                  </div>
+                </IconButton>
+              </div>
+            </div>
           )}
         </>
+        // <>
+        //   <CreatableSelect
+        //     placeholder="Conduit"
+        //     onChange={(o, actionMeta) => {
+        //       if (actionMeta.action === "create-option") {
+        //         onRegionClassAdded(o.value)
+        //       }
+        //       return onChange({
+        //         ...(region: any),
+        //         cls: o.value,
+        //       })
+        //     }}
+        //     value={region.cls ? { label: region.cls, value: region.cls } : null}
+        //     options={asMutable(
+        //       allowedClasses
+        //         .filter((x) => !all_symbols.includes(x))
+        //         .concat(conduit_symbols)
+        //         .map((c) => ({ value: c, label: c }))
+        //     )}
+        //   />
+        //   {relativeLineLengthFt === 0 ? (
+        //     <div>No Scales Found</div>
+        //   ) : (
+        //     <div>{relativeLineLengthFt.toFixed(2)} ft</div>
+        //   )}
+        // </>
       )
     } else {
       // do device
@@ -793,8 +993,6 @@ export const RegionLabel = ({
           })
           results.push(single_page_regions)
         }
-        console.log("DBG: results")
-        console.log(results)
         finishMatchTemplate(results, page_properties, "project")
         setIsTemplateMatchingLoading(false)
       })
@@ -919,9 +1117,18 @@ export const RegionLabel = ({
         {!editing ? (
           <div>
             {region.cls && (
-              <div className="name">
+              <div
+                className="name"
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                }}
+              >
                 {region.type === "scale" ? (
-                  <LinearScaleIcon style={{ color: region.color }} />
+                  <LinearScaleIcon
+                    style={{ color: region.color, marginRight: "8px" }}
+                  />
                 ) : (
                   <div
                     className="circle"
@@ -930,9 +1137,45 @@ export const RegionLabel = ({
                 )}
 
                 {region.type === "scale" ? (
-                  <div>{region.cls} ft</div>
+                  <div>Scale Length: {region.cls} ft</div>
+                ) : region.type === "line" ? (
+                  <>
+                    <div
+                      style={{
+                        flexGrow: 1,
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        marginRight: "8px",
+                      }}
+                    >
+                      {region.cls === "" ||
+                      region.cls === null ||
+                      region.cls === undefined
+                        ? "NOT CLASSIFIED"
+                        : region.cls}{" "}
+                    </div>
+                    <div
+                      style={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        marginLeft: "auto",
+                      }}
+                    >
+                      {relativeLineLengthFt === 0
+                        ? "No Scales Found"
+                        : `Length: ${relativeLineLengthFt.toFixed(2)} ft`}
+                    </div>
+                  </>
                 ) : (
-                  <div>{region.cls}</div>
+                  <div>
+                    {region.cls === "" ||
+                    region.cls === null ||
+                    region.cls === undefined
+                      ? "NOT CLASSIFIED"
+                      : region.cls}{" "}
+                  </div>
                 )}
               </div>
             )}
