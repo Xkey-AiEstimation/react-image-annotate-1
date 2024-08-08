@@ -1419,15 +1419,18 @@ export default (state: MainLayoutState, action: Action) => {
       }
       let newRegion
       let defaultRegionCls =
-        state.selectedCls ??
-        (Array.isArray(state.regionClsList) && state.regionClsList.length > 0
+        state.selectedCls !== undefined && state.selectedCls !== null
+          ? state.selectedCls
+          : Array.isArray(state.regionClsList) && state.regionClsList.length > 0
           ? state.regionClsList[0]
-          : undefined)
+          : undefined
+
       let defaultRegionCategory =
-        state.selectedCategory ??
-        (defaultRegionCls
+        state.selectedCategory !== undefined && state.selectedCategory !== null
+          ? state.selectedCategory
+          : defaultRegionCls
           ? getCategoryBySymbolName(defaultRegionCls)
-          : undefined)
+          : undefined
       let defaultPointAndBoxColor = getColorByCategory(defaultRegionCategory)
       let defaultRegionColor = "#C4A484"
       const clsIndex = (state.regionClsList || []).indexOf(defaultRegionCls)
@@ -1830,7 +1833,7 @@ export default (state: MainLayoutState, action: Action) => {
             }
           }
         }
-  
+
         // append new regions to the old regions, and reset highlighting
         let regions = [...(getIn(state, _pathToActiveImage).regions || [])]
           .map((r) =>
@@ -1841,13 +1844,18 @@ export default (state: MainLayoutState, action: Action) => {
         newState = setIn(newState, ["loadingTemplateMatching"], false)
         // save to history
         newState = saveToHistory(newState, `RAN OCR Matching`)
-        return setIn(newState, [..._pathToActiveImage, "regions"], regions)  
-      }
-      else if (action.ocr_type === "project") {
+        return setIn(newState, [..._pathToActiveImage, "regions"], regions)
+      } else if (action.ocr_type === "project") {
         let newState = { ...state }
-        let project_regions = action.region;
-        for (let page_index = 0; page_index < project_regions.length; page_index++ ) {
-          let old_regions = [...(getIn(state, ["images", page_index]).regions || [])]
+        let project_regions = action.region
+        for (
+          let page_index = 0;
+          page_index < project_regions.length;
+          page_index++
+        ) {
+          let old_regions = [
+            ...(getIn(state, ["images", page_index]).regions || []),
+          ]
           let new_regions = project_regions[page_index]
           // remove the new regions that have IoU > 0.5 with the old regions to prevent duplicate regions
           for (let i = 0; i < old_regions.length; i++) {
@@ -1859,7 +1867,9 @@ export default (state: MainLayoutState, action: Action) => {
               }
             }
           }
-          let regions = [...(getIn(state, ["images", page_index]).regions || [])]
+          let regions = [
+            ...(getIn(state, ["images", page_index]).regions || []),
+          ]
             .map((r) =>
               setIn(r, ["editingLabels"], false).setIn(["highlighted"], false)
             )
