@@ -1441,7 +1441,6 @@ export default (state: MainLayoutState, action: Action) => {
           let newRegionBreakout = undefined
           const { selectedBreakoutIdAutoAdd } = state
           if (selectedBreakoutIdAutoAdd !== null) {
-            // create a breakout object with id === selectedBreakoutIdAutoAdd
             newRegionBreakout = state.breakouts.find(
               (breakout) => breakout.id === selectedBreakoutIdAutoAdd
             )
@@ -1575,7 +1574,7 @@ export default (state: MainLayoutState, action: Action) => {
             y2: y,
             highlighted: true,
             editingLabels: false,
-            color: defaultRegionColor,
+            color: defaultPointAndBoxColor,
             cls: defaultRegionCls,
             id: getRandomId(),
             category: getCategoryBySymbolName(defaultRegionCls),
