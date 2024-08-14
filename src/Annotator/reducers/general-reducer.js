@@ -1827,7 +1827,7 @@ export default (state: MainLayoutState, action: Action) => {
         for (let i = 0; i < old_regions.length; i++) {
           for (let j = 0; j < new_regions.length; j++) {
             let iou_temp = calculateIoU(old_regions[i], new_regions[j])
-            if (iou_temp > 0.5) {
+            if (iou_temp > 0.1) {
               new_regions.splice(j, 1)
               break
             }
@@ -1861,7 +1861,7 @@ export default (state: MainLayoutState, action: Action) => {
           for (let i = 0; i < old_regions.length; i++) {
             for (let j = 0; j < new_regions.length; j++) {
               let iou_temp = calculateIoU(old_regions[i], new_regions[j])
-              if (iou_temp > 0.5) {
+              if (iou_temp > 0.1) {
                 new_regions.splice(j, 1)
                 break
               }
