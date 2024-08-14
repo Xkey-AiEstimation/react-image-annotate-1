@@ -28,7 +28,7 @@ export default ({
   const zoomIn = (direction, point) => {
     const [mx, my] = [point.x, point.y]
     let scale =
-      typeof direction === "object" ? direction.to / mat.a : 1 + 0.2 * direction
+      typeof direction === "object" ? direction.to / mat.a : 1 + 0.1 * direction // Adjust the 0.1 for slower/faster zoom
 
     // NOTE: We're mutating mat here
     mat.translate(mx, my).scaleU(scale)
