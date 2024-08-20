@@ -3,6 +3,7 @@ import {
   Checkbox,
   FormControlLabel,
   Grid,
+  Switch,
   TextField,
   Tooltip,
   Typography,
@@ -11,7 +12,7 @@ import Button from "@material-ui/core/Button"
 import IconButton from "@material-ui/core/IconButton"
 import Paper from "@material-ui/core/Paper"
 
-import { makeStyles } from "@material-ui/core/styles"
+import { makeStyles, withStyles } from "@material-ui/core/styles"
 import AddIcon from "@material-ui/icons/Add"
 import TrashIcon from "@material-ui/icons/Delete"
 import ImageSearchIcon from "@material-ui/icons/ImageSearch"
@@ -32,6 +33,20 @@ import DeviceList from "./DeviceList"
 import styles from "./styles"
 
 const useStyles = makeStyles(styles)
+
+const GreenOCRToggleSwitch = withStyles({
+  switchBase: {
+    color: "#388E3C",
+    "&$checked": {
+      color: "#4CAF50",
+    },
+    "&$checked + $track": {
+      backgroundColor: "#4CAF50",
+    },
+  },
+  checked: {},
+  track: {},
+})(Switch)
 
 type Props = {
   region: Region,
@@ -907,7 +922,7 @@ export const RegionLabel = ({
     page: "page",
     project: "project",
   }
-  const [isOCRProjectChecked, setIsOCRProjectChecked] = useState(true)
+  const [isOCRProjectChecked, setIsOCRProjectChecked] = useState(false)
 
   const handleProjectOCR = (region) => {
     setIsTemplateMatchingLoading(true)
@@ -1333,9 +1348,12 @@ export const RegionLabel = ({
                           color: "black",
                         }}
                         control={
-                          <Checkbox
+                          <GreenOCRToggleSwitch
                             checked={isOCRProjectChecked}
                             onChange={handleOCRTypeChange}
+                            color="primary"
+                            name="checkedB"
+                            inputProps={{ "aria-label": "primary checkbox" }}
                           />
                         }
                         label={
