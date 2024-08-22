@@ -34,14 +34,13 @@ import styles from "./styles"
 
 const useStyles = makeStyles(styles)
 
-const GreenOCRToggleSwitch = withStyles({
+const RedOCRToggleSwitch = withStyles({
   switchBase: {
-    color: "#388E3C",
     "&$checked": {
-      color: "#4CAF50",
+      color: "#FF0000",
     },
     "&$checked + $track": {
-      backgroundColor: "#4CAF50",
+      backgroundColor: "#FF0000",
     },
   },
   checked: {},
@@ -1348,7 +1347,7 @@ export const RegionLabel = ({
                           color: "black",
                         }}
                         control={
-                          <GreenOCRToggleSwitch
+                          <RedOCRToggleSwitch
                             checked={isOCRProjectChecked}
                             onChange={handleOCRTypeChange}
                             color="primary"
@@ -1390,7 +1389,7 @@ export const RegionLabel = ({
                     variant="outlined"
                   >
                     <TrashIcon
-                      style={{ marginTop: -4, width: 16, height: 16 }}
+                      style={{ color: "#D63230", width: 24, height: 24 }}
                     />
                   </IconButton>
                 </Tooltip>
