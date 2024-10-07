@@ -42,6 +42,7 @@ export const RegionTags = ({
   region,
   selectedBreakoutIdAutoAdd,
   deviceList,
+  subType
 }) => {
   const RegionLabel = DefaultRegionLabel
   return regions
@@ -121,6 +122,7 @@ export const RegionTags = ({
               : {})}
           >
             <RegionLabel
+              subType={region.subType}
               allowedClasses={regionClsList}
               allowedTags={regionTagList}
               onOpen={onBeginRegionEdit}

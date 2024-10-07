@@ -109,6 +109,7 @@ export const Annotator = ({
   hideFullScreen,
   hideSave,
   allowComments,
+  subType,
 }: Props) => {
   if (typeof selectedImage === "string") {
     selectedImage = (images || []).findIndex((img) => img.src === selectedImage)
@@ -178,6 +179,7 @@ export const Annotator = ({
       excludedCategories: [],
       selectedBreakoutToggle: null,
       selectedDeviceToggle: "ALL",
+      subType,
       ...(annotationType === "image"
         ? {
             selectedImage,
