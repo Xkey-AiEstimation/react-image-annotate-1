@@ -34,6 +34,7 @@ import favicon from "../../public/images/favicon.png"
 import { action } from "@storybook/addon-actions"
 import BreakoutSidebarBox from "../BreakoutSidebarBox"
 import { AnnotationCountSidebarBox } from "../AnnotationCountSidebarBox"
+import { disableBreakoutSubscription, subTypes } from "../Annotator/constants"
 // import Fullscreen from "../Fullscreen"
 
 const emptyArr = []
@@ -158,11 +159,14 @@ export const MainLayout = ({
       realSize={activeImage ? activeImage.realSize : undefined}
       videoPlaying={state.videoPlaying}
       imageSrc={state.annotationType === "image" ? activeImage.src : null}
-      imageSrcs={state.annotationType === "image" ? state.images.map(i => {
-        return i.src
-      }) : null}
+      imageSrcs={
+        state.annotationType === "image"
+          ? state.images.map((i) => {
+              return i.src
+            })
+          : null
+      }
       videoSrc={state.annotationType === "video" ? state.videoSrc : null}
-
       pointDistancePrecision={state.pointDistancePrecision}
       createWithPrimary={state.selectedTool.includes("create")}
       dragWithPrimary={state.selectedTool === "pan"}
@@ -218,6 +222,7 @@ export const MainLayout = ({
       onRegionClassAdded={onRegionClassAdded}
       allowComments={state.allowComments}
       dispatch={dispatch}
+      subType={state?.subType || subTypes.fullSuiteYearly}
     />
   )
 
@@ -255,6 +260,13 @@ export const MainLayout = ({
   const debugModeOn = Boolean(window.localStorage.$ANNOTATE_DEBUG_MODE && state)
   const nextImageHasRegions =
     !nextImage || (nextImage.regions && nextImage.regions.length > 0)
+
+  const isBreakoutDisabled = useMemo(() => {
+    if (state?.subType) {
+      return disableBreakoutSubscription.includes(state.subType)
+    }
+    return false
+  }, [state.subType])
 
   return (
     <FullScreenContainer>
@@ -462,24 +474,27 @@ export const MainLayout = ({
                   })
                 }}
               />,
-              <BreakoutSidebarBox
-                regions={activeImage ? activeImage.regions : emptyArr}
-                onBreakoutDelete={action(
-                  "DELETE_BREAKOUT_BY_BREAKOUT_ID",
-                  "breakoutId"
-                )}
-                onBreakoutVisible={action(
-                  "TOGGLE_BREAKOUT_VISIBILITY",
-                  "breakoutId"
-                )}
-                onBreakoutAutoAdd={action(
-                  "TOGGLE_BREAKOUT_AUTO_ADD",
-                  "breakoutId"
-                )}
-                selectedBreakoutToggle={state.selectedBreakoutToggle}
-                selectedBreakoutIdAutoAdd={state.selectedBreakoutIdAutoAdd}
-                breakouts={state.breakouts}
-              />,
+
+              !isBreakoutDisabled && (
+                <BreakoutSidebarBox
+                  regions={activeImage ? activeImage.regions : emptyArr}
+                  onBreakoutDelete={action(
+                    "DELETE_BREAKOUT_BY_BREAKOUT_ID",
+                    "breakoutId"
+                  )}
+                  onBreakoutVisible={action(
+                    "TOGGLE_BREAKOUT_VISIBILITY",
+                    "breakoutId"
+                  )}
+                  onBreakoutAutoAdd={action(
+                    "TOGGLE_BREAKOUT_AUTO_ADD",
+                    "breakoutId"
+                  )}
+                  selectedBreakoutToggle={state.selectedBreakoutToggle}
+                  selectedBreakoutIdAutoAdd={state.selectedBreakoutIdAutoAdd}
+                  breakouts={state.breakouts}
+                />
+              ),
               <AnnotationCountSidebarBox
                 regions={activeImage ? activeImage.regions : emptyArr}
                 onToggleDevice={action(
@@ -490,7 +505,10 @@ export const MainLayout = ({
                   "DELETE_DEVICES_WITH_DEVICENAME",
                   "deviceName"
                 )}
-                onAddDeviceOldDeviceToList={action("ADD_OLD_DEVICE_TO_NEW_DEVICES", "device")}
+                onAddDeviceOldDeviceToList={action(
+                  "ADD_OLD_DEVICE_TO_NEW_DEVICES",
+                  "device"
+                )}
                 onDeleteAll={action("DELETE_ALL_DEVICES")}
                 selectedDeviceToggle={state.selectedDeviceToggle}
                 deviceList={state.deviceList}

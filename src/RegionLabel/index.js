@@ -31,6 +31,7 @@ import type { Region } from "../ImageCanvas/region-tools.js"
 import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
+import { disableBreakoutSubscription } from "../Annotator/constants.js"
 
 const useStyles = makeStyles(styles)
 
@@ -119,9 +120,14 @@ export const RegionLabel = ({
   dispatch,
   devices,
   disableAddingClasses = false,
+  subType,
 }: Props) => {
   const classes = useStyles()
   const [openBreakout, setOpenBreakout] = React.useState(false)
+
+  const isBreakoutDisabled = React.useMemo(() => {
+    return disableBreakoutSubscription.includes(subType)
+  }, [region])
 
   const commentInputRef = useRef(null)
   const onCommentInputClick = (_) => {
@@ -1241,6 +1247,7 @@ export const RegionLabel = ({
                   !region.isOldDevice &&
                   region.cls &&
                   region.cls !== NOT_CLASSIFED &&
+                  !isBreakoutDisabled &&
                   (region.breakout === undefined ||
                     (region.breakout &&
                       region.breakout.is_breakout === false)) && (

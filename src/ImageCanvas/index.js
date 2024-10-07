@@ -28,6 +28,7 @@ import styles from "./styles"
 import useMouse from "./use-mouse"
 import useProjectRegionBox from "./use-project-box"
 import useWasdMode from "./use-wasd-mode"
+import { disableBreakoutSubscription } from "../Annotator/constants.js"
 
 const useStyles = makeStyles(styles)
 
@@ -151,6 +152,7 @@ export const ImageCanvas = ({
   dispatch,
   selectedBreakoutIdAutoAdd,
   selectedDeviceToggle,
+  subType,
 }: Props) => {
   const classes = useStyles()
 
@@ -324,6 +326,8 @@ export const ImageCanvas = ({
   }, [regions])
 
   const breakoutList = useMemo(() => {
+    if (disableBreakoutSubscription.includes(subType)) return null
+
     const breakoutRegions = [
       ...new Set(
         breakouts
@@ -400,31 +404,6 @@ export const ImageCanvas = ({
       )}
       {imageLoaded && showTags && !dragging && (
         <PreventScrollToParents key="regionTags">
-          {/* <RegionTags
-            regions={regions}
-            projectRegionBox={projectRegionBox}
-            mouseEvents={mouseEvents}
-            regionClsList={regionClsList}
-            regionTagList={regionTagList}
-            onBeginRegionEdit={onBeginRegionEdit}
-            onChangeRegion={onChangeRegion}
-            onCloseRegionEdit={onCloseRegionEdit}
-            onDeleteRegion={onDeleteRegion}
-            onMatchTemplate={onMatchRegionTemplate}
-            finishMatchTemplate={finishMatchRegionTemplate}
-            layoutParams={layoutParams}
-            imageSrc={imageSrc}
-            pageIndex={pageIndex}
-            regionTemplateMatchingDisabled={regionTemplateMatchingDisabled}
-            RegionEditLabel={RegionEditLabel}
-            onRegionClassAdded={onRegionClassAdded}
-            allowComments={allowComments}
-            dispatch={dispatch}
-            breakoutList={breakoutList}
-
-            
-          /> */}
-
           <RegionTags
             regions={regions}
             projectRegionBox={projectRegionBox}
@@ -455,6 +434,7 @@ export const ImageCanvas = ({
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
             selectedDeviceToggle={selectedDeviceToggle}
             deviceList={deviceList}
+            subType={subType}
           />
         </PreventScrollToParents>
       )}
@@ -488,6 +468,7 @@ export const ImageCanvas = ({
             breakoutList={breakoutList}
             dispatch={dispatch}
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
+            subType={subType}
           />
         </div>
       )}
