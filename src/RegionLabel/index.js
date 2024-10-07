@@ -122,6 +122,7 @@ export const RegionLabel = ({
   disableAddingClasses = false,
   subType,
 }: Props) => {
+
   const classes = useStyles()
   const [openBreakout, setOpenBreakout] = React.useState(false)
 
@@ -1402,7 +1403,7 @@ export const RegionLabel = ({
                 </Tooltip>
               </div>
             </div>
-            {(allowedClasses || []).length > 0 && (
+            {(allowedClasses || []) && (
               <div style={{ marginTop: 6 }}>
                 {conditionalRegionTextField(region, region.type)}
               </div>
@@ -1448,7 +1449,8 @@ export const RegionLabel = ({
               region.cls &&
               region.cls !== NOT_CLASSIFED &&
               region.breakout &&
-              region.breakout.is_breakout && (
+              region.breakout.is_breakout &&
+              !isBreakoutDisabled && (
                 <div
                   style={{
                     marginTop: 4,
@@ -1519,7 +1521,7 @@ export const RegionLabel = ({
         )}
       </Paper>
 
-      {openBreakout && (
+      {openBreakout && !isBreakoutDisabled && (
         <BreakoutSection
           region={region}
           dispatch={dispatch}
