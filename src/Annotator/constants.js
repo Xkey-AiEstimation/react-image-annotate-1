@@ -16,7 +16,7 @@ export const subTypes = {
   standardEditionElectricalYearly: "yearly_xkey_see",
 }
 
-export const disableBreakoutSubscription = [subTypes.standardEditionYearly]
+export const disableBreakoutSubscription = [subTypes.standardEditionYearly, subTypes.standardEditionElectricalYearly]
 
 
 
