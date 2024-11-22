@@ -473,6 +473,7 @@ export const MainLayout = ({
                     category: regionCategory,
                   })
                 }}
+                isBreakoutDisabled={isBreakoutDisabled}
               />,
 
               !isBreakoutDisabled && (

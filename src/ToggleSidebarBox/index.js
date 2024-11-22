@@ -99,7 +99,7 @@ const RowHeader = ({
   onRegionToggle,
   regions,
   onRegionBreakout,
-  excludedCategories,
+  isBreakoutDisabled,
 }) => {
   const [checkedList, setCheckedList] = useState(
     DEVICE_LIST.map((item) => {
@@ -155,6 +155,9 @@ const RowHeader = ({
   }
 
   const handleBreakout = (regionCategory) => {
+    if (isBreakoutDisabled) {
+      return
+    }
     onRegionBreakout(regionCategory)
   }
 
@@ -275,32 +278,35 @@ const RowHeader = ({
                       color: "white",
                     }}
                   > */}
-                  <IconButton
-                    style={{
-                      color: "white",
-                    }}
-                    disabled={
-                      regions.filter((region) => region.category === device)
-                        .length === 0
-                    }
-                    onClick={() => handleBreakout(device)}
-                  >
-                    <DashboardIcon
+                  {!isBreakoutDisabled && (
+                    <IconButton
                       style={{
-                        color:
-                          regions.filter((region) => region.category === device)
-                            .length === 0
-                            ? "grey"
-                            : "white",
-                        width: 20,
-                        height: 20,
-                        ":hover": {
-                          // if not disabled add a shadow
-                          boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.75)",
-                        },
+                        color: "white",
                       }}
-                    />
-                  </IconButton>
+                      disabled={
+                        regions.filter((region) => region.category === device)
+                          .length === 0
+                      }
+                      onClick={() => handleBreakout(device)}
+                    >
+                      <DashboardIcon
+                        style={{
+                          color:
+                            regions.filter(
+                              (region) => region.category === device
+                            ).length === 0
+                              ? "grey"
+                              : "white",
+                          width: 20,
+                          height: 20,
+                          ":hover": {
+                            // if not disabled add a shadow
+                            boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.75)",
+                          },
+                        }}
+                      />
+                    </IconButton>
+                  )}
                 </div>
               )
             })}
@@ -333,8 +339,10 @@ export const ToggleSidebarBox = ({
   regions,
   onRegionToggle,
   onRegionBreakout,
+  isBreakoutDisabled,
 }) => {
   const classes = useStyles()
+
   return (
     <SidebarBoxContainer
       title="Toggles"
@@ -347,6 +355,7 @@ export const ToggleSidebarBox = ({
           regions={regions}
           onRegionBreakout={onRegionBreakout}
           excludedCategories={excludedCategories}
+          isBreakoutDisabled={isBreakoutDisabled}
         />
       </div>
     </SidebarBoxContainer>
