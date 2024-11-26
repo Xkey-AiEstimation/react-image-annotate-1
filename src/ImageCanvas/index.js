@@ -117,6 +117,7 @@ export const ImageCanvas = ({
   regionClsList,
   regionTagList,
   deviceList,
+  categories,
   showCrosshairs,
   showHighlightBox = true,
   showPointDistances,
@@ -434,6 +435,7 @@ export const ImageCanvas = ({
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
             selectedDeviceToggle={selectedDeviceToggle}
             deviceList={deviceList}
+            categories={categories}
             subType={subType}
           />
         </PreventScrollToParents>
@@ -469,6 +471,7 @@ export const ImageCanvas = ({
             dispatch={dispatch}
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
             subType={subType}
+            categories={categories}
           />
         </div>
       )}

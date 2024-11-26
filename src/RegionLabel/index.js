@@ -31,7 +31,10 @@ import type { Region } from "../ImageCanvas/region-tools.js"
 import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
-import { disableBreakoutSubscription } from "../Annotator/constants.js"
+import {
+  AIE_CATEGORIES,
+  disableBreakoutSubscription,
+} from "../Annotator/constants.js"
 
 const useStyles = makeStyles(styles)
 
@@ -119,10 +122,10 @@ export const RegionLabel = ({
   selectedBreakoutIdAutoAdd,
   dispatch,
   devices,
+  categories,
   disableAddingClasses = false,
   subType,
 }: Props) => {
-
   const classes = useStyles()
   const [openBreakout, setOpenBreakout] = React.useState(false)
 
@@ -236,7 +239,9 @@ export const RegionLabel = ({
     value: "NOT CLASSIFIED",
     label: "NOT CLASSIFIED",
   })
-  const [categories, setCategories] = useState([])
+  const [userCategories, setUserCategories] = useState(
+    categories || AIE_CATEGORIES
+  )
 
   const [canChangeCategory, setCanChangeCategory] = useState(false)
 
@@ -304,6 +309,13 @@ export const RegionLabel = ({
       value: category,
     }))
 
+    const categoryList = [...categories]
+
+    const options = categoryList.map((category) => ({
+      label: category,
+      value: category,
+    }))
+
     const device = mutableDeviceList.find(
       (device) => device.symbol_name === region.cls
     )
@@ -345,7 +357,12 @@ export const RegionLabel = ({
       setCanChangeCategory(region?.isOldDevice ? false : true)
     }
 
-    setCategories(categoryOptions)
+    if (options.length > 0) {
+      setUserCategories(options)
+    } else {
+      setUserCategories(categoryOptions)
+    }
+
     setDeviceOptions(deviceOptions)
     setConduitOptions(xkeyConduitOptions)
   }, [devices, region])
@@ -649,7 +666,7 @@ export const RegionLabel = ({
               onSelectCategory(e)
             }}
             value={selectedCategory}
-            options={categories}
+            options={userCategories}
           />
           {!canChangeCategory && (
             <div
@@ -844,7 +861,7 @@ export const RegionLabel = ({
               onSelectCategory(e)
             }}
             value={selectedCategory}
-            options={categories}
+            options={userCategories}
           />
           {!canChangeCategory && (
             <div

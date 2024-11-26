@@ -16,8 +16,23 @@ export const subTypes = {
   standardEditionElectricalYearly: "yearly_xkey_see",
 }
 
-export const disableBreakoutSubscription = [subTypes.standardEditionYearly, subTypes.standardEditionElectricalYearly]
+export const disableBreakoutSubscription = [
+  subTypes.standardEditionYearly,
+  subTypes.standardEditionElectricalYearly,
+]
 
-
-
-
+export const AIE_CATEGORIES = [
+  "COMMUNICATION SYSTEMS",
+  "FIRE ALARM",
+  "LIGHTING",
+  "MECHANICAL/ELECTRICAL",
+  "POWER",
+  "SECURITY SYSTEMS",
+  "CONDUIT AND WIRE",
+  "FEEDERS",
+  "CABLE",
+  "TRAY",
+  "WIREMOLD",
+  "BREAKERS",
+  "NOT CLASSIFIED",
+]

@@ -25,6 +25,7 @@ import { HotKeys } from "react-hotkeys"
 import { defaultKeyMap } from "../ShortcutsManager"
 import getActiveImage from "../Annotator/reducers/get-active-image"
 import DeviceList from "../RegionLabel/DeviceList.js"
+import { AIE_CATEGORIES } from "./constants.js"
 
 const getRandomId = () => Math.random().toString().split(".")[1]
 
@@ -85,6 +86,7 @@ export const Annotator = ({
   regionTagList = [],
   regionClsList = [],
   deviceList = [],
+  categories,
   imageTagList = [],
   imageClsList = [],
   keyframes = {},
@@ -173,6 +175,7 @@ export const Annotator = ({
       selectedBreakoutIdAutoAdd: null,
       breakouts: breakouts,
       deviceList,
+      categories: categories || AIE_CATEGORIES,
       newDevicesToSave: [],
       counts: [],
       filters: filters,
@@ -193,6 +196,8 @@ export const Annotator = ({
           }),
     })
   )
+
+  console.log(state.categories)
 
   const dispatch = useEventCallback((action: Action) => {
     if (action.type === "HEADER_BUTTON_CLICKED") {
