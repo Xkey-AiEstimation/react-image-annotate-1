@@ -42,7 +42,8 @@ export const RegionTags = ({
   region,
   selectedBreakoutIdAutoAdd,
   deviceList,
-  subType
+  categories,
+  subType,
 }) => {
   const RegionLabel = DefaultRegionLabel
   return regions
@@ -149,7 +150,14 @@ export const RegionTags = ({
                   region,
                 })
               }}
+              onAddNewCategory={(category) => {
+                dispatch({
+                  type: "ADD_NEW_CATEGORY",
+                  category,
+                })
+              }}
               devices={deviceList}
+              categories={categories}
             />
           </div>
         </div>

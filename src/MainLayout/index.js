@@ -173,6 +173,7 @@ export const MainLayout = ({
       zoomWithPrimary={state.selectedTool === "zoom"}
       showPointDistances={state.showPointDistances}
       deviceList={state.deviceList}
+      categories={state.categories}
       videoTime={
         state.annotationType === "image"
           ? state.selectedImageFrameTime
@@ -460,6 +461,7 @@ export const MainLayout = ({
               <ToggleSidebarBox
                 regions={activeImage ? activeImage.regions : emptyArr}
                 excludedCategories={state.excludedCategories}
+                categories={state.categories}
                 onRegionToggle={(event) => {
                   dispatch({
                     type: "TOGGLE_VISIBILITY",

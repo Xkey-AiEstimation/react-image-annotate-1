@@ -22,6 +22,7 @@ import { ColorMapping } from "../RegionLabel/ColorMapping"
 import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 import styles from "./styles"
+import { useEffect } from "react"
 
 const useStyles = makeStyles(styles)
 
@@ -100,46 +101,69 @@ const RowHeader = ({
   regions,
   onRegionBreakout,
   isBreakoutDisabled,
+  categories,
 }) => {
-  const [checkedList, setCheckedList] = useState(
-    DEVICE_LIST.map((item) => {
+  console.log("RowHeader", categories)
+  const [categoryList, setCategoryList] = useState([...categories])
+  const [checkedList, setCheckedList] = useState(() => {
+    const categoryList = [...categories]
+    return categoryList.map((category) => {
       if (regions !== undefined && regions.length > 0) {
         let matchedObject = regions.find((region) => {
-          return region.category === item
+          return region.category === category
         })
         return {
-          item: item,
+          item: category,
           checked: matchedObject ? matchedObject.visible : true,
         }
-      } else {
-        return {
-          item: item,
-          checked: true,
-        }
+      }
+      return {
+        item: category,
+        checked: true,
       }
     })
-  )
+  })
+
+  // useMemo(() => {
+  //   setCheckedList(
+  //     DEVICE_LIST.map((item) => {
+  //       if (regions !== undefined && regions.length > 0) {
+  //         let matchedObject = regions.find((region) => {
+  //           return region.category === item
+  //         })
+  //         return {
+  //           item: item,
+  //           checked: matchedObject ? matchedObject.visible : true,
+  //         }
+  //       } else {
+  //         return {
+  //           item: item,
+  //           checked: true,
+  //         }
+  //       }
+  //     })
+  //   )
+  // }, [regions])
 
   useMemo(() => {
-    setCheckedList(
-      DEVICE_LIST.map((item) => {
-        if (regions !== undefined && regions.length > 0) {
-          let matchedObject = regions.find((region) => {
-            return region.category === item
-          })
-          return {
-            item: item,
-            checked: matchedObject ? matchedObject.visible : true,
-          }
-        } else {
-          return {
-            item: item,
-            checked: true,
-          }
+    const categoryList = [...categories]
+    const checkedList = categoryList.map((category) => {
+      if (regions !== undefined && regions.length > 0) {
+        let matchedObject = regions.find((region) => {
+          return region.category === category
+        })
+        return {
+          item: category,
+          checked: matchedObject ? matchedObject.visible : true,
         }
-      })
-    )
-  }, [regions])
+      }
+      return {
+        item: category,
+        checked: true,
+      }
+    })
+    setCheckedList(checkedList)
+  }, [categories, regions])
 
   const setCheckedItem = useCallback((id, checked) => {
     setCheckedList(() =>
@@ -200,6 +224,10 @@ const RowHeader = ({
     setOpen(false)
   }
 
+  useEffect(() => {
+    setCategoryList(categories)
+  }, [categories])
+
   const body = (
     <div style={modalStyle} className={classes.paper}>
       <h2 id="simple-modal-title">Text in a modal</h2>
@@ -222,7 +250,7 @@ const RowHeader = ({
       visible={
         <div>
           <FormGroup>
-            {DEVICE_LIST.map((device, index) => {
+            {categoryList.map((device, index) => {
               return (
                 <div key={index}>
                   <FormControlLabel
@@ -231,7 +259,7 @@ const RowHeader = ({
                         style={{
                           color: "white",
                           "&MuiSwitch-colorSecondary": {
-                            color: ColorMapping[device],
+                            color: ColorMapping[device] || "#C4A484",
                           },
                         }}
                         size="small"
@@ -258,7 +286,7 @@ const RowHeader = ({
                         </div>
                         <div
                           style={{
-                            backgroundColor: ColorMapping[device],
+                            backgroundColor: ColorMapping[device] || "#C4A484",
                             color: "white",
                             width: 10,
                             height: 10,
@@ -340,7 +368,9 @@ export const ToggleSidebarBox = ({
   onRegionToggle,
   onRegionBreakout,
   isBreakoutDisabled,
+  categories,
 }) => {
+  console.log("ToggleSidebarBox", categories)
   const classes = useStyles()
 
   return (
@@ -356,6 +386,7 @@ export const ToggleSidebarBox = ({
           onRegionBreakout={onRegionBreakout}
           excludedCategories={excludedCategories}
           isBreakoutDisabled={isBreakoutDisabled}
+          categories={categories}
         />
       </div>
     </SidebarBoxContainer>
@@ -370,9 +401,11 @@ const mapUsedRegionProperties = (r) => [
   r.highlighted,
 ]
 
-export default memo(ToggleSidebarBox, (prevProps, nextProps) =>
-  isEqual(
-    (prevProps.regions || emptyArr).map(mapUsedRegionProperties),
-    (nextProps.regions || emptyArr).map(mapUsedRegionProperties)
-  )
+export default memo(
+  ToggleSidebarBox,
+  (prevProps, nextProps) =>
+    isEqual(
+      (prevProps.regions || []).map(mapUsedRegionProperties),
+      (nextProps.regions || []).map(mapUsedRegionProperties)
+    ) && isEqual(prevProps.categories, nextProps.categories)
 )

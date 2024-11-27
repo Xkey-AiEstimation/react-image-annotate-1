@@ -31,7 +31,10 @@ import type { Region } from "../ImageCanvas/region-tools.js"
 import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
-import { disableBreakoutSubscription } from "../Annotator/constants.js"
+import {
+  AIE_CATEGORIES,
+  disableBreakoutSubscription,
+} from "../Annotator/constants.js"
 
 const useStyles = makeStyles(styles)
 
@@ -109,6 +112,7 @@ export const RegionLabel = ({
   onDelete,
   onChange,
   onChangeNewRegion,
+  onAddNewCategory,
   onClose,
   onOpen,
   onMatchTemplate,
@@ -119,10 +123,10 @@ export const RegionLabel = ({
   selectedBreakoutIdAutoAdd,
   dispatch,
   devices,
+  categories,
   disableAddingClasses = false,
   subType,
 }: Props) => {
-
   const classes = useStyles()
   const [openBreakout, setOpenBreakout] = React.useState(false)
 
@@ -236,7 +240,9 @@ export const RegionLabel = ({
     value: "NOT CLASSIFIED",
     label: "NOT CLASSIFIED",
   })
-  const [categories, setCategories] = useState([])
+  const [userCategories, setUserCategories] = useState(
+    categories || AIE_CATEGORIES
+  )
 
   const [canChangeCategory, setCanChangeCategory] = useState(false)
 
@@ -304,6 +310,13 @@ export const RegionLabel = ({
       value: category,
     }))
 
+    const categoryList = [...categories]
+
+    const options = categoryList.map((category) => ({
+      label: category,
+      value: category,
+    }))
+
     const device = mutableDeviceList.find(
       (device) => device.symbol_name === region.cls
     )
@@ -345,7 +358,12 @@ export const RegionLabel = ({
       setCanChangeCategory(region?.isOldDevice ? false : true)
     }
 
-    setCategories(categoryOptions)
+    if (options.length > 0) {
+      setUserCategories(options)
+    } else {
+      setUserCategories(categoryOptions)
+    }
+
     setDeviceOptions(deviceOptions)
     setConduitOptions(xkeyConduitOptions)
   }, [devices, region])
@@ -412,9 +430,13 @@ export const RegionLabel = ({
     })
   }
 
-  const onSelectCategory = (e) => {
+  const onSelectCategory = (e, isNewCategory) => {
     const category = e.value
     setSelectedCategory(e)
+
+    if (isNewCategory) {
+      onAddNewCategory(category)
+    }
 
     if (isNewDevice) {
       onChangeNewRegion({
@@ -649,7 +671,7 @@ export const RegionLabel = ({
               onSelectCategory(e)
             }}
             value={selectedCategory}
-            options={categories}
+            options={userCategories}
           />
           {!canChangeCategory && (
             <div
@@ -836,16 +858,37 @@ export const RegionLabel = ({
               </IconButton>
             </Tooltip>
           </div>
+          <CreatableSelect
+            placeholder="Select Category/System or Create New"
+            onChange={(o, actionMeta) => {
+              let isActionCreate = false
+              if (actionMeta.action === "create-option") {
+                isActionCreate = true
+              }
+              // onNewDeviceAdded(isActionCreate, o.value)
+              // return onChangeDevice({
+              //   ...region,
+              //   cls: o.value,
+              // })
+              // onNewCategoryAdded(isActionCreate, o.value)
+              console.log("o", o) // o has { label: , value: } for the selected category value pair from the dropdown
 
-          <Select
+              console.log("actionMeta", isActionCreate)
+              onSelectCategory(o, isActionCreate)
+            }}
+            value={region.category ? selectedCategory : null}
+            options={userCategories}
+          />
+
+          {/* <Select
             placeholder="Select Category"
             isDisabled={!canChangeCategory}
             onChange={(e) => {
               onSelectCategory(e)
             }}
             value={selectedCategory}
-            options={categories}
-          />
+            options={userCategories}
+          /> */}
           {!canChangeCategory && (
             <div
               style={{

@@ -117,6 +117,7 @@ export const ImageCanvas = ({
   regionClsList,
   regionTagList,
   deviceList,
+  categories,
   showCrosshairs,
   showHighlightBox = true,
   showPointDistances,
@@ -434,6 +435,7 @@ export const ImageCanvas = ({
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
             selectedDeviceToggle={selectedDeviceToggle}
             deviceList={deviceList}
+            categories={categories}
             subType={subType}
           />
         </PreventScrollToParents>
@@ -445,6 +447,12 @@ export const ImageCanvas = ({
             // allowedClasses is overriden in RegionLabel class to filter conduits, devices, etc.
             allowedClasses={regionClsList}
             allowedTags={regionTagList}
+            onAddNewCategory={(category) => {
+              dispatch({
+                type: "ADD_NEW_CATEGORY",
+                category,
+              })
+            }}
             onChangeNewRegion={(region) => {
               dispatch({
                 type: "CHANGE_NEW_REGION",
@@ -469,6 +477,7 @@ export const ImageCanvas = ({
             dispatch={dispatch}
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
             subType={subType}
+            categories={categories}
           />
         </div>
       )}
