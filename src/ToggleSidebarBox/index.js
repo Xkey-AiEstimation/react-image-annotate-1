@@ -103,6 +103,7 @@ const RowHeader = ({
   isBreakoutDisabled,
   categories,
 }) => {
+  console.log("RowHeader", categories)
   const [categoryList, setCategoryList] = useState([...categories])
   const [checkedList, setCheckedList] = useState(() => {
     const categoryList = [...categories]
@@ -222,6 +223,10 @@ const RowHeader = ({
   const handleClose = () => {
     setOpen(false)
   }
+
+  useEffect(() => {
+    setCategoryList(categories)
+  }, [categories])
 
   const body = (
     <div style={modalStyle} className={classes.paper}>
@@ -396,9 +401,11 @@ const mapUsedRegionProperties = (r) => [
   r.highlighted,
 ]
 
-export default memo(ToggleSidebarBox, (prevProps, nextProps) =>
-  isEqual(
-    (prevProps.regions || emptyArr).map(mapUsedRegionProperties),
-    (nextProps.regions || emptyArr).map(mapUsedRegionProperties)
-  )
+export default memo(
+  ToggleSidebarBox,
+  (prevProps, nextProps) =>
+    isEqual(
+      (prevProps.regions || []).map(mapUsedRegionProperties),
+      (nextProps.regions || []).map(mapUsedRegionProperties)
+    ) && isEqual(prevProps.categories, nextProps.categories)
 )

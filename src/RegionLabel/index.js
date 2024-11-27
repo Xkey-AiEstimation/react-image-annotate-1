@@ -112,6 +112,7 @@ export const RegionLabel = ({
   onDelete,
   onChange,
   onChangeNewRegion,
+  onAddNewCategory,
   onClose,
   onOpen,
   onMatchTemplate,
@@ -429,9 +430,13 @@ export const RegionLabel = ({
     })
   }
 
-  const onSelectCategory = (e) => {
+  const onSelectCategory = (e, isNewCategory) => {
     const category = e.value
     setSelectedCategory(e)
+
+    if (isNewCategory) {
+      onAddNewCategory(category)
+    }
 
     if (isNewDevice) {
       onChangeNewRegion({
@@ -853,8 +858,29 @@ export const RegionLabel = ({
               </IconButton>
             </Tooltip>
           </div>
+          <CreatableSelect
+            placeholder="Select Category/System or Create New"
+            onChange={(o, actionMeta) => {
+              let isActionCreate = false
+              if (actionMeta.action === "create-option") {
+                isActionCreate = true
+              }
+              // onNewDeviceAdded(isActionCreate, o.value)
+              // return onChangeDevice({
+              //   ...region,
+              //   cls: o.value,
+              // })
+              // onNewCategoryAdded(isActionCreate, o.value)
+              console.log("o", o) // o has { label: , value: } for the selected category value pair from the dropdown
 
-          <Select
+              console.log("actionMeta", isActionCreate)
+              onSelectCategory(o, isActionCreate)
+            }}
+            value={region.category ? selectedCategory : null}
+            options={userCategories}
+          />
+
+          {/* <Select
             placeholder="Select Category"
             isDisabled={!canChangeCategory}
             onChange={(e) => {
@@ -862,7 +888,7 @@ export const RegionLabel = ({
             }}
             value={selectedCategory}
             options={userCategories}
-          />
+          /> */}
           {!canChangeCategory && (
             <div
               style={{

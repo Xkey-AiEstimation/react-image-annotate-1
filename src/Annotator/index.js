@@ -197,8 +197,6 @@ export const Annotator = ({
     })
   )
 
-  console.log(state.categories)
-
   const dispatch = useEventCallback((action: Action) => {
     if (action.type === "HEADER_BUTTON_CLICKED") {
       //if (["Exit", "Done", "Save", "Complete"].includes(action.buttonName)) {

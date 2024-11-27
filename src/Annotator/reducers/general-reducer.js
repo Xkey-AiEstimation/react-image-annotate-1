@@ -225,6 +225,28 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+    case "ADD_NEW_CATEGORY": {
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      if (!newRegions) {
+        return state
+      }
+      const newCategory = action.category
+      let categories = getIn(newState, ["categories"])
+      if (!categories) {
+        categories = []
+      }
+      if (!categories.includes(newCategory)) {
+        categories = categories.concat(newCategory)
+      }
+      console.log(categories)
+
+      newState = setIn(newState, ["categories"], categories)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      return newState
+    }
+
     case "TOGGLE_VISIBILITY": {
       let newState = { ...state }
       let newImage = getIn(newState, ["images", currentImageIndex])

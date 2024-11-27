@@ -447,6 +447,12 @@ export const ImageCanvas = ({
             // allowedClasses is overriden in RegionLabel class to filter conduits, devices, etc.
             allowedClasses={regionClsList}
             allowedTags={regionTagList}
+            onAddNewCategory={(category) => {
+              dispatch({
+                type: "ADD_NEW_CATEGORY",
+                category,
+              })
+            }}
             onChangeNewRegion={(region) => {
               dispatch({
                 type: "CHANGE_NEW_REGION",
