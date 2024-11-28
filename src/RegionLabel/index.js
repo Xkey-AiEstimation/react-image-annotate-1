@@ -34,7 +34,9 @@ import styles from "./styles"
 import {
   AIE_CATEGORIES,
   disableBreakoutSubscription,
+  lowerTiers,
 } from "../Annotator/constants.js"
+import { useMemo } from "react"
 
 const useStyles = makeStyles(styles)
 
@@ -1166,6 +1168,43 @@ export const RegionLabel = ({
     }
   }
 
+  const shouldShowBreakoutButton = useMemo(() => {
+    const isLowerTier = lowerTiers.includes(subType)
+    console.log("isLowerTier", isLowerTier)
+    if (isLowerTier) {
+      return false
+    }
+
+    const isValidRegionType = region.type !== "scale"
+    const isNotOldDevice = !region.isOldDevice
+    const isValidClass = region.cls && region.cls !== NOT_CLASSIFED
+    const isBreakoutAllowed = !isBreakoutDisabled && !isTemplateMatchingLoading
+    const isNotBreakout =
+      region.breakout === undefined ||
+      (region.breakout && !region.breakout.is_breakout)
+
+    return (
+      isValidRegionType &&
+      isNotOldDevice &&
+      isValidClass &&
+      isBreakoutAllowed &&
+      isNotBreakout
+    )
+  }, [
+    region,
+    subType,
+    isBreakoutDisabled,
+    isTemplateMatchingLoading,
+    lowerTiers,
+  ])
+
+  const handleBreakoutClick = () => {
+    if (lowerTiers.includes(subType)) {
+      setOpenBreakout(false)
+    }
+    setOpenBreakout((open) => !open)
+  }
+
   return (
     <>
       <Paper
@@ -1287,54 +1326,47 @@ export const RegionLabel = ({
 
               {/* <div style={{ flexGrow: 1, padding: 12 }} /> */}
               <div style={{ justifyContent: "" }}>
-                {region.type !== "scale" &&
-                  !region.isOldDevice &&
-                  region.cls &&
-                  region.cls !== NOT_CLASSIFED &&
-                  !isBreakoutDisabled &&
-                  (region.breakout === undefined ||
-                    (region.breakout &&
-                      region.breakout.is_breakout === false)) && (
-                    <Tooltip
-                      title={"Create a breakout group for this device."}
-                      PopperProps={{
-                        style: { zIndex: 9999999 },
+                {shouldShowBreakoutButton && (
+                  <Tooltip
+                    title={"Create a breakout group for this device."}
+                    PopperProps={{
+                      style: { zIndex: 9999999 },
+                    }}
+                  >
+                    <IconButton
+                      disabled={isTemplateMatchingLoading}
+                      style={{
+                        backgroundColor: "#1DA1F2",
+                        color: "white",
+                        borderRadius: "4px",
+                        marginRight: "8px",
+                        height: "22px",
                       }}
+                      classes={{
+                        label: {
+                          display: "flex",
+                          flexDirection: "row",
+                          marginTop: -2,
+                        },
+                      }}
+                      onClick={handleBreakoutClick}
                     >
-                      <IconButton
-                        disabled={isTemplateMatchingLoading}
+                      <AddIcon
                         style={{
-                          backgroundColor: "#1DA1F2",
-                          color: " white",
-                          borderRadius: "4px",
-                          marginRight: "8px",
-                          height: "22px",
+                          width: 16,
+                          height: 16,
                         }}
-                        classes={{
-                          label: {
-                            display: "flex",
-                            flexDirection: "row",
-                            marginTop: -2,
-                          },
+                      />
+                      <div
+                        style={{
+                          fontSize: "12px",
                         }}
-                        onClick={() => setOpenBreakout((open) => !open)}
                       >
-                        <AddIcon
-                          style={{
-                            width: 16,
-                            height: 16,
-                          }}
-                        />
-                        <div
-                          style={{
-                            fontSize: "12px",
-                          }}
-                        >
-                          Breakout
-                        </div>
-                      </IconButton>
-                    </Tooltip>
-                  )}
+                        Breakout
+                      </div>
+                    </IconButton>
+                  </Tooltip>
+                )}
 
                 {region.cls &&
                 region.cls !== NOT_CLASSIFED &&

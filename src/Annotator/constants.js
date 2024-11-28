@@ -21,6 +21,18 @@ export const disableBreakoutSubscription = [
   subTypes.standardEditionElectricalYearly,
 ]
 
+export const lowerTiers = [
+  subTypes.standardEditionYearly,
+  subTypes.standardEditionElectricalYearly,
+]
+
+export const higherTiers = [
+  subTypes.fullSuiteYearly,
+  subTypes.fullSuiteMonthly,
+  subTypes.dataYearly,
+  subTypes.dataMonthly,
+]
+
 export const AIE_CATEGORIES = [
   "COMMUNICATION SYSTEMS",
   "FIRE ALARM",
