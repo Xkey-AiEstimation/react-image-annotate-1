@@ -33,8 +33,7 @@ import DeviceList from "./DeviceList"
 import styles from "./styles"
 import {
   AIE_CATEGORIES,
-  disableBreakoutSubscription,
-  lowerTiers,
+  disableBreakoutSubscription
 } from "../Annotator/constants.js"
 import { useMemo } from "react"
 
@@ -1169,9 +1168,8 @@ export const RegionLabel = ({
   }
 
   const shouldShowBreakoutButton = useMemo(() => {
-    const isLowerTier = lowerTiers.includes(subType)
-    console.log("isLowerTier", isLowerTier)
-    if (isLowerTier) {
+    const isBreakoutNotIncluded = disableBreakoutSubscription.includes(subType)
+    if (isBreakoutNotIncluded) {
       return false
     }
 
@@ -1195,11 +1193,11 @@ export const RegionLabel = ({
     subType,
     isBreakoutDisabled,
     isTemplateMatchingLoading,
-    lowerTiers,
+    disableBreakoutSubscription,
   ])
 
   const handleBreakoutClick = () => {
-    if (lowerTiers.includes(subType)) {
+    if (isBreakoutNotIncluded.includes(subType)) {
       setOpenBreakout(false)
     }
     setOpenBreakout((open) => !open)
