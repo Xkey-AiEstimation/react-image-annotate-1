@@ -123,7 +123,7 @@ export const RegionTags = ({
               : {})}
           >
             <RegionLabel
-              subType={region.subType}
+              subType={subType}
               allowedClasses={regionClsList}
               allowedTags={regionTagList}
               onOpen={onBeginRegionEdit}

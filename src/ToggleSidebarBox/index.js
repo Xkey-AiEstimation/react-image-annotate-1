@@ -103,7 +103,6 @@ const RowHeader = ({
   isBreakoutDisabled,
   categories,
 }) => {
-  console.log("RowHeader", categories)
   const [categoryList, setCategoryList] = useState([...categories])
   const [checkedList, setCheckedList] = useState(() => {
     const categoryList = [...categories]
@@ -370,7 +369,6 @@ export const ToggleSidebarBox = ({
   isBreakoutDisabled,
   categories,
 }) => {
-  console.log("ToggleSidebarBox", categories)
   const classes = useStyles()
 
   return (
