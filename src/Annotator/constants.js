@@ -13,12 +13,14 @@ export const subTypes = {
   dataYearly: "yearly_data",
   dataMonthly: "monthly_data",
   standardEditionYearly: "yearly_xkey_se",
+  electricalAieLite: "yearly_lite",
   standardEditionElectricalYearly: "yearly_xkey_see",
 }
 
 export const disableBreakoutSubscription = [
   subTypes.standardEditionYearly,
   subTypes.standardEditionElectricalYearly,
+  subTypes.electricalAieLite
 ]
 
 export const lowerTiers = [
