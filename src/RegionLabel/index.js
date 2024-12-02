@@ -1173,6 +1173,7 @@ export const RegionLabel = ({
       return false
     }
 
+
     const isValidRegionType = region.type !== "scale"
     const isNotOldDevice = !region.isOldDevice
     const isValidClass = region.cls && region.cls !== NOT_CLASSIFED
@@ -1197,9 +1198,6 @@ export const RegionLabel = ({
   ])
 
   const handleBreakoutClick = () => {
-    if (isBreakoutNotIncluded.includes(subType)) {
-      setOpenBreakout(false)
-    }
     setOpenBreakout((open) => !open)
   }
 
