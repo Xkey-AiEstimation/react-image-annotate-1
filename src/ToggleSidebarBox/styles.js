@@ -4,7 +4,7 @@ export default {
   container: {
     fontSize: 11,
     fontWeight: "bold",
-    color: 'white',
+    color: "white",
     "& .icon": {
       marginTop: 4,
       width: 16,
@@ -20,6 +20,11 @@ export default {
         opacity: 1,
       },
     },
+  },
+  rowContainer: {
+    maxHeight: "200px", // Set the maximum height for the container
+    overflowY: "auto", // Enable vertical scrolling
+    paddingLeft: 10,
   },
   row: {
     padding: 4,

@@ -3,26 +3,23 @@ import {
   FormControlLabel,
   FormGroup,
   IconButton,
-  Modal,
   Switch,
-  Tooltip,
   createTheme,
 } from "@material-ui/core"
 import Grid from "@material-ui/core/Grid"
 import { makeStyles } from "@material-ui/core/styles"
+import DashboardIcon from "@material-ui/icons/Dashboard"
 import TrashIcon from "@material-ui/icons/Delete"
 import LockIcon from "@material-ui/icons/Lock"
 import PieChartIcon from "@material-ui/icons/PieChart"
-import DashboardIcon from "@material-ui/icons/Dashboard"
 import ReorderIcon from "@material-ui/icons/SwapVert"
 import ToggleOnIcon from "@material-ui/icons/ToggleOn"
 import isEqual from "lodash/isEqual"
-import React, { memo, useCallback, useMemo, useState } from "react"
+import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
 import { ColorMapping } from "../RegionLabel/ColorMapping"
 import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 import styles from "./styles"
-import { useEffect } from "react"
 
 const useStyles = makeStyles(styles)
 
@@ -83,13 +80,7 @@ const RowLayout = ({ visible, onClick }) => {
       onMouseEnter={() => changeMouseOver(true)}
       onMouseLeave={() => changeMouseOver(false)}
     >
-      <Grid
-        container
-        style={{
-          paddingLeft: 10,
-        }}
-        alignItems="center"
-      >
+      <Grid container className={classes.rowContainer} alignItems="center">
         {visible}
       </Grid>
     </div>
@@ -104,6 +95,14 @@ const RowHeader = ({
   categories,
 }) => {
   const [categoryList, setCategoryList] = useState([...categories])
+  const [regionCategorySet, setRegionCategorySet] = useState(
+    new Set(regions.map((region) => region.category))
+  )
+
+  useEffect(() => {
+    setRegionCategorySet(new Set(regions.map((region) => region.category)))
+  }, [regions])
+
   const [checkedList, setCheckedList] = useState(() => {
     const categoryList = [...categories]
     return categoryList.map((category) => {
@@ -123,34 +122,16 @@ const RowHeader = ({
     })
   })
 
-  // useMemo(() => {
-  //   setCheckedList(
-  //     DEVICE_LIST.map((item) => {
-  //       if (regions !== undefined && regions.length > 0) {
-  //         let matchedObject = regions.find((region) => {
-  //           return region.category === item
-  //         })
-  //         return {
-  //           item: item,
-  //           checked: matchedObject ? matchedObject.visible : true,
-  //         }
-  //       } else {
-  //         return {
-  //           item: item,
-  //           checked: true,
-  //         }
-  //       }
-  //     })
-  //   )
-  // }, [regions])
 
   useMemo(() => {
     const categoryList = [...categories]
+
     const checkedList = categoryList.map((category) => {
       if (regions !== undefined && regions.length > 0) {
         let matchedObject = regions.find((region) => {
           return region.category === category
         })
+
         return {
           item: category,
           checked: matchedObject ? matchedObject.visible : true,
@@ -249,7 +230,12 @@ const RowHeader = ({
       visible={
         <div>
           <FormGroup>
-            {categoryList.map((device, index) => {
+            {categoryList.map((category, index) => {
+              // check if the category is in the regionCategorySet
+              if (!regionCategorySet.has(category)) {
+                return null
+              }
+
               return (
                 <div key={index}>
                   <FormControlLabel
@@ -258,15 +244,16 @@ const RowHeader = ({
                         style={{
                           color: "white",
                           "&MuiSwitch-colorSecondary": {
-                            color: ColorMapping[device] || "#C4A484",
+                            color: ColorMapping[category] || "#C4A484",
                           },
                         }}
                         size="small"
-                        id={device}
+                        id={category}
                         checked={
                           (
-                            checkedList.find((item) => item.item === device) ||
-                            {}
+                            checkedList.find(
+                              (item) => item.item === category
+                            ) || {}
                           ).checked
                         }
                         onChange={handleChange}
@@ -281,11 +268,12 @@ const RowHeader = ({
                         }}
                       >
                         <div style={{ paddingRight: 10, fontSize: "0.7500em" }}>
-                          {device}
+                          {category}
                         </div>
                         <div
                           style={{
-                            backgroundColor: ColorMapping[device] || "#C4A484",
+                            backgroundColor:
+                              ColorMapping[category] || "#C4A484",
                             color: "white",
                             width: 10,
                             height: 10,
@@ -310,17 +298,14 @@ const RowHeader = ({
                       style={{
                         color: "white",
                       }}
-                      disabled={
-                        regions.filter((region) => region.category === device)
-                          .length === 0
-                      }
-                      onClick={() => handleBreakout(device)}
+                      disabled={!regionCategorySet.has(category)}
+                      onClick={() => handleBreakout(category)}
                     >
                       <DashboardIcon
                         style={{
                           color:
                             regions.filter(
-                              (region) => region.category === device
+                              (region) => region.category === category
                             ).length === 0
                               ? "grey"
                               : "white",
@@ -370,7 +355,6 @@ export const ToggleSidebarBox = ({
   categories,
 }) => {
   const classes = useStyles()
-
   return (
     <SidebarBoxContainer
       title="Toggles"

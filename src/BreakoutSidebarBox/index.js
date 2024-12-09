@@ -75,9 +75,6 @@ const RowLayout = ({
           justifyContent: "center",
         }}
       >
-        {/* <Grid item xs={1}>
-          <div style={{ textAlign: "right", paddingRight: 10 }}>{order}</div>
-        </Grid> */}
         <Grid
           item
           xs={5}
