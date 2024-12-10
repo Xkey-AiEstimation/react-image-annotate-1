@@ -87,6 +87,7 @@ export const Annotator = ({
   regionClsList = [],
   deviceList = [],
   categories = [],
+  categoriesColorMap = {},
   imageTagList = [],
   imageClsList = [],
   keyframes = {},
@@ -140,7 +141,6 @@ export const Annotator = ({
     breakoutNames: new Set(),
   }
 
-  console.log(categories)
 
   const [state, dispatchToReducer] = useReducer(
     historyHandler(
@@ -178,6 +178,8 @@ export const Annotator = ({
       breakouts: breakouts,
       deviceList,
       newDevicesToSave: [],
+      newCategoriesToSave: [],
+      categoriesColorMap,
       counts: [],
       filters: filters,
       excludedCategories: [],

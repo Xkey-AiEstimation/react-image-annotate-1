@@ -1,8 +1,12 @@
 // @flow
 import {
+  Box,
   Checkbox,
+  createGenerateClassName,
   FormControlLabel,
   Grid,
+  Popover,
+  StylesProvider,
   Switch,
   TextField,
   Tooltip,
@@ -33,9 +37,13 @@ import DeviceList from "./DeviceList"
 import styles from "./styles"
 import {
   AIE_CATEGORIES,
-  disableBreakoutSubscription
+  defaultColor,
+  defaultSystem,
+  disableBreakoutSubscription,
 } from "../Annotator/constants.js"
 import { useMemo } from "react"
+// import { ColorPicker } from "material-ui-color"
+import ColorPicker from "material-ui-color-picker"
 
 const useStyles = makeStyles(styles)
 
@@ -100,6 +108,10 @@ const encodeAzureURL = (url) => {
   return first + "/" + encodeURIComponent(part)
 }
 
+const generateClassName = createGenerateClassName({
+  seed: "ColorPicker--",
+})
+
 export const RegionLabel = ({
   region,
   regions,
@@ -125,6 +137,7 @@ export const RegionLabel = ({
   dispatch,
   devices,
   categories,
+  categoriesColorMap,
   disableAddingClasses = false,
   subType,
 }: Props) => {
@@ -336,9 +349,15 @@ export const RegionLabel = ({
         id: device.id,
         user_defined: device.user_defined,
       })
+
+      const categoryExists = categories.includes(device?.category)
+      const selectedCategoryValue = categoryExists
+        ? device?.category
+        : defaultSystem
+
       setSelectedCategory({
-        label: region.category || "NOT CLASSIFIED",
-        value: region.category || "NOT CLASSIFIED",
+        label: selectedCategoryValue,
+        value: selectedCategoryValue,
       })
       setCanChangeCategory(device.user_defined)
     } else {
@@ -352,9 +371,14 @@ export const RegionLabel = ({
         id: region.id,
         user_defined: false,
       })
+      const categoryExists = categories.includes(device?.category)
+      const selectedCategoryValue = categoryExists
+        ? device?.category
+        : defaultSystem
+
       setSelectedCategory({
-        label: region.category || "NOT CLASSIFIED",
-        value: region.category || "NOT CLASSIFIED",
+        label: selectedCategoryValue,
+        value: selectedCategoryValue,
       })
       setCanChangeCategory(region?.isOldDevice ? false : true)
     }
@@ -419,7 +443,7 @@ export const RegionLabel = ({
     onChange({
       ...region,
       category: category,
-      color: getColorByCategory(category),
+      color: categoriesColorMap[category] || defaultColor,
     })
   }
 
@@ -431,11 +455,27 @@ export const RegionLabel = ({
     })
   }
 
+  const [selectedColor, setSelectedColor] = useState(region.color)
+  const [isNewCategory, setIsNewCategory] = useState(false)
+
+  const onSelectCategoryColor = (category) => {
+    setSelectedCategory({
+      value: category,
+      label: category,
+    })
+    return onChange({
+      ...region,
+      category: category,
+      color: getColorByCategory(state, category),
+    })
+  }
+
   const onSelectCategory = (e, isNewCategory) => {
     const category = e.value
     setSelectedCategory(e)
 
     if (isNewCategory) {
+      setIsNewCategory(true)
       onAddNewCategory(category)
     }
 
@@ -454,6 +494,21 @@ export const RegionLabel = ({
     }
   }
 
+  // const handleColorChange = (color) => {
+  //   setSelectedColor(color)
+  //   onAddNewCategory(selectedCategory.value, color)
+  // }
+
+  const handleSaveSystemWithCategory = (e) => {
+    e.preventDefault()
+    onAddNewCategory(selectedCategory.value, selectedColor)
+    dispatch({
+      type: "UPDATE_REGION_COLOR",
+      region: region,
+      color: selectedColor,
+    })
+  }
+
   // const onSaveNewDevice = () => {
   //   setIsNewDevice(false)
   //   return onChangeNewRegion({
@@ -462,7 +517,7 @@ export const RegionLabel = ({
   //     category: selectedCategory.value,
   //     color: getColorByCategory(category),
   //   })
-  // }
+  //
 
   const regionLabelDescription = ` Note: If you don't see the device you are looking for, you can add it
   to the list. If you are unsure of the category, please select "NOT
@@ -859,27 +914,94 @@ export const RegionLabel = ({
               </IconButton>
             </Tooltip>
           </div>
-          <CreatableSelect
-            placeholder="Select Category/System or Create New"
-            onChange={(o, actionMeta) => {
-              let isActionCreate = false
-              if (actionMeta.action === "create-option") {
-                isActionCreate = true
-              }
-              // onNewDeviceAdded(isActionCreate, o.value)
-              // return onChangeDevice({
-              //   ...region,
-              //   cls: o.value,
-              // })
-              // onNewCategoryAdded(isActionCreate, o.value)
-              console.log("o", o) // o has { label: , value: } for the selected category value pair from the dropdown
-
-              console.log("actionMeta", isActionCreate)
-              onSelectCategory(o, isActionCreate)
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              padding: 2,
+              border: "1px solid #ccc",
+              borderRadius: "8px",
+              backgroundColor: "#f9f9f9",
             }}
-            value={region.category ? selectedCategory : null}
-            options={userCategories}
-          />
+          >
+            <CreatableSelect
+              placeholder="Select Category/System or Create New"
+              onChange={(o, actionMeta) => {
+                let isActionCreate = false
+                if (actionMeta.action === "create-option") {
+                  isActionCreate = true
+                }
+                onSelectCategory(o, isActionCreate)
+              }}
+              value={region.category ? selectedCategory : null}
+              options={userCategories}
+              styles={{
+                control: (provided) => ({
+                  ...provided,
+                  borderColor: "#1DA1F2",
+                  "&:hover": {
+                    borderColor: "#1DA1F2",
+                  },
+                }),
+                placeholder: (provided) => ({
+                  ...provided,
+                  color: "#888",
+                }),
+              }}
+            />
+
+            {/* {isNewCategory && (
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                  width: "100%",
+                }}
+              >
+                <Typography sx={{ fontSize: "6px" }}>Choose color:</Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    width: "100%",
+                  }}
+                >
+                  <Box
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      backgroundColor: selectedColor,
+                      border: `1px solid ${selectedColor}`,
+                      borderRadius: "4px",
+                    }}
+                  ></Box>
+                  <ColorPicker
+                    name="color"
+                    defaultValue={defaultColor}
+                    value={selectedColor}
+                    onChange={(color) => {
+                      setSelectedColor(color)
+                    }}
+                    sx={{
+                      flexGrow: 1,
+                      color: "black",
+                    }}
+                  />
+                </Box>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={handleSaveSystemWithCategory}
+                  sx={{ alignSelf: "flex-start" }}
+                >
+                  Save New Device
+                </Button>
+              </Box>
+            )} */}
+          </Box>
 
           {/* <Select
             placeholder="Select Category"
@@ -1172,7 +1294,6 @@ export const RegionLabel = ({
     if (isBreakoutNotIncluded) {
       return false
     }
-
 
     const isValidRegionType = region.type !== "scale"
     const isNotOldDevice = !region.isOldDevice

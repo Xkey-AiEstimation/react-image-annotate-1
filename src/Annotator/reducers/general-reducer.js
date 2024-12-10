@@ -65,18 +65,36 @@ const color_mapping = {
   "NOT CLASSIFIED": "#C4A484",
 }
 
-const getColor = (device_name) => {
+const getColor = (state, device_name) => {
   let device_type = DeviceList.find((o) => o.symbol_name === device_name)
   if (device_type) {
-    return color_mapping[device_type["category"]]
+    // return color_mapping[device_type["category"]]
+    // get categoriesColorMap from the state
+    let colorMap = getIn(state, ["categoriesColorMap"])
+    if (colorMap) {
+      if (colorMap[device_type["category"]]) {
+        return colorMap[device_type["category"]]
+      } else {
+        return "#C4A484"
+      }
+    }
   } else {
     return "#C4A484"
   }
 }
 
 export const NOT_CLASSIFED = "NOT CLASSIFIED"
-export const getColorByCategory = (category) => {
-  return color_mapping[category] || "#C4A484"
+
+export const getColorByCategory = (state, category) => {
+  // get categoriesColorMap from the state
+  let colorMap = getIn(state, ["categoriesColorMap"])
+  if (colorMap) {
+    if (colorMap[category]) {
+      return colorMap[category]
+    } else {
+      return "#C4A484"
+    }
+  }
 }
 
 export default (state: MainLayoutState, action: Action) => {
@@ -232,17 +250,49 @@ export default (state: MainLayoutState, action: Action) => {
       if (!newRegions) {
         return state
       }
-      const newCategory = action.category
-      let categories = getIn(newState, ["categories"])
-      if (!categories) {
-        categories = []
-      }
-      if (!categories.includes(newCategory)) {
-        categories = categories.concat(newCategory)
-      }
-      console.log(categories)
 
+      const newCategory = action.category
+      const color = action.color || "#C4A484"
+      let categories = getIn(newState, ["categories"]) || []
+      let newCategoriesToSave = getIn(newState, ["newCategoriesToSave"]) || []
+
+      const newCat = { category: newCategory, color }
+
+      if (!categories.includes(newCategory)) {
+        // Add new category
+        newCategoriesToSave = [...newCategoriesToSave, newCat]
+        categories = [...categories, newCategory]
+      } else {
+        // Update color of existing category
+        newCategoriesToSave = newCategoriesToSave.map((cat) =>
+          cat.category === newCategory ? newCat : cat
+        )
+      }
+
+      newState = setIn(newState, ["newCategoriesToSave"], newCategoriesToSave)
       newState = setIn(newState, ["categories"], categories)
+
+      console.log("Updated newCategoriesToSave", newCategoriesToSave)
+      console.log("Updated categories", categories)
+
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      return newState
+    }
+    case "UPDATE_REGION_COLOR": {
+      const { region, color } = action
+
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      if (!newRegions) {
+        return state
+      }
+
+      newRegions = newRegions.map((r) =>
+        r.id === region.id ? { ...r, color } : r
+      )
+
+      newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
@@ -321,7 +371,7 @@ export default (state: MainLayoutState, action: Action) => {
           return {
             ...region,
             category: device.category,
-            color: getColorByCategory(device.category),
+            color: getColorByCategory(state, device.category),
             isOldDevice: false,
           }
         } else {
@@ -805,7 +855,7 @@ export default (state: MainLayoutState, action: Action) => {
     }
     case "UPDATE_DEVICE_CATEGORY_ON_ALL_REGIONS_BY_SYMBOL_NAME_AND_CATEGORY_USER_DEFINED": {
       let newState = { ...state }
-      const color = getColorByCategory(action.category)
+      const color = getColorByCategory(state, action.category)
 
       // Iterate over all images
       newState.images = newState.images.map((image) => {
@@ -885,7 +935,7 @@ export default (state: MainLayoutState, action: Action) => {
       const regionIndex = getRegionIndex(action.region)
       if (regionIndex === null) return state
 
-      region.color = getColorByCategory(region.category)
+      region.color = getColorByCategory(state, region.category)
       region.visible = true
       state = saveToHistory(state, "Add New Region")
 
@@ -949,7 +999,7 @@ export default (state: MainLayoutState, action: Action) => {
       if (oldRegion.cls !== action.region.cls) {
         action.region.visible = true
         action.region.category = getCategoryBySymbolName(action.region.cls)
-        action.region.color = getColorByCategory(action.region.category)
+        action.region.color = getColorByCategory(state, action.region.category)
         state = saveToHistory(state, "Change Region Classification")
         const clsIndex = state.regionClsList.indexOf(action.region.cls)
         if (clsIndex !== -1) {
@@ -1453,11 +1503,11 @@ export default (state: MainLayoutState, action: Action) => {
           : defaultRegionCls
           ? getCategoryBySymbolName(defaultRegionCls)
           : undefined
-      let defaultPointAndBoxColor = getColorByCategory(defaultRegionCategory)
+      let defaultPointAndBoxColor = getColorByCategory(state, defaultRegionCategory)
       let defaultRegionColor = "#C4A484"
       const clsIndex = (state.regionClsList || []).indexOf(defaultRegionCls)
       if (clsIndex !== -1) {
-        defaultRegionColor = getColor(state.selectedCls)
+        defaultRegionColor = getColor(state, state.selectedCls)
       }
 
       switch (state.selectedTool) {
@@ -1806,7 +1856,7 @@ export default (state: MainLayoutState, action: Action) => {
       const regionIndex = getRegionIndex(action.region)
 
       if (regionIndex === null) return state
-      let regionColor = getColor(region.cls)
+      let regionColor = getColor(state , region.cls)
 
       return setIn(state, [...pathToActiveImage, "regions", regionIndex], {
         ...(activeImage.regions || [])[regionIndex],

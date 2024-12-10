@@ -154,6 +154,7 @@ export const ImageCanvas = ({
   selectedBreakoutIdAutoAdd,
   selectedDeviceToggle,
   subType,
+  categoriesColorMap,
 }: Props) => {
   const classes = useStyles()
 
@@ -437,6 +438,7 @@ export const ImageCanvas = ({
             deviceList={deviceList}
             categories={categories}
             subType={subType}
+            categoriesColorMap={categoriesColorMap}
           />
         </PreventScrollToParents>
       )}
@@ -447,10 +449,11 @@ export const ImageCanvas = ({
             // allowedClasses is overriden in RegionLabel class to filter conduits, devices, etc.
             allowedClasses={regionClsList}
             allowedTags={regionTagList}
-            onAddNewCategory={(category) => {
+            onAddNewCategory={(category, color) => {
               dispatch({
                 type: "ADD_NEW_CATEGORY",
                 category,
+                color: color || "#000000",
               })
             }}
             onChangeNewRegion={(region) => {
@@ -478,6 +481,7 @@ export const ImageCanvas = ({
             selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
             subType={subType}
             categories={categories}
+            categoriesColorMap={categoriesColorMap}
           />
         </div>
       )}

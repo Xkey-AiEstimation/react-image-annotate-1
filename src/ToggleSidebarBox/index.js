@@ -93,6 +93,7 @@ const RowHeader = ({
   onRegionBreakout,
   isBreakoutDisabled,
   categories,
+  categoriesColorMap,
 }) => {
   const [categoryList, setCategoryList] = useState([...categories])
   const [regionCategorySet, setRegionCategorySet] = useState(
@@ -121,7 +122,6 @@ const RowHeader = ({
       }
     })
   })
-
 
   useMemo(() => {
     const categoryList = [...categories]
@@ -208,6 +208,25 @@ const RowHeader = ({
     setCategoryList(categories)
   }, [categories])
 
+  Object.keys(categoriesColorMap).forEach(
+    (device) =>
+      (theme.overrides.MuiSwitch = {
+        ...theme.overrides.MuiSwitch,
+        [device]: {
+          switchBase: {
+            // Controls default (unchecked) color for the thumb
+            color: "#ccc",
+          },
+          colorSecondary: {
+            "&$checked": {
+              // Controls checked color for the thumb
+              color: ColorMapping[device],
+            },
+          },
+        },
+      })
+  )
+
   const body = (
     <div style={modalStyle} className={classes.paper}>
       <h2 id="simple-modal-title">Text in a modal</h2>
@@ -244,7 +263,7 @@ const RowHeader = ({
                         style={{
                           color: "white",
                           "&MuiSwitch-colorSecondary": {
-                            color: ColorMapping[category] || "#C4A484",
+                            color: categoriesColorMap[category] || "#C4A484",
                           },
                         }}
                         size="small"
@@ -273,7 +292,7 @@ const RowHeader = ({
                         <div
                           style={{
                             backgroundColor:
-                              ColorMapping[category] || "#C4A484",
+                              categoriesColorMap[category] || "#C4A484",
                             color: "white",
                             width: 10,
                             height: 10,
@@ -353,6 +372,7 @@ export const ToggleSidebarBox = ({
   onRegionBreakout,
   isBreakoutDisabled,
   categories,
+  categoriesColorMap,
 }) => {
   const classes = useStyles()
   return (
@@ -369,6 +389,7 @@ export const ToggleSidebarBox = ({
           excludedCategories={excludedCategories}
           isBreakoutDisabled={isBreakoutDisabled}
           categories={categories}
+          categoriesColorMap={categoriesColorMap}
         />
       </div>
     </SidebarBoxContainer>
