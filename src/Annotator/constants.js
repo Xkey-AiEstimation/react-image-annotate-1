@@ -20,7 +20,7 @@ export const subTypes = {
 export const disableBreakoutSubscription = [
   subTypes.standardEditionYearly,
   subTypes.standardEditionElectricalYearly,
-  subTypes.electricalAieLite
+  subTypes.electricalAieLite,
 ]
 
 export const lowerTiers = [
@@ -50,3 +50,6 @@ export const AIE_CATEGORIES = [
   "BREAKERS",
   "NOT CLASSIFIED",
 ]
+
+export const defaultColor = "#C4A484"
+export const defaultSystem = "NOT CLASSIFIED"

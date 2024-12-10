@@ -44,6 +44,7 @@ export const RegionTags = ({
   deviceList,
   categories,
   subType,
+  categoriesColorMap,
 }) => {
   const RegionLabel = DefaultRegionLabel
   return regions
@@ -144,6 +145,7 @@ export const RegionTags = ({
               dispatch={dispatch}
               breakoutList={breakoutList}
               selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
+              categoriesColorMap={categoriesColorMap}
               onChangeNewRegion={(region) => {
                 dispatch({
                   type: "CHANGE_NEW_REGION",

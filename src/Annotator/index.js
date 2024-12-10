@@ -86,7 +86,8 @@ export const Annotator = ({
   regionTagList = [],
   regionClsList = [],
   deviceList = [],
-  categories,
+  categories = [],
+  categoriesColorMap = {},
   imageTagList = [],
   imageClsList = [],
   keyframes = {},
@@ -140,6 +141,7 @@ export const Annotator = ({
     breakoutNames: new Set(),
   }
 
+
   const [state, dispatchToReducer] = useReducer(
     historyHandler(
       combineReducers(
@@ -175,13 +177,15 @@ export const Annotator = ({
       selectedBreakoutIdAutoAdd: null,
       breakouts: breakouts,
       deviceList,
-      categories: categories || AIE_CATEGORIES,
       newDevicesToSave: [],
+      newCategoriesToSave: [],
+      categoriesColorMap,
       counts: [],
       filters: filters,
       excludedCategories: [],
       selectedBreakoutToggle: null,
       selectedDeviceToggle: "ALL",
+      categories: categories || AIE_CATEGORIES,
       subType,
       ...(annotationType === "image"
         ? {

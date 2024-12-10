@@ -224,6 +224,7 @@ export const MainLayout = ({
       allowComments={state.allowComments}
       dispatch={dispatch}
       subType={state?.subType || subTypes.fullSuiteYearly}
+      categoriesColorMap={state.categoriesColorMap}
     />
   )
 
@@ -476,6 +477,7 @@ export const MainLayout = ({
                   })
                 }}
                 isBreakoutDisabled={isBreakoutDisabled}
+                categoriesColorMap={state.categoriesColorMap}
               />,
 
               !isBreakoutDisabled && (
