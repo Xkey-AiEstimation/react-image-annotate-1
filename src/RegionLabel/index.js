@@ -40,6 +40,7 @@ import {
   defaultColor,
   defaultSystem,
   disableBreakoutSubscription,
+  subTypes,
 } from "../Annotator/constants.js"
 import { useMemo } from "react"
 // import { ColorPicker } from "material-ui-color"
@@ -375,7 +376,6 @@ export const RegionLabel = ({
       const selectedCategoryValue = categoryExists
         ? device?.category
         : defaultSystem
-      console.log("selectedCategoryValue", selectedCategoryValue)
       setSelectedCategory({
         label: selectedCategoryValue,
         value: selectedCategoryValue,
@@ -383,12 +383,17 @@ export const RegionLabel = ({
       setCanChangeCategory(region?.isOldDevice ? false : true)
     }
 
-    console.log("options", options)
-
     if (options.length > 0) {
       setUserCategories(options)
     } else {
-      setUserCategories(categoryOptions)
+      if (
+        // check sub type
+        subType === subTypes.standardEditionYearly
+      )
+        setUserCategories([])
+      else {
+        setUserCategories(categoryOptions)
+      }
     }
 
     setDeviceOptions(deviceOptions)

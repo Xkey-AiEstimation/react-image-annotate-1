@@ -377,7 +377,7 @@ export const ToggleSidebarBox = ({
   const classes = useStyles()
   return (
     <SidebarBoxContainer
-      title="Toggles"
+      title="Systems"
       icon={<ToggleOnIcon style={{ color: "white" }} />}
       expandedByDefault
     >
