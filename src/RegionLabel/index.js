@@ -40,6 +40,7 @@ import {
   defaultColor,
   defaultSystem,
   disableBreakoutSubscription,
+  subTypes,
 } from "../Annotator/constants.js"
 import { useMemo } from "react"
 // import { ColorPicker } from "material-ui-color"
@@ -359,7 +360,7 @@ export const RegionLabel = ({
         label: selectedCategoryValue,
         value: selectedCategoryValue,
       })
-      setCanChangeCategory(device.user_defined)
+      setCanChangeCategory(device.user_defined && !region.isOldDevice)
     } else {
       const deviceName =
         region.cls === "" || region.cls === null || region.cls === undefined
@@ -375,7 +376,6 @@ export const RegionLabel = ({
       const selectedCategoryValue = categoryExists
         ? device?.category
         : defaultSystem
-
       setSelectedCategory({
         label: selectedCategoryValue,
         value: selectedCategoryValue,
@@ -386,12 +386,19 @@ export const RegionLabel = ({
     if (options.length > 0) {
       setUserCategories(options)
     } else {
-      setUserCategories(categoryOptions)
+      if (
+        // check sub type
+        subType === subTypes.standardEditionYearly
+      )
+        setUserCategories([])
+      else {
+        setUserCategories(categoryOptions)
+      }
     }
 
     setDeviceOptions(deviceOptions)
     setConduitOptions(xkeyConduitOptions)
-  }, [devices, region])
+  }, [devices, region, categories])
 
   const onChangeNewDevice = (newDevice) => {
     return onChange({
@@ -532,7 +539,7 @@ export const RegionLabel = ({
     "Only user defined devices can have their category changed."
 
   const regionLabelOld =
-    "This device is not in the list. It may have been deleted, renamed, or is outdated."
+    "This device is not in the list. It may have been deleted, renamed, or is outdated. Please add it to the list to modify it."
 
   const conditionalRegionTextField = (region, regionType) => {
     if (regionType === "scale") {
@@ -926,6 +933,7 @@ export const RegionLabel = ({
             }}
           >
             <CreatableSelect
+              isDisabled={!canChangeCategory}
               placeholder="Select Category/System or Create New"
               onChange={(o, actionMeta) => {
                 let isActionCreate = false
