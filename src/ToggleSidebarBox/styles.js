@@ -22,7 +22,6 @@ export default {
     },
   },
   rowContainer: {
-    maxHeight: "200px", // Set the maximum height for the container
     overflowY: "auto", // Enable vertical scrolling
     paddingLeft: 10,
   },

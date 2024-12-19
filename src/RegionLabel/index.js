@@ -44,7 +44,9 @@ import {
 } from "../Annotator/constants.js"
 import { useMemo } from "react"
 // import { ColorPicker } from "material-ui-color"
-import ColorPicker from "material-ui-color-picker"
+import { state } from "../Annotator/reducers/general-reducer"
+import EditIcon from "@material-ui/icons/Edit"
+import { SketchPicker } from "react-color"
 
 const useStyles = makeStyles(styles)
 
@@ -524,7 +526,36 @@ export const RegionLabel = ({
   //     category: selectedCategory.value,
   //     color: getColorByCategory(category),
   //   })
+
   //
+  const [sketchPickerColor, setSketchPickerColor] = useState(
+    region.color || categoriesColorMap[selectedCategory.value] || defaultColor
+  )
+  const [openToolMap, setOpenToolMap] = useState(false)
+
+  const handleToolTipClick = () => {
+    setOpenToolMap(!openToolMap)
+  }
+
+  const handleColorChangeComplete = (color) => {
+    setSketchPickerColor(color.hex)
+    console.log(color)
+    dispatch({
+      type: "CHANGE_CATEGORY_COLOR",
+      category: selectedCategory.value,
+      color: color.hex,
+    })
+  }
+
+  // Function to determine the text color based on the background color
+  const getTextForColorPicker = (backgroundColor) => {
+    const hexColor = backgroundColor.replace("#", "")
+    const r = parseInt(hexColor.substring(0, 2), 16)
+    const g = parseInt(hexColor.substring(2, 4), 16)
+    const b = parseInt(hexColor.substring(4, 6), 16)
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000
+    return brightness > 125 ? "black" : "white"
+  }
 
   const regionLabelDescription = ` Note: If you don't see the device you are looking for, you can add it
   to the list. If you are unsure of the category, please select "NOT
@@ -569,6 +600,7 @@ export const RegionLabel = ({
           label: 100,
         },
       ]
+
       // do scale
       return (
         <div
@@ -727,7 +759,7 @@ export const RegionLabel = ({
               </IconButton>
             </Tooltip>
           </div>
-          <Select
+          {/* <Select
             placeholder="Select Category"
             isDisabled={!canChangeCategory}
             onChange={(e) => {
@@ -735,6 +767,32 @@ export const RegionLabel = ({
             }}
             value={selectedCategory}
             options={userCategories}
+          /> */}
+          <CreatableSelect
+            isDisabled={!canChangeCategory}
+            placeholder="Select Category/System or Create New"
+            onChange={(o, actionMeta) => {
+              let isActionCreate = false
+              if (actionMeta.action === "create-option") {
+                isActionCreate = true
+              }
+              onSelectCategory(o, isActionCreate)
+            }}
+            value={region.category ? selectedCategory : null}
+            options={userCategories}
+            styles={{
+              control: (provided) => ({
+                ...provided,
+                borderColor: "#1DA1F2",
+                "&:hover": {
+                  borderColor: "#1DA1F2",
+                },
+              }),
+              placeholder: (provided) => ({
+                ...provided,
+                color: "#888",
+              }),
+            }}
           />
           {!canChangeCategory && (
             <div
@@ -958,6 +1016,46 @@ export const RegionLabel = ({
                 }),
               }}
             />
+            {/* <Tooltip
+              interactive
+              title={
+                <SketchPicker
+                  color={sketchPickerColor} // Use local state or fallback to props color map
+                  onChangeComplete={handleColorChangeComplete} // Handle color change
+                />
+              }
+              PopperProps={{
+                disablePortal: true,
+                style: { zIndex: 9999 },
+              }}
+              open={openToolMap}
+            >
+              <Button
+                onClick={handleToolTipClick}
+                style={{
+                  backgroundColor: sketchPickerColor,
+                  width: "100%",
+                  height: 32,
+                  borderRadius: 8,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginTop: 12,
+                  marginBottom: 12,
+                  color: getTextForColorPicker(sketchPickerColor),
+                  fontSize: 16,
+                  border: "1px solid black", // Add black outline
+                }}
+                startIcon={
+                  <EditIcon
+                    style={{ color: getTextForColorPicker(sketchPickerColor), fontSize: 16 }}
+                  />
+                }
+              >
+                Change System Color
+              </Button>
+            </Tooltip> */}
 
             {/* {isNewCategory && (
               <Box

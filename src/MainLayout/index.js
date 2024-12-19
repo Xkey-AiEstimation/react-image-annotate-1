@@ -476,6 +476,13 @@ export const MainLayout = ({
                     category: regionCategory,
                   })
                 }}
+                onCategoryColorChange={(category, color) => {
+                  dispatch({
+                    type: "CHANGE_CATEGORY_COLOR",
+                    category,
+                    color,
+                  })
+                }}
                 isBreakoutDisabled={isBreakoutDisabled}
                 categoriesColorMap={state.categoriesColorMap}
               />,
