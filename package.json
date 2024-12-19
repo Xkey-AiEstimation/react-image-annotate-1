@@ -16,6 +16,7 @@
     "material-ui-color-picker": "^3.5.1",
     "mmgc1-cpp": "^1.0.50",
     "moment": "^2.23.0",
+    "react-color": "^2.19.3",
     "react-full-screen": "^0.3.1",
     "react-hotkeys": "^2.0.0",
     "react-json-view": "^1.19.1",

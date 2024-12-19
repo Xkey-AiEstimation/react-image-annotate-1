@@ -278,6 +278,47 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+    case "CHANGE_CATEGORY_COLOR": {
+      const { category, color } = action
+      let newState = { ...state }
+
+      // Update the color in the categories array
+      
+      let newCategoriesToSave = getIn(newState, ["newCategoriesToSave"]) || []
+
+      // Update the color of the existing category
+      let newCatToSave = newCategoriesToSave.map((cat) =>
+        cat.category === category ? { ...cat, color } : cat
+      )
+
+      // If the category does not exist in newCategoriesToSave, add it
+      if (!newCatToSave.some((cat) => cat.category === category)) {
+        newCatToSave = [...newCatToSave, { category, color }]
+      }
+
+      // Update all regions with the new color
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      if (!newRegions) {
+        return state
+      }
+      newRegions = newRegions.map((region) => {
+        if (region.category === category) {
+          return {
+            ...region,
+            color,
+          }
+        } else {
+          return region
+        }
+      })
+      // update the color in the categories array
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      newState = setIn(newState, ["newCategoriesToSave"], newCatToSave)
+
+      return newState
+    }
     case "UPDATE_REGION_COLOR": {
       const { region, color } = action
 
@@ -1503,7 +1544,10 @@ export default (state: MainLayoutState, action: Action) => {
           : defaultRegionCls
           ? getCategoryBySymbolName(defaultRegionCls)
           : undefined
-      let defaultPointAndBoxColor = getColorByCategory(state, defaultRegionCategory)
+      let defaultPointAndBoxColor = getColorByCategory(
+        state,
+        defaultRegionCategory
+      )
       let defaultRegionColor = "#C4A484"
       const clsIndex = (state.regionClsList || []).indexOf(defaultRegionCls)
       if (clsIndex !== -1) {
@@ -1856,7 +1900,7 @@ export default (state: MainLayoutState, action: Action) => {
       const regionIndex = getRegionIndex(action.region)
 
       if (regionIndex === null) return state
-      let regionColor = getColor(state , region.cls)
+      let regionColor = getColor(state, region.cls)
 
       return setIn(state, [...pathToActiveImage, "regions", regionIndex], {
         ...(activeImage.regions || [])[regionIndex],

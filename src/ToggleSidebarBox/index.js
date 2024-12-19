@@ -1,9 +1,14 @@
 // @flow
 import {
+  Button,
+  ClickAwayListener,
   FormControlLabel,
   FormGroup,
   IconButton,
+  Popover,
   Switch,
+  Tooltip,
+  Typography,
   createTheme,
 } from "@material-ui/core"
 import Grid from "@material-ui/core/Grid"
@@ -13,13 +18,23 @@ import TrashIcon from "@material-ui/icons/Delete"
 import LockIcon from "@material-ui/icons/Lock"
 import PieChartIcon from "@material-ui/icons/PieChart"
 import ReorderIcon from "@material-ui/icons/SwapVert"
+import EditIcon from "@material-ui/icons/Edit"
 import ToggleOnIcon from "@material-ui/icons/ToggleOn"
 import isEqual from "lodash/isEqual"
-import React, { memo, useCallback, useEffect, useMemo, useState } from "react"
+import ColorPicker from "material-ui-color-picker"
+import React, {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { ColorMapping } from "../RegionLabel/ColorMapping"
 import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 import styles from "./styles"
+import { SketchPicker } from "react-color"
 
 const useStyles = makeStyles(styles)
 
@@ -94,6 +109,7 @@ const RowHeader = ({
   isBreakoutDisabled,
   categories,
   categoriesColorMap,
+  onCategoryColorChange,
 }) => {
   const [categoryList, setCategoryList] = useState([...categories])
   const [regionCategorySet, setRegionCategorySet] = useState(
@@ -165,6 +181,14 @@ const RowHeader = ({
     onRegionBreakout(regionCategory)
   }
 
+  const handleColorChange = (color, event) => {
+    const category = event.target.id
+    const newColor = color.hex
+    const newCategoriesColorMap = { ...categoriesColorMap }
+
+    newCategoriesColorMap[category] = newColor
+  }
+
   function rand() {
     return Math.round(Math.random() * 20) - 10
   }
@@ -194,7 +218,7 @@ const RowHeader = ({
   const classes = useStyles()
   // getModalStyle is not a pure function, we roll the style only on the first render
   const [modalStyle] = React.useState(getModalStyle)
-  const [open, setOpen] = React.useState(false)
+  const [open, setOpen] = React.useState(true)
 
   const handleOpen = () => {
     setOpen(true)
@@ -236,6 +260,51 @@ const RowHeader = ({
       <RowHeader />
     </div>
   )
+  // State to manage the tooltip visibility and color for each category
+  const [openToolMap, setOpenToolMap] = useState({})
+  const [categoryColors, setCategoryColors] = useState({})
+
+  // Ref to track the tooltip container
+  const tooltipRef = useRef(null)
+
+  // Function to toggle tooltip visibility for a specific category
+  const handleToolTipClick = (category) => {
+    setOpenToolMap((prevState) => ({
+      ...prevState,
+      [category]: !prevState[category],
+    }))
+  }
+
+  // Function to close all tooltips
+  const closeAllTooltips = () => {
+    setOpenToolMap({})
+  }
+
+  // Function to update the color of a category
+  const handleColorChangeLocal = (color, category) => {
+    setCategoryColors((prevState) => ({
+      ...prevState,
+      [category]: color.hex, // Store hex color value for the category
+    }))
+    onCategoryColorChange(category, color.hex)
+  }
+
+  // Close tooltip when clicking outside (with checks to avoid closing on tooltip content)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Prevent closing if the click is inside the tooltip or color picker container
+      if (tooltipRef.current && tooltipRef.current.contains(event.target)) {
+        return
+      }
+      closeAllTooltips()
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
   return (
     <RowLayout
       style={{ paddingLeft: 10 }}
@@ -247,33 +316,34 @@ const RowHeader = ({
       trash={<TrashIcon className="icon" />}
       lock={<LockIcon className="icon" />}
       visible={
-        <div>
+        <div ref={tooltipRef}>
           <FormGroup>
             {categoryList.map((category, index) => {
-              // check if the category is in the regionCategorySet
               if (!regionCategorySet.has(category)) {
                 return null
               }
 
               return (
-                <div key={index}>
+                <div
+                  key={index}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: 10,
+                  }}
+                >
                   <FormControlLabel
                     control={
                       <Switch
                         style={{
                           color: "white",
-                          "&MuiSwitch-colorSecondary": {
-                            color: categoriesColorMap[category] || "#C4A484",
-                          },
                         }}
                         size="small"
                         id={category}
                         checked={
-                          (
-                            checkedList.find(
-                              (item) => item.item === category
-                            ) || {}
-                          ).checked
+                          checkedList.find((item) => item.item === category)
+                            ?.checked || false
                         }
                         onChange={handleChange}
                       />
@@ -286,57 +356,74 @@ const RowHeader = ({
                           alignItems: "center",
                         }}
                       >
-                        <div style={{ paddingRight: 10, fontSize: "0.7500em" }}>
+                        <div style={{ paddingRight: 10, fontSize: "0.75em" }}>
                           {category}
                         </div>
-                        <div
-                          style={{
-                            backgroundColor:
-                              categoriesColorMap[category] || "#C4A484",
-                            color: "white",
-                            width: 10,
-                            height: 10,
-                            borderRadius: 5,
-                          }}
-                        />
                       </div>
                     }
                   />
-                  {/* <Tooltip
-                    title="Add Breakout"
-                    placement="bottom"
-                    arrow
-                    enterTouchDelay={0}
-                    style={{
-                      fontSize: "0.7500em",
-                      color: "white",
-                    }}
-                  > */}
-                  {!isBreakoutDisabled && (
-                    <IconButton
-                      style={{
-                        color: "white",
-                      }}
-                      disabled={!regionCategorySet.has(category)}
-                      onClick={() => handleBreakout(category)}
-                    >
-                      <DashboardIcon
-                        style={{
-                          color:
-                            regions.filter(
-                              (region) => region.category === category
-                            ).length === 0
-                              ? "grey"
-                              : "white",
-                          width: 20,
-                          height: 20,
-                          ":hover": {
-                            // if not disabled add a shadow
-                            boxShadow: "0px 0px 10px 0px rgba(0,0,0,0.75)",
-                          },
-                        }}
+
+                  <Tooltip
+                    interactive
+                    title={
+                      <SketchPicker
+                        color={
+                          categoryColors[category] ||
+                          categoriesColorMap[category] ||
+                          "#C4A484"
+                        } // Use local state or fallback to props color map
+                        onChangeComplete={(color) =>
+                          handleColorChangeLocal(color, category)
+                        } // Handle color change
                       />
+                    }
+                    PopperProps={{
+                      disablePortal: true,
+                      style: { zIndex: 9999 },
+                    }}
+                    open={openToolMap[category] || false}
+                  >
+                    <IconButton
+                      onClick={() => handleToolTipClick(category)}
+                      style={{
+                        backgroundColor:
+                          categoryColors[category] ||
+                          categoriesColorMap[category] ||
+                          "#C4A484", // Display the correct color
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <EditIcon style={{ color: "white", fontSize: 16 }} />
                     </IconButton>
+                  </Tooltip>
+
+                  {!isBreakoutDisabled && (
+                    <Tooltip title="Add a System Breakout">
+                      <IconButton
+                        style={{ color: "white" }}
+                        disabled={!regionCategorySet.has(category)}
+                        onClick={() => handleBreakout(category)}
+                      >
+                        <DashboardIcon
+                          style={{
+                            color:
+                              regions.filter(
+                                (region) => region.category === category
+                              ).length === 0
+                                ? "grey"
+                                : "white",
+                            width: 20,
+                            height: 20,
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
                   )}
                 </div>
               )
@@ -373,13 +460,14 @@ export const ToggleSidebarBox = ({
   isBreakoutDisabled,
   categories,
   categoriesColorMap,
+  onCategoryColorChange,
 }) => {
   const classes = useStyles()
   return (
     <SidebarBoxContainer
       title="Systems"
       icon={<ToggleOnIcon style={{ color: "white" }} />}
-      expandedByDefault
+      expandedByDefault={true}
     >
       <div className={classes.container}>
         <RowHeader
@@ -390,6 +478,7 @@ export const ToggleSidebarBox = ({
           isBreakoutDisabled={isBreakoutDisabled}
           categories={categories}
           categoriesColorMap={categoriesColorMap}
+          onCategoryColorChange={onCategoryColorChange}
         />
       </div>
     </SidebarBoxContainer>
