@@ -279,45 +279,35 @@ export default (state: MainLayoutState, action: Action) => {
       return newState
     }
     case "CHANGE_CATEGORY_COLOR": {
-      const { category, color } = action
-      let newState = { ...state }
+      const { category, color } = action;
+      let newState = { ...state };
 
       // Update the color in the categories array
-      
-      let newCategoriesToSave = getIn(newState, ["newCategoriesToSave"]) || []
+      let newCategoriesToSave = getIn(newState, ["newCategoriesToSave"]) || [];
 
       // Update the color of the existing category
       let newCatToSave = newCategoriesToSave.map((cat) =>
         cat.category === category ? { ...cat, color } : cat
-      )
+      );
 
       // If the category does not exist in newCategoriesToSave, add it
       if (!newCatToSave.some((cat) => cat.category === category)) {
-        newCatToSave = [...newCatToSave, { category, color }]
+        newCatToSave = [...newCatToSave, { category, color }];
       }
 
-      // Update all regions with the new color
-      let newImage = getIn(newState, ["images", currentImageIndex])
-      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
-      if (!newRegions) {
-        return state
-      }
-      newRegions = newRegions.map((region) => {
-        if (region.category === category) {
-          return {
-            ...region,
-            color,
-          }
-        } else {
-          return region
-        }
-      })
-      // update the color in the categories array
-      newImage = setIn(newImage, ["regions"], newRegions)
-      newState = setIn(newState, ["images", currentImageIndex], newImage)
-      newState = setIn(newState, ["newCategoriesToSave"], newCatToSave)
+      // Update all regions with the new color in all images
+      let newImages = getIn(newState, ["images"]) || [];
+      newImages = newImages.map((image) => {
+        let newRegions = image.regions.map((region) =>
+          region.category === category ? { ...region, color } : region
+        );
+        return setIn(image, ["regions"], newRegions);
+      });
 
-      return newState
+      newState = setIn(newState, ["images"], newImages);
+      newState = setIn(newState, ["newCategoriesToSave"], newCatToSave);
+
+      return newState;
     }
     case "UPDATE_REGION_COLOR": {
       const { region, color } = action
@@ -1088,18 +1078,18 @@ export default (state: MainLayoutState, action: Action) => {
         editingLabels: r.id === region.id,
         ...(selectedBreakoutIdAutoAdd && r.id === region.id
           ? {
-              breakout: {
-                is_breakout: true,
-                name: state.breakouts.find(
-                  (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-                ).name,
-                id: selectedBreakoutIdAutoAdd,
-                visible: false,
-              },
-            }
+            breakout: {
+              is_breakout: true,
+              name: state.breakouts.find(
+                (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+              ).name,
+              id: selectedBreakoutIdAutoAdd,
+              visible: false,
+            },
+          }
           : {
-              breakout: r.breakout || undefined,
-            }),
+            breakout: r.breakout || undefined,
+          }),
       }))
       return setIn(state, [...pathToActiveImage, "regions"], regions)
     }
@@ -1242,15 +1232,15 @@ export default (state: MainLayoutState, action: Action) => {
             xFree === 0
               ? ow
               : xFree === -1
-              ? ow + (ox - dx)
-              : Math.max(0, ow + (x - ox - ow))
+                ? ow + (ox - dx)
+                : Math.max(0, ow + (x - ox - ow))
           const dy = yFree === 0 ? oy : yFree === -1 ? Math.min(oy + oh, y) : oy
           const dh =
             yFree === 0
               ? oh
               : yFree === -1
-              ? oh + (oy - dy)
-              : Math.max(0, oh + (y - oy - oh))
+                ? oh + (oy - dy)
+                : Math.max(0, oh + (y - oy - oh))
 
           // determine if we should switch the freedom
           if (dw <= 0.001) {
@@ -1432,7 +1422,7 @@ export default (state: MainLayoutState, action: Action) => {
                   scaleValues.push(
                     Math.sqrt(
                       (scale["x1"] - scale["x2"]) ** 2 +
-                        (scale["y1"] - scale["y2"]) ** 2
+                      (scale["y1"] - scale["y2"]) ** 2
                     ) / scaleVal
                   )
                 }
@@ -1535,15 +1525,15 @@ export default (state: MainLayoutState, action: Action) => {
         state.selectedCls !== undefined && state.selectedCls !== null
           ? state.selectedCls
           : Array.isArray(state.regionClsList) && state.regionClsList.length > 0
-          ? state.regionClsList[0]
-          : undefined
+            ? state.regionClsList[0]
+            : undefined
 
       let defaultRegionCategory =
         state.selectedCategory !== undefined && state.selectedCategory !== null
           ? state.selectedCategory
           : defaultRegionCls
-          ? getCategoryBySymbolName(defaultRegionCls)
-          : undefined
+            ? getCategoryBySymbolName(defaultRegionCls)
+            : undefined
       let defaultPointAndBoxColor = getColorByCategory(
         state,
         defaultRegionCategory
@@ -1735,21 +1725,21 @@ export default (state: MainLayoutState, action: Action) => {
           const [[keypointsDefinitionId, { landmarks, connections }]] =
             (Object.entries(state.keypointDefinitions): any)
 
-          newRegion = {
-            type: "keypoints",
-            keypointsDefinitionId,
-            points: getLandmarksWithTransform({
-              landmarks,
-              center: { x, y },
-              scale: 1,
-            }),
-            highlighted: true,
-            editingLabels: false,
-            id: getRandomId(),
-            category: getCategoryBySymbolName(defaultRegionCls),
-            visible: true,
-            breakout: undefined,
-          }
+            newRegion = {
+              type: "keypoints",
+              keypointsDefinitionId,
+              points: getLandmarksWithTransform({
+                landmarks,
+                center: { x, y },
+                scale: 1,
+              }),
+              highlighted: true,
+              editingLabels: false,
+              id: getRandomId(),
+              category: getCategoryBySymbolName(defaultRegionCls),
+              visible: true,
+              breakout: undefined,
+            }
           state = setIn(state, ["mode"], {
             mode: "RESIZE_KEYPOINTS",
             landmarks,
@@ -1875,22 +1865,22 @@ export default (state: MainLayoutState, action: Action) => {
           highlighted: true,
           editingLabels: true,
           ...(selectedBreakoutIdAutoAdd &&
-          (activeImage.regions || [])[regionIndex].id === region.id
+            (activeImage.regions || [])[regionIndex].id === region.id
             ? {
-                breakout: {
-                  is_breakout: true,
-                  name: state.breakouts.find(
-                    (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-                  ).name,
-                  id: selectedBreakoutIdAutoAdd,
-                  visible: false,
-                },
-              }
+              breakout: {
+                is_breakout: true,
+                name: state.breakouts.find(
+                  (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+                ).name,
+                id: selectedBreakoutIdAutoAdd,
+                visible: false,
+              },
+            }
             : {
-                breakout:
-                  (activeImage.regions || [])[regionIndex].breakout ||
-                  undefined,
-              }),
+              breakout:
+                (activeImage.regions || [])[regionIndex].breakout ||
+                undefined,
+            }),
         }
       )
       return setIn(state, [...pathToActiveImage, "regions"], newRegions)

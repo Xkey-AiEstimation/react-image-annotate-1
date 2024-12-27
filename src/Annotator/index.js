@@ -133,6 +133,8 @@ export const Annotator = ({
     })
   }
 
+  
+
   // Converting Set back to an array before returning
   const breakouts = Array.from(uniqueBreakouts)
 

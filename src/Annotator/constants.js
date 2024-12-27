@@ -23,6 +23,12 @@ export const disableBreakoutSubscription = [
   subTypes.electricalAieLite,
 ]
 
+export const disableAIESubscription = [
+  subTypes.standardEditionYearly,
+  subTypes.standardEditionElectricalYearly,
+  subTypes.electricalAieLite,
+]
+
 export const lowerTiers = [
   subTypes.standardEditionYearly,
   subTypes.standardEditionElectricalYearly,
