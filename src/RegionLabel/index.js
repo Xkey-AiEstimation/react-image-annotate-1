@@ -39,6 +39,7 @@ import {
   AIE_CATEGORIES,
   defaultColor,
   defaultSystem,
+  disableAIESubscription,
   disableBreakoutSubscription,
   subTypes,
 } from "../Annotator/constants.js"
@@ -194,7 +195,7 @@ export const RegionLabel = ({
           scaleValues.push(
             Math.sqrt(
               (scale["x1"] - scale["x2"]) ** 2 +
-                (scale["y1"] - scale["y2"]) ** 2
+              (scale["y1"] - scale["y2"]) ** 2
             ) / scaleVal
           )
         }
@@ -341,8 +342,8 @@ export const RegionLabel = ({
     if (device) {
       const deviceName =
         device.symbol_name === "" ||
-        device.symbol_name === null ||
-        device.symbol_name === undefined
+          device.symbol_name === null ||
+          device.symbol_name === undefined
           ? "NOT CLASSIFIED"
           : device.symbol_name
 
@@ -1424,6 +1425,18 @@ export const RegionLabel = ({
     disableBreakoutSubscription,
   ])
 
+  const shouldShowAIEButton = useMemo(() => {
+    const isAIENotIncluded = disableAIESubscription.includes(subType)
+    if (isAIENotIncluded) {
+      return false
+    }
+    const isValidRegionType = region.type === "box"
+    return (
+      isValidRegionType && region.cls && region.cls !== NOT_CLASSIFED
+    )
+  }, [region, subType, disableAIESubscription])
+
+
   const handleBreakoutClick = () => {
     setOpenBreakout((open) => !open)
   }
@@ -1476,8 +1489,8 @@ export const RegionLabel = ({
                       }}
                     >
                       {region.cls === "" ||
-                      region.cls === null ||
-                      region.cls === undefined
+                        region.cls === null ||
+                        region.cls === undefined
                         ? "NOT CLASSIFIED"
                         : region.cls}{" "}
                     </div>
@@ -1497,8 +1510,8 @@ export const RegionLabel = ({
                 ) : (
                   <div>
                     {region.cls === "" ||
-                    region.cls === null ||
-                    region.cls === undefined
+                      region.cls === null ||
+                      region.cls === undefined
                       ? "NOT CLASSIFIED"
                       : region.cls}{" "}
                   </div>
@@ -1591,92 +1604,91 @@ export const RegionLabel = ({
                   </Tooltip>
                 )}
 
-                {region.cls &&
-                region.cls !== NOT_CLASSIFED &&
-                region.type === "box" ? (
-                  <>
-                    <Tooltip
-                      title={
-                        "After Annotating object or text, run AiE to search for this device."
-                      }
-                      PopperProps={{
-                        style: { zIndex: 9999999 },
-                      }}
-                    >
-                      <IconButton
-                        disabled={isTemplateMatchingLoading}
-                        onClick={() => {
-                          handleRunOCR(region)
-                        }}
-                        tabIndex={-1}
-                        style={{
-                          color: "white",
-                          backgroundColor: "#FF0000",
-                          paddingLeft: "12px",
-                          paddingRight: "12px",
-                          borderRadius: "4px",
-                          height: "24px",
-                        }}
-                        classes={{
-                          label: {
-                            display: "flex",
-                            flexDirection: "row",
-                            marginTop: -2,
-                          },
-                        }}
-                        size="small"
-                        variant="outlined"
-                      >
-                        <ImageSearchIcon
-                          style={{ marginTop: -4, width: 16, height: 16 }}
-                        />
-                        <div
-                          style={{
-                            fontSize: "12px",
-                          }}
-                        >
-                          Run AiE
-                        </div>
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip
-                      title={
-                        "Allow AiE to search for this device on all pages."
-                      }
-                      PopperProps={{
-                        style: { zIndex: 9999999 },
-                      }}
-                    >
-                      <FormControlLabel
-                        style={{
-                          paddingLeft: "8px",
-                          color: "black",
-                        }}
-                        control={
-                          <RedOCRToggleSwitch
-                            checked={isOCRProjectChecked}
-                            onChange={handleOCRTypeChange}
-                            color="primary"
-                            name="checkedB"
-                            inputProps={{ "aria-label": "primary checkbox" }}
-                          />
+                {shouldShowAIEButton
+                  ? (
+                    <>
+                      <Tooltip
+                        title={
+                          "After Annotating object or text, run AiE to search for this device."
                         }
-                        label={
-                          <Typography
+                        PopperProps={{
+                          style: { zIndex: 9999999 },
+                        }}
+                      >
+                        <IconButton
+                          disabled={isTemplateMatchingLoading}
+                          onClick={() => {
+                            handleRunOCR(region)
+                          }}
+                          tabIndex={-1}
+                          style={{
+                            color: "white",
+                            backgroundColor: "#FF0000",
+                            paddingLeft: "12px",
+                            paddingRight: "12px",
+                            borderRadius: "4px",
+                            height: "24px",
+                          }}
+                          classes={{
+                            label: {
+                              display: "flex",
+                              flexDirection: "row",
+                              marginTop: -2,
+                            },
+                          }}
+                          size="small"
+                          variant="outlined"
+                        >
+                          <ImageSearchIcon
+                            style={{ marginTop: -4, width: 16, height: 16 }}
+                          />
+                          <div
                             style={{
                               fontSize: "12px",
-                              marginLeft: "-4px",
-                              color: "black",
                             }}
                           >
-                            All Pages
-                          </Typography>
+                            Run AiE
+                          </div>
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          "Allow AiE to search for this device on all pages."
                         }
-                        fontSize="small"
-                      />
-                    </Tooltip>
-                  </>
-                ) : null}
+                        PopperProps={{
+                          style: { zIndex: 9999999 },
+                        }}
+                      >
+                        <FormControlLabel
+                          style={{
+                            paddingLeft: "8px",
+                            color: "black",
+                          }}
+                          control={
+                            <RedOCRToggleSwitch
+                              checked={isOCRProjectChecked}
+                              onChange={handleOCRTypeChange}
+                              color="primary"
+                              name="checkedB"
+                              inputProps={{ "aria-label": "primary checkbox" }}
+                            />
+                          }
+                          label={
+                            <Typography
+                              style={{
+                                fontSize: "12px",
+                                marginLeft: "-4px",
+                                color: "black",
+                              }}
+                            >
+                              All Pages
+                            </Typography>
+                          }
+                          fontSize="small"
+                        />
+                      </Tooltip>
+                    </>
+                  ) : null}
                 <Tooltip
                   title={"Delete Region"}
                   placement="right"

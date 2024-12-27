@@ -23,7 +23,10 @@ export default {
   },
   rowContainer: {
     overflowY: "auto", // Enable vertical scrolling
+    overflowX: "hidden", // Disable horizontal scrolling
     paddingLeft: 10,
+
+
   },
   row: {
     padding: 4,
