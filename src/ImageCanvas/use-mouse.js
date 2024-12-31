@@ -64,7 +64,6 @@ export default ({
           prevMousePosition.current.x - mousePosition.current.x,
           prevMousePosition.current.y - mousePosition.current.y
         )
-
         changeMat(mat.clone())
       }
       e.preventDefault()

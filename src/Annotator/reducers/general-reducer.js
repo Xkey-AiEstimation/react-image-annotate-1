@@ -97,6 +97,40 @@ export const getColorByCategory = (state, category) => {
   }
 }
 
+// Update the helper functions for stricter containment checks
+
+const isPointInBox = (point, box) => {
+  return (
+    point.x >= box.x &&
+    point.x <= box.x + box.w &&
+    point.y >= box.y &&
+    point.y <= box.y + box.h
+  )
+}
+
+const isBoxFullyContained = (box1, box2) => {
+  // box1 is the region, box2 is the selection box
+  return (
+    box1.x >= box2.x &&
+    box1.x + box1.w <= box2.x + box2.w &&
+    box1.y >= box2.y &&
+    box1.y + box1.h <= box2.y + box2.h
+  )
+}
+
+const isPolygonFullyContained = (polygon, box) => {
+  // Check if ALL points of the polygon are inside the box
+  return polygon.points.every(([x, y]) => isPointInBox({ x, y }, box))
+}
+
+const isLineFullyContained = (line, box) => {
+  // Check if both endpoints are inside the box
+  return (
+    isPointInBox({ x: line.x1, y: line.y1 }, box) &&
+    isPointInBox({ x: line.x2, y: line.y2 }, box)
+  )
+}
+
 export default (state: MainLayoutState, action: Action) => {
   if (
     state.allowedArea &&
@@ -279,35 +313,35 @@ export default (state: MainLayoutState, action: Action) => {
       return newState
     }
     case "CHANGE_CATEGORY_COLOR": {
-      const { category, color } = action;
-      let newState = { ...state };
+      const { category, color } = action
+      let newState = { ...state }
 
       // Update the color in the categories array
-      let newCategoriesToSave = getIn(newState, ["newCategoriesToSave"]) || [];
+      let newCategoriesToSave = getIn(newState, ["newCategoriesToSave"]) || []
 
       // Update the color of the existing category
       let newCatToSave = newCategoriesToSave.map((cat) =>
         cat.category === category ? { ...cat, color } : cat
-      );
+      )
 
       // If the category does not exist in newCategoriesToSave, add it
       if (!newCatToSave.some((cat) => cat.category === category)) {
-        newCatToSave = [...newCatToSave, { category, color }];
+        newCatToSave = [...newCatToSave, { category, color }]
       }
 
       // Update all regions with the new color in all images
-      let newImages = getIn(newState, ["images"]) || [];
+      let newImages = getIn(newState, ["images"]) || []
       newImages = newImages.map((image) => {
         let newRegions = image.regions.map((region) =>
           region.category === category ? { ...region, color } : region
-        );
-        return setIn(image, ["regions"], newRegions);
-      });
+        )
+        return setIn(image, ["regions"], newRegions)
+      })
 
-      newState = setIn(newState, ["images"], newImages);
-      newState = setIn(newState, ["newCategoriesToSave"], newCatToSave);
+      newState = setIn(newState, ["images"], newImages)
+      newState = setIn(newState, ["newCategoriesToSave"], newCatToSave)
 
-      return newState;
+      return newState
     }
     case "UPDATE_REGION_COLOR": {
       const { region, color } = action
@@ -1078,18 +1112,18 @@ export default (state: MainLayoutState, action: Action) => {
         editingLabels: r.id === region.id,
         ...(selectedBreakoutIdAutoAdd && r.id === region.id
           ? {
-            breakout: {
-              is_breakout: true,
-              name: state.breakouts.find(
-                (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-              ).name,
-              id: selectedBreakoutIdAutoAdd,
-              visible: false,
-            },
-          }
+              breakout: {
+                is_breakout: true,
+                name: state.breakouts.find(
+                  (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+                ).name,
+                id: selectedBreakoutIdAutoAdd,
+                visible: false,
+              },
+            }
           : {
-            breakout: r.breakout || undefined,
-          }),
+              breakout: r.breakout || undefined,
+            }),
       }))
       return setIn(state, [...pathToActiveImage, "regions"], regions)
     }
@@ -1232,15 +1266,15 @@ export default (state: MainLayoutState, action: Action) => {
             xFree === 0
               ? ow
               : xFree === -1
-                ? ow + (ox - dx)
-                : Math.max(0, ow + (x - ox - ow))
+              ? ow + (ox - dx)
+              : Math.max(0, ow + (x - ox - ow))
           const dy = yFree === 0 ? oy : yFree === -1 ? Math.min(oy + oh, y) : oy
           const dh =
             yFree === 0
               ? oh
               : yFree === -1
-                ? oh + (oy - dy)
-                : Math.max(0, oh + (y - oy - oh))
+              ? oh + (oy - dy)
+              : Math.max(0, oh + (y - oy - oh))
 
           // determine if we should switch the freedom
           if (dw <= 0.001) {
@@ -1382,6 +1416,13 @@ export default (state: MainLayoutState, action: Action) => {
 
       state = setIn(state, ["mouseDownAt"], { x, y })
 
+      if (state.selectedTool === "multi-delete-select") {
+        return setIn(state, ["mode"], {
+          mode: "MULTI_DELETE_SELECT",
+          start: { x, y },
+        })
+      }
+
       if (state.mode) {
         switch (state.mode.mode) {
           case "DRAW_POLYGON": {
@@ -1422,7 +1463,7 @@ export default (state: MainLayoutState, action: Action) => {
                   scaleValues.push(
                     Math.sqrt(
                       (scale["x1"] - scale["x2"]) ** 2 +
-                      (scale["y1"] - scale["y2"]) ** 2
+                        (scale["y1"] - scale["y2"]) ** 2
                     ) / scaleVal
                   )
                 }
@@ -1525,15 +1566,15 @@ export default (state: MainLayoutState, action: Action) => {
         state.selectedCls !== undefined && state.selectedCls !== null
           ? state.selectedCls
           : Array.isArray(state.regionClsList) && state.regionClsList.length > 0
-            ? state.regionClsList[0]
-            : undefined
+          ? state.regionClsList[0]
+          : undefined
 
       let defaultRegionCategory =
         state.selectedCategory !== undefined && state.selectedCategory !== null
           ? state.selectedCategory
           : defaultRegionCls
-            ? getCategoryBySymbolName(defaultRegionCls)
-            : undefined
+          ? getCategoryBySymbolName(defaultRegionCls)
+          : undefined
       let defaultPointAndBoxColor = getColorByCategory(
         state,
         defaultRegionCategory
@@ -1725,21 +1766,21 @@ export default (state: MainLayoutState, action: Action) => {
           const [[keypointsDefinitionId, { landmarks, connections }]] =
             (Object.entries(state.keypointDefinitions): any)
 
-            newRegion = {
-              type: "keypoints",
-              keypointsDefinitionId,
-              points: getLandmarksWithTransform({
-                landmarks,
-                center: { x, y },
-                scale: 1,
-              }),
-              highlighted: true,
-              editingLabels: false,
-              id: getRandomId(),
-              category: getCategoryBySymbolName(defaultRegionCls),
-              visible: true,
-              breakout: undefined,
-            }
+          newRegion = {
+            type: "keypoints",
+            keypointsDefinitionId,
+            points: getLandmarksWithTransform({
+              landmarks,
+              center: { x, y },
+              scale: 1,
+            }),
+            highlighted: true,
+            editingLabels: false,
+            id: getRandomId(),
+            category: getCategoryBySymbolName(defaultRegionCls),
+            visible: true,
+            breakout: undefined,
+          }
           state = setIn(state, ["mode"], {
             mode: "RESIZE_KEYPOINTS",
             landmarks,
@@ -1768,6 +1809,54 @@ export default (state: MainLayoutState, action: Action) => {
       const { mouseDownAt = { x, y } } = state
       if (!state.mode) return state
       state = setIn(state, ["mouseDownAt"], null)
+
+      if (state.mode?.mode === "MULTI_DELETE_SELECT") {
+        // Calculate selection box coordinates
+        const selectionBox = {
+          x: Math.min(mouseDownAt.x, x),
+          y: Math.min(mouseDownAt.y, y),
+          w: Math.abs(x - mouseDownAt.x),
+          h: Math.abs(y - mouseDownAt.y),
+        }
+
+        // Get regions before deletion for history
+        const regionsBeforeDelete = activeImage.regions || []
+
+        // Filter out regions that intersect with the selection box
+        const newRegions = regionsBeforeDelete.filter((region) => {
+          switch (region.type) {
+            case "point":
+              return !isPointInBox(region, selectionBox)
+            case "box":
+              return !isBoxFullyContained(region, selectionBox)
+            case "polygon":
+              return !isPolygonFullyContained(region, selectionBox)
+            case "line":
+              return !isLineFullyContained(region, selectionBox)
+            default:
+              return true
+          }
+        })
+
+        // Count deleted regions
+        const deletedCount = regionsBeforeDelete.length - newRegions.length
+
+        // Only save to history if regions were actually deleted
+        if (deletedCount > 0) {
+          state = saveToHistory(
+            state,
+            `Eraser Tool: Deleted ${deletedCount} region${
+              deletedCount !== 1 ? "s" : ""
+            }`
+          )
+        }
+
+        return setIn(
+          setIn(state, ["mode"], null),
+          [...pathToActiveImage, "regions"],
+          newRegions
+        )
+      }
       switch (state.mode.mode) {
         case "RESIZE_BOX": {
           if (state.mode.isNew) {
@@ -1865,22 +1954,22 @@ export default (state: MainLayoutState, action: Action) => {
           highlighted: true,
           editingLabels: true,
           ...(selectedBreakoutIdAutoAdd &&
-            (activeImage.regions || [])[regionIndex].id === region.id
+          (activeImage.regions || [])[regionIndex].id === region.id
             ? {
-              breakout: {
-                is_breakout: true,
-                name: state.breakouts.find(
-                  (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-                ).name,
-                id: selectedBreakoutIdAutoAdd,
-                visible: false,
-              },
-            }
+                breakout: {
+                  is_breakout: true,
+                  name: state.breakouts.find(
+                    (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+                  ).name,
+                  id: selectedBreakoutIdAutoAdd,
+                  visible: false,
+                },
+              }
             : {
-              breakout:
-                (activeImage.regions || [])[regionIndex].breakout ||
-                undefined,
-            }),
+                breakout:
+                  (activeImage.regions || [])[regionIndex].breakout ||
+                  undefined,
+              }),
         }
       )
       return setIn(state, [...pathToActiveImage, "regions"], newRegions)

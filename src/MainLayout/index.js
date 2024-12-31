@@ -225,6 +225,7 @@ export const MainLayout = ({
       dispatch={dispatch}
       subType={state?.subType}
       categoriesColorMap={state.categoriesColorMap}
+      state={state}
     />
   )
 
@@ -422,6 +423,11 @@ export const MainLayout = ({
               {
                 name: "create-keypoints",
                 helperText: "Add Keypoints (Pose)",
+              },
+              {
+                name: "multi-delete-select",
+                helperText: "Eraser Tool",
+                alwaysShowing: true,
               },
               state.fullImageSegmentationMode && {
                 name: "show-mask",

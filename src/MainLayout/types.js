@@ -22,6 +22,7 @@ export type ToolEnum =
   | "create-pixel"
   | "create-expanding-line"
   | "create-keypoints"
+  | "multi-delete-select"
 
 export type Image = {
   src: string,
