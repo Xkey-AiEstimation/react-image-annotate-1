@@ -35,6 +35,7 @@ import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 import styles from "./styles"
 import { SketchPicker } from "react-color"
+import CloseIcon from "@material-ui/icons/Close"
 
 const useStyles = makeStyles(styles)
 
@@ -366,16 +367,46 @@ const RowHeader = ({
                   <Tooltip
                     interactive
                     title={
-                      <SketchPicker
-                        color={
-                          categoryColors[category] ||
-                          categoriesColorMap[category] ||
-                          "#C4A484"
-                        } // Use local state or fallback to props color map
-                        onChangeComplete={(color) =>
-                          handleColorChangeLocal(color, category)
-                        } // Handle color change
-                      />
+                      <div>
+                        <div style={{ 
+                          display: 'flex', 
+                          justifyContent: 'flex-end', 
+                          marginBottom: 8 
+                        }}>
+                          <IconButton
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenToolMap(prev => ({
+                                ...prev,
+                                [category]: false
+                              }));
+                            }}
+                            style={{ 
+                              backgroundColor: 'white',
+                              width: 24,
+                              height: 24,
+                              padding: 2,
+                              color: 'black'
+                            }}
+                          >
+                            <CloseIcon 
+                              fontSize="small"
+                              style={{ fontSize: 16 }}
+                            />
+                          </IconButton>
+                        </div>
+                        <SketchPicker
+                          color={
+                            categoryColors[category] ||
+                            categoriesColorMap[category] ||
+                            "#C4A484"
+                          }
+                          onChangeComplete={(color) =>
+                            handleColorChangeLocal(color, category)
+                          }
+                        />
+                      </div>
                     }
                     PopperProps={{
                       disablePortal: true,
