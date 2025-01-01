@@ -23,7 +23,7 @@ export const disableBreakoutSubscription = [
   subTypes.electricalAieLite,
 ]
 
-export const disableAIESubscription = [
+export const disableMultiPageOCR = [
   subTypes.standardEditionYearly,
   subTypes.standardEditionElectricalYearly,
   subTypes.electricalAieLite,

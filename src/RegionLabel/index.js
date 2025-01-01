@@ -1,16 +1,13 @@
 // @flow
 import {
   Box,
-  Checkbox,
   createGenerateClassName,
   FormControlLabel,
   Grid,
-  Popover,
-  StylesProvider,
   Switch,
   TextField,
   Tooltip,
-  Typography,
+  Typography
 } from "@material-ui/core"
 import Button from "@material-ui/core/Button"
 import IconButton from "@material-ui/core/IconButton"
@@ -23,31 +20,29 @@ import ImageSearchIcon from "@material-ui/icons/ImageSearch"
 import InfoIcon from "@material-ui/icons/Info"
 import LinearScaleIcon from "@material-ui/icons/LinearScale"
 import classnames from "classnames"
-import React, { memo, useEffect, useRef, useState } from "react"
+import React, { memo, useEffect, useMemo, useRef, useState } from "react"
 import Select from "react-select"
 import CreatableSelect from "react-select/creatable"
 import { asMutable } from "seamless-immutable"
-import {
-  NOT_CLASSIFED,
-  getColorByCategory,
-} from "../Annotator/reducers/general-reducer.js"
-import type { Region } from "../ImageCanvas/region-tools.js"
-import BreakoutSection from "./BreakoutSection.js"
-import DeviceList from "./DeviceList"
-import styles from "./styles"
 import {
   AIE_CATEGORIES,
   defaultColor,
   defaultSystem,
   disableAIESubscription,
   disableBreakoutSubscription,
+  disableMultiPageOCR,
   subTypes,
 } from "../Annotator/constants.js"
-import { useMemo } from "react"
+import {
+  getColorByCategory,
+  NOT_CLASSIFED,
+} from "../Annotator/reducers/general-reducer.js"
+import type { Region } from "../ImageCanvas/region-tools.js"
+import BreakoutSection from "./BreakoutSection.js"
+import DeviceList from "./DeviceList"
+import styles from "./styles"
 // import { ColorPicker } from "material-ui-color"
 import { state } from "../Annotator/reducers/general-reducer"
-import EditIcon from "@material-ui/icons/Edit"
-import { SketchPicker } from "react-color"
 
 const useStyles = makeStyles(styles)
 
@@ -183,6 +178,17 @@ export const RegionLabel = ({
 
   const min = 1
   const max = 1000
+
+  const shouldDisableMultiPageOCR = useMemo(() => {
+    // Return true (disabled) if subType is null/undefined
+    console.log("subType", subType)
+    if (!subType) {
+      return true;
+    }
+    
+    const isMultiPageOcrDisabled = disableMultiPageOCR.includes(subType)
+    return isMultiPageOcrDisabled
+  }, [subType])
 
   useEffect(() => {
     if (region.type === "line") {
@@ -1204,6 +1210,11 @@ export const RegionLabel = ({
   const [isOCRProjectChecked, setIsOCRProjectChecked] = useState(false)
 
   const handleProjectOCR = (region) => {
+    if (shouldDisableMultiPageOCR) {
+      console.warn("Multi-page OCR is disabled for this project");
+      return;
+    }
+
     setIsTemplateMatchingLoading(true)
     // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
     let page_properties = {
@@ -1384,11 +1395,14 @@ export const RegionLabel = ({
   }
 
   const handleOCRTypeChange = (event) => {
+    if (shouldDisableMultiPageOCR) {
+      return
+    }
     setIsOCRProjectChecked(event.target.checked)
   }
 
   const handleRunOCR = (region) => {
-    if (isOCRProjectChecked) {
+    if (isOCRProjectChecked && !shouldDisableMultiPageOCR) {
       handleProjectOCR(region)
     }
     if (!isOCRProjectChecked) {
@@ -1397,6 +1411,11 @@ export const RegionLabel = ({
   }
 
   const shouldShowBreakoutButton = useMemo(() => {
+    // Return false if subType is null/undefined
+    if (!subType) {
+      return false;
+    }
+
     const isBreakoutNotIncluded = disableBreakoutSubscription.includes(subType)
     if (isBreakoutNotIncluded) {
       return false
@@ -1426,20 +1445,49 @@ export const RegionLabel = ({
   ])
 
   const shouldShowAIEButton = useMemo(() => {
-    const isAIENotIncluded = disableAIESubscription.includes(subType)
-    if (isAIENotIncluded) {
-      return false
+    // Return false if subType is null/undefined
+    if (!subType) {
+      return false;
     }
+
     const isValidRegionType = region.type === "box"
     return (
       isValidRegionType && region.cls && region.cls !== NOT_CLASSIFED
     )
   }, [region, subType, disableAIESubscription])
 
-
   const handleBreakoutClick = () => {
     setOpenBreakout((open) => !open)
   }
+
+  const OCRSection = () => (
+    <Box>
+      <Grid container alignItems="center" spacing={1}>
+        <Grid item>
+          <Typography>Page OCR</Typography>
+        </Grid>
+        <Grid item>
+          <RedOCRToggleSwitch
+            checked={isOCRProjectChecked}
+            onChange={(e) => {
+              setIsOCRProjectChecked(e.target.checked);
+            }}
+            disabled={shouldDisableMultiPageOCR || isTemplateMatchingLoading}
+          />
+        </Grid>
+        <Grid item>
+          <Typography>Project OCR</Typography>
+        </Grid>
+        {shouldDisableMultiPageOCR && (
+          <Grid item>
+            <Tooltip title="Multi-page OCR is disabled for this project">
+              <InfoIcon color="disabled" fontSize="small" />
+            </Tooltip>
+          </Grid>
+        )}
+      </Grid>
+    </Box>
+  );
 
   return (
     <>
@@ -1653,7 +1701,8 @@ export const RegionLabel = ({
                       </Tooltip>
                       <Tooltip
                         title={
-                          "Allow AiE to search for this device on all pages."
+                          shouldDisableMultiPageOCR ? "Please contact support to upgrade to a higher tier to use this feature." : "Allow AiE to search for this device on all pages."
+
                         }
                         PopperProps={{
                           style: { zIndex: 9999999 },
@@ -1666,6 +1715,7 @@ export const RegionLabel = ({
                           }}
                           control={
                             <RedOCRToggleSwitch
+                              disabled={shouldDisableMultiPageOCR}
                               checked={isOCRProjectChecked}
                               onChange={handleOCRTypeChange}
                               color="primary"
@@ -1678,7 +1728,8 @@ export const RegionLabel = ({
                               style={{
                                 fontSize: "12px",
                                 marginLeft: "-4px",
-                                color: "black",
+                                color:
+                                  shouldDisableMultiPageOCR ? "gray" : "black",
                               }}
                             >
                               All Pages
