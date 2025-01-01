@@ -223,7 +223,7 @@ export const MainLayout = ({
       onRegionClassAdded={onRegionClassAdded}
       allowComments={state.allowComments}
       dispatch={dispatch}
-      subType={state?.subType || subTypes.fullSuiteYearly}
+      subType={state?.subType}
       categoriesColorMap={state.categoriesColorMap}
     />
   )
