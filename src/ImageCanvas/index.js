@@ -29,8 +29,11 @@ import useMouse from "./use-mouse"
 import useProjectRegionBox from "./use-project-box"
 import useWasdMode from "./use-wasd-mode"
 import { disableBreakoutSubscription } from "../Annotator/constants.js"
+import type { MainLayoutState } from "../MainLayout/MainLayout"
 
 const useStyles = makeStyles(styles)
+
+const eraserCursor = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ff69b4"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.05.79 2.83 0l7.07-7.07-6.37-6.37-7.07 7.07c-.79.78-.79 2.05 0 2.84z"/></svg>`
 
 type Props = {
   regions: Array<Region>,
@@ -85,6 +88,13 @@ type Props = {
   onRegionClassAdded: (cls) => any,
   onChangeVideoPlaying?: Function,
   addRegion: (index: number, region: Region) => any,
+  state: MainLayoutState,
+  selectionBox?: ?{
+    x1: number,
+    y1: number,
+    w: number,
+    h: number,
+  },
 }
 
 const getDefaultMat = (allowedArea = null, { iw, ih } = {}) => {
@@ -155,6 +165,7 @@ export const ImageCanvas = ({
   selectedDeviceToggle,
   subType,
   categoriesColorMap,
+  state,
 }: Props) => {
   const classes = useStyles()
 
@@ -167,6 +178,8 @@ export const ImageCanvas = ({
   const [mat, changeMat] = useRafState(getDefaultMat())
   const maskImages = useRef({})
   const windowSize = useWindowSize()
+  const [dragStartPos, setDragStartPos] = useState(null)
+  const [selectionBox, setSelectionBox] = useState(null)
 
   const getLatestMat = useEventCallback(() => mat)
   useWasdMode({ getLatestMat, changeMat })
@@ -184,9 +197,66 @@ export const ImageCanvas = ({
     changeDragging,
     zoomWithPrimary,
     dragWithPrimary,
-    onMouseMove,
-    onMouseDown,
-    onMouseUp,
+    onMouseMove: (e) => {
+      if (state.mode?.mode === "MULTI_DELETE_SELECT" && dragStartPos) {
+        const { iw, ih } = layoutParams.current
+        const point = mat
+          .inverse()
+          .applyToPoint(mousePosition.current.x, mousePosition.current.y)
+
+        const dx = point.x / iw - dragStartPos.x
+        const dy = point.y / ih - dragStartPos.y
+
+        // Set selection box without waiting for state update
+        const newSelectionBox = {
+          x1: dx < 0 ? dragStartPos.x + dx : dragStartPos.x,
+          y1: dy < 0 ? dragStartPos.y + dy : dragStartPos.y,
+          w: Math.abs(dx),
+          h: Math.abs(dy),
+        }
+        setSelectionBox(newSelectionBox)
+      }
+      onMouseMove(e)
+    },
+    onMouseDown: (e) => {
+      if (state.mode?.mode === "MULTI_DELETE_SELECT") {
+        const { iw, ih } = layoutParams.current
+        const point = mat
+          .inverse()
+          .applyToPoint(mousePosition.current.x, mousePosition.current.y)
+
+        const pos = {
+          x: point.x / iw,
+          y: point.y / ih,
+        }
+        setDragStartPos(pos)
+        // Initialize selection box immediately
+        const initialBox = {
+          x1: pos.x,
+          y1: pos.y,
+          w: 0,
+          h: 0,
+        }
+        setSelectionBox(initialBox)
+      }
+      onMouseDown(e)
+    },
+    onMouseUp: (e) => {
+      if (state.mode?.mode === "MULTI_DELETE_SELECT" && selectionBox) {
+        // Keep the current selection box for the delete operation
+        const currentBox = {
+          x: selectionBox.x1,
+          y: selectionBox.y1,
+          w: selectionBox.w,
+          h: selectionBox.h,
+        }
+        onMouseUp({ ...e, selectionBox: currentBox })
+        setDragStartPos(null)
+        setSelectionBox(null)
+      } else {
+        onMouseUp(e)
+      }
+    },
   })
 
   useLayoutEffect(() => changeMat(mat.clone()), [windowSize])
@@ -361,12 +431,33 @@ export const ImageCanvas = ({
           ? mat.a < 1
             ? "zoom-out"
             : "zoom-in"
+          : state.selectedTool === "multi-delete-select"
+          ? `crosshair`
           : undefined,
       }}
     >
       {showCrosshairs && (
         <Crosshairs key="crossHairs" mousePosition={mousePosition} />
       )}
+      {imageLoaded &&
+        state.mode?.mode === "MULTI_DELETE_SELECT" &&
+        selectionBox && (
+          <div
+            style={{
+              position: "absolute",
+              left: selectionBox.x1 * layoutParams.current.iw,
+              top: selectionBox.y1 * layoutParams.current.ih,
+              width: selectionBox.w * layoutParams.current.iw,
+              height: selectionBox.h * layoutParams.current.ih,
+              border: "2px solid #ff69b4",
+              backgroundColor: "rgba(255, 105, 180, 0.2)",
+              pointerEvents: "none",
+              transform: `matrix(${mat.a}, ${mat.b}, ${mat.c}, ${mat.d}, ${mat.e}, ${mat.f})`,
+              transformOrigin: "top left",
+              zIndex: 100000,
+            }}
+          />
+        )}
       {imageLoaded && !dragging && (
         <RegionSelectAndTransformBoxes
           key="regionSelectAndTransformBoxes"
@@ -402,6 +493,7 @@ export const ImageCanvas = ({
           onBeginMoveKeypoint={onBeginMoveKeypoint}
           onAddPolygonPoint={onAddPolygonPoint}
           showHighlightBox={showHighlightBox}
+          state={state}
         />
       )}
       {imageLoaded && showTags && !dragging && (
@@ -510,6 +602,7 @@ export const ImageCanvas = ({
           pointDistancePrecision={pointDistancePrecision}
         />
       )}
+
       <PreventScrollToParents
         style={{ width: "100%", height: "100%" }}
         {...mouseEvents}

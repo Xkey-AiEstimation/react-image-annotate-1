@@ -36,4 +36,22 @@ export default {
       opacity: 1,
     },
   },
+  eraserCursor: {
+    cursor: "none",
+    "& canvas": {
+      cursor: "none"
+    },
+    "&::after": {
+      content: '""',
+      display: "block",
+      width: "20px",
+      height: "20px",
+      background: "rgba(255, 105, 180, 0.3)",
+      border: "2px solid #ff69b4",
+      position: "fixed",
+      pointerEvents: "none",
+      transform: "translate(-50%, -50%)",
+      zIndex: 100000,
+    }
+  }
 }

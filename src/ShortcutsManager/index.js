@@ -70,7 +70,7 @@ export const defaultHotkeys = [
   {
     id: "undo",
     description: "Undo latest change",
-    binding: "Ctrl+z",
+    binding: "ctrl+z"
   },
   // {
   //   id: "hide",
@@ -78,10 +78,17 @@ export const defaultHotkeys = [
   //   binding: "h"
   // },
 ]
-export const defaultKeyMap = {}
-for (const { id, binding } of defaultHotkeys) defaultKeyMap[id] = binding
 
-export const useDispatchHotkeyHandlers = ({ dispatch }) => {
+export const defaultKeyMap = {}
+for (const { id, binding } of defaultHotkeys) {
+  if (id === "undo") {
+    defaultKeyMap[id] = ["command+z", "ctrl+z"]
+  } else {
+    defaultKeyMap[id] = binding
+  }
+}
+
+export const useDispatchHotkeyHandlers = ({ dispatch, state }) => {
   const handlers = useMemo(
     () => ({
       select_tool: () => {
@@ -162,9 +169,16 @@ export const useDispatchHotkeyHandlers = ({ dispatch }) => {
         })
       },
       undo: () => {
+        if (!state?.history?.length) return
+        
         dispatch({
           type: "RESTORE_HISTORY",
+          index: 0
         })
+        const lastAction = state?.history?.[0]?.name
+        if (lastAction?.toLowerCase().includes('eraser')) {
+          dispatch({ type: "SELECT_TOOL", selectedTool: "select" })
+        }
       },
       hide: () => {
         dispatch({
@@ -178,13 +192,13 @@ export const useDispatchHotkeyHandlers = ({ dispatch }) => {
       //   })
       // }
     }),
-    [dispatch]
+    [dispatch, state]
   )
   return handlers
 }
 
-export default ({ children, dispatch }) => {
-  const handlers = useDispatchHotkeyHandlers({ dispatch })
+export default ({ children, dispatch, state }) => {
+  const handlers = useDispatchHotkeyHandlers({ dispatch, state })
   return (
     <HotKeys allowChanges handlers={handlers}>
       {children}

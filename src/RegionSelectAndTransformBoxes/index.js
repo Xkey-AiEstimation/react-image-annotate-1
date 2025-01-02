@@ -24,7 +24,8 @@ const arePropsEqual = (prev, next) => {
     prev.dragWithPrimary === next.dragWithPrimary &&
     prev.createWithPrimary === next.createWithPrimary &&
     prev.zoomWithPrimary === next.zoomWithPrimary &&
-    prev.mat === next.mat
+    prev.mat === next.mat &&
+    prev.state?.mode === next.state?.mode
   )
 }
 
@@ -46,6 +47,7 @@ export const RegionSelectAndTransformBox = memo(
     onBeginMoveKeypoint,
     onAddPolygonPoint,
     showHighlightBox,
+    state,
   }) => {
     const pbox = projectRegionBox(r)
     const { iw, ih } = layoutParams.current
@@ -201,6 +203,29 @@ export const RegionSelectAndTransformBox = memo(
                 )
               }
             )}
+          {state.mode?.mode === "MULTI_DELETE_SELECT" && state.mode?.type === "eraser-selection" && (
+            <HighlightBox
+              region={{
+                ...state.mode,
+                highlighted: true,
+                type: "box",
+                id: state.mode.regionId,
+                cls: "eraser-selection"
+              }}
+              mouseEvents={mouseEvents}
+              dragWithPrimary={false}
+              createWithPrimary={false}
+              zoomWithPrimary={false}
+              onBeginMovePoint={() => null}
+              onSelectRegion={() => null}
+              pbox={{
+                x: state.mode.x,
+                y: state.mode.y,
+                w: state.mode.w,
+                h: state.mode.h
+              }}
+            />
+          )}
         </PreventScrollToParents>
       </Fragment>
     )
@@ -210,14 +235,31 @@ export const RegionSelectAndTransformBox = memo(
 
 export const RegionSelectAndTransformBoxes = memo(
   (props) => {
-    return props.regions
-      .filter((r) => r.visible || r.visible === undefined)
-      .filter((r) => !r.locked)
-      .map((r, i) => {
-        return <RegionSelectAndTransformBox key={r.id} {...props} region={r} />
-      })
+    return (
+      <>
+        {props.regions
+          .filter((r) => r.visible || r.visible === undefined)
+          .filter((r) => !r.locked)
+          .map((r, i) => {
+            return <RegionSelectAndTransformBox key={r.id} {...props} region={r} />
+          })}
+        {props.state?.mode?.mode === "MULTI_DELETE_SELECT" && 
+         props.state.mode?.type === "eraser-selection" && (
+          <RegionSelectAndTransformBox
+            {...props}
+            region={{
+              ...props.state.mode,
+              highlighted: true,
+              type: "box",
+              id: props.state.mode.regionId,
+              cls: "eraser-selection"
+            }}
+          />
+        )}
+      </>
+    )
   },
-  (n, p) => n.regions === p.regions && n.mat === p.mat
+  (n, p) => n.regions === p.regions && n.mat === p.mat && n.state?.mode === p.state?.mode
 )
 
 export default RegionSelectAndTransformBoxes

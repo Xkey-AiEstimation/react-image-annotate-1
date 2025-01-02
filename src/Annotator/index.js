@@ -81,6 +81,7 @@ export const Annotator = ({
     "create-expanding-line",
     "show-mask",
     "create-scale",
+    "multi-delete-select",
   ],
   selectedTool = "select",
   regionTagList = [],

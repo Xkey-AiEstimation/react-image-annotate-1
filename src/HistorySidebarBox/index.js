@@ -1,87 +1,134 @@
 // @flow
 
-import React, { setState, memo } from "react"
+import React from "react"
 import { makeStyles } from "@material-ui/core/styles"
 import SidebarBoxContainer from "../SidebarBoxContainer"
-import HistoryIcon from "@material-ui/icons/History"
-import List from "@material-ui/core/List"
-import ListItem from "@material-ui/core/ListItem"
-import ListItemText from "@material-ui/core/ListItemText"
-import IconButton from "@material-ui/core/IconButton"
-import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction"
-import UndoIcon from "@material-ui/icons/Undo"
-import moment from "moment"
 import { grey } from "@material-ui/core/colors"
-import isEqual from "lodash/isEqual"
-import Box from "@material-ui/core/Box"
-import { Typography } from "@material-ui/core"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import {
+  faHistory,
+  faEraser,
+  faUndo,
+} from "@fortawesome/free-solid-svg-icons"
+import moment from "moment"
+import { styled } from "@material-ui/core/styles"
+import Button from "@material-ui/core/Button"
 
 const useStyles = makeStyles({
   emptyText: {
     fontSize: 14,
     fontWeight: "bold",
-    color: "white",
+    color: grey[500],
     textAlign: "center",
     padding: 20,
   },
+  historyItem: {
+    display: "flex",
+    alignItems: "center",
+    padding: 8,
+    margin: 2,
+    marginTop: 0,
+    marginBottom: 4,
+    borderRadius: 4,
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    "&:hover": {
+      background: "rgba(0, 0, 0, 0.08)",
+      "& $historyItemText": {
+        color: "#000",
+      },
+      "& $historyItemIcon": {
+        color: "#000",
+      },
+      "& $historyItemTime": {
+        color: "rgba(0, 0, 0, 0.7)",
+      },
+    },
+  },
+  historyItemIcon: {
+    marginRight: 8,
+    color: 'white',
+    fontSize: 16,
+    transition: "color 0.2s ease",
+    '&:hover': {
+      color: 'white',
+    },
+  },
+  historyItemText: {
+    fontSize: 12,
+    flexGrow: 1,
+    color: 'white',
+    transition: "color 0.2s ease",
+    '&:hover': {
+      color: 'white',
+    },
+  },
+  historyItemTime: {
+    fontSize: 11,
+    color: 'white',
+    transition: "color 0.2s ease",
+    '&:hover': {
+      color: 'white',
+    },
+  },
+  undoButton: {
+    marginLeft: 8,
+    padding: 4,
+    minWidth: 0,
+    width: 24,
+    height: 24,
+    color: 'white',
+    '&:hover': {
+      color: 'white',
+    },
+  },
 })
 
-const listItemTextStyle = { paddingLeft: 16, color: "white" }
-
-export const HistorySidebarBox = ({
-  history,
-  onRestoreHistory,
-}: {
-  history: Array<{ name: string, time: Date }>,
-}) => {
+const HistorySidebarBox = ({ history, onRestoreHistory, dispatch }) => {
   const classes = useStyles()
+
+  const handleUndo = (index, actionName) => {
+    onRestoreHistory(index)
+    // If undoing an eraser action, switch back to select tool
+    if (actionName.toLowerCase().includes('eraser')) {
+      dispatch({ type: "SELECT_TOOL", selectedTool: "select" })
+    }
+  }
 
   return (
     <SidebarBoxContainer
       title="History"
-      icon={<HistoryIcon style={{ color: "white" }} />}
+      icon={<FontAwesomeIcon icon={faHistory} />}
+      expandedByDefault
     >
-      <List>
-        {history.length === 0 && (
-          <div className={classes.emptyText}>No History Yet</div>
-        )}
-        {history.map(({ name, time }, i) => (
-          <ListItem button dense key={i}>
-            <ListItemText
-              style={listItemTextStyle}
-              disableTypography
-              primary={
-                <Typography variant="body2" style={{ color: "#FFFFFF" }}>
-                  {name}
-                </Typography>
-              }
-              secondary={
-                <Typography variant="body2" style={{ color: "#FFFFFF" }}>
-                  {moment(time).format("LT")}
-                </Typography>
-              }
-            />
-            {i === 0 && (
-              <ListItemSecondaryAction onClick={() => onRestoreHistory()}>
-                <IconButton
-                  style={{
-                    color: "white",
-                  }}
-                >
-                  <UndoIcon />
-                </IconButton>
-              </ListItemSecondaryAction>
+      {history.length === 0 && (
+        <div className={classes.emptyText}>No History Yet</div>
+      )}
+      {history.map(({ name, time }, i) => (
+        <div key={i} className={classes.historyItem}>
+          <div className={classes.historyItemIcon}>
+            {name.toLowerCase().includes("eraser") ? (
+              <FontAwesomeIcon icon={faEraser} />
+            ) : (
+              <FontAwesomeIcon icon={faHistory} />
             )}
-          </ListItem>
-        ))}
-      </List>
+          </div>
+          <div className={classes.historyItemText}>{name}</div>
+          <div className={classes.historyItemTime}>
+            {moment(time).fromNow()}
+          </div>
+          <Button
+            className={classes.undoButton}
+            size="small"
+            onClick={() => handleUndo(i, name)}
+            title="Undo this action"
+          >
+            <FontAwesomeIcon icon={faUndo} />
+          </Button>
+        </div>
+      ))}
     </SidebarBoxContainer>
   )
 }
 
-export default memo(HistorySidebarBox, (prevProps, nextProps) =>
-  isEqual(
-    prevProps.history.map((a) => [a.name, a.time]),
-    nextProps.history.map((a) => [a.name, a.time])
-  )
-)
+export default HistorySidebarBox

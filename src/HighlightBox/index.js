@@ -38,6 +38,12 @@ const useStyles = makeStyles({
       animationIterationCount: "infinite",
       animationPlayState: "running",
     },
+    "&.eraser-selection": {
+      stroke: "#ff69b4",
+      strokeDasharray: "5,5",
+      strokeWidth: 2,
+      fill: "rgba(255, 105, 180, 0.1)"
+    },
   },
 })
 

@@ -18,6 +18,7 @@ import {
   faEdit,
   faChartLine,
   faRuler,
+  faEraser,
 } from "@fortawesome/free-solid-svg-icons"
 import FullscreenIcon from "@material-ui/icons/Fullscreen"
 import AccessibilityNewIcon from "@material-ui/icons/AccessibilityNew"
@@ -78,6 +79,9 @@ export const iconDictionary = {
   ),
   "create-keypoints": AccessibilityNewIcon,
   window: FullscreenIcon,
+  "multi-delete-select": () => (
+    <FontAwesomeIcon style={faStyle} size="xs" fixedWidth icon={faEraser} />
+  ),
 }
 
 export default iconDictionary
