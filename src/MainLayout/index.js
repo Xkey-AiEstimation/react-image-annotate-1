@@ -119,7 +119,7 @@ useKey(() => dispatch({ type: "CANCEL" }), {
 
 const isAVideoFrame = activeImage && activeImage.frameTime !== undefined
 const innerContainerRef = useRef()
-const hotkeyHandlers = useDispatchHotkeyHandlers({ 
+const hotkeyHandlers = useDispatchHotkeyHandlers({
   dispatch,
   state
 })
@@ -408,6 +408,19 @@ return (
                 getHotkeyHelpText("create_bounding_box"),
             },
             {
+              name: "multi-delete-select",
+              helperText: (
+                <Tooltip
+                  PopperProps={{
+                    style: { zIndex: 9999999 },
+                  }}
+                  title="Click and drag to create a selection box. All regions within the box will be deleted.">
+                  <span>Eraser Tool</span>
+                </Tooltip>
+              ),
+              alwaysShowing: true,
+            },
+            {
               name: "create-polygon",
               helperText: "Add Polygon" + getHotkeyHelpText("create_polygon"),
             },
@@ -426,19 +439,6 @@ return (
             {
               name: "create-keypoints",
               helperText: "Add Keypoints (Pose)",
-            },
-            {
-              name: "multi-delete-select",
-              helperText: (
-                <Tooltip
-                  PopperProps={{
-                    style: { zIndex: 9999999 },
-                  }}
-                  title="Click and drag to create a selection box. All regions within the box will be deleted.">
-                  <span>Eraser Tool</span>
-                </Tooltip>
-              ),
-              alwaysShowing: true,
             },
             state.fullImageSegmentationMode && {
               name: "show-mask",
