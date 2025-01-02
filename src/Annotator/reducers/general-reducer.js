@@ -1200,7 +1200,25 @@ export default (state: MainLayoutState, action: Action) => {
       if (!state.mode) return state
       if (!activeImage) return state
       const { mouseDownAt } = state
+
       switch (state.mode.mode) {
+        case "MULTI_DELETE_SELECT": {
+          const { start } = state.mode
+          // Calculate dimensions of selection box
+          const w = Math.abs(x - start.x)
+          const h = Math.abs(y - start.y)
+          // Calculate top-left position
+          const newX = Math.min(x, start.x)
+          const newY = Math.min(y, start.y)
+
+          return setIn(state, ["mode"], {
+            ...state.mode,
+            x: newX,
+            y: newY,
+            w,
+            h
+          })
+        }
         case "MOVE_POLYGON_POINT": {
           const { pointIndex, regionId } = state.mode
           const regionIndex = getRegionIndex(regionId)
@@ -1419,7 +1437,12 @@ export default (state: MainLayoutState, action: Action) => {
       if (state.selectedTool === "multi-delete-select") {
         return setIn(state, ["mode"], {
           mode: "MULTI_DELETE_SELECT",
+          regionId: getRandomId(),  // Generate a temporary region ID for the selection box
           start: { x, y },
+          w: 0,
+          h: 0,
+          highlighted: true,
+          type: "eraser-selection"  // Special type to identify this is an eraser box
         })
       }
 
@@ -1811,12 +1834,13 @@ export default (state: MainLayoutState, action: Action) => {
       state = setIn(state, ["mouseDownAt"], null)
 
       if (state.mode?.mode === "MULTI_DELETE_SELECT") {
-        // Calculate selection box coordinates
+        const { start } = state.mode
+        // Calculate final selection box
         const selectionBox = {
-          x: Math.min(mouseDownAt.x, x),
-          y: Math.min(mouseDownAt.y, y),
-          w: Math.abs(x - mouseDownAt.x),
-          h: Math.abs(y - mouseDownAt.y),
+          x: Math.min(start.x, x),
+          y: Math.min(start.y, y),
+          w: Math.abs(x - start.x),
+          h: Math.abs(y - start.y)
         }
 
         // Get regions before deletion for history

@@ -493,6 +493,7 @@ export const ImageCanvas = ({
           onBeginMoveKeypoint={onBeginMoveKeypoint}
           onAddPolygonPoint={onAddPolygonPoint}
           showHighlightBox={showHighlightBox}
+          state={state}
         />
       )}
       {imageLoaded && showTags && !dragging && (

@@ -31,22 +31,45 @@ const useStyles = makeStyles({
     marginBottom: 4,
     borderRadius: 4,
     cursor: "pointer",
+    transition: "all 0.2s ease",
     "&:hover": {
-      background: grey[100],
+      background: "rgba(0, 0, 0, 0.08)",
+      "& $historyItemText": {
+        color: "#000",
+      },
+      "& $historyItemIcon": {
+        color: "#000",
+      },
+      "& $historyItemTime": {
+        color: "rgba(0, 0, 0, 0.7)",
+      },
     },
   },
   historyItemIcon: {
     marginRight: 8,
-    color: grey[500],
+    color: 'white',
     fontSize: 16,
+    transition: "color 0.2s ease",
+    '&:hover': {
+      color: 'white',
+    },
   },
   historyItemText: {
     fontSize: 12,
     flexGrow: 1,
+    color: 'white',
+    transition: "color 0.2s ease",
+    '&:hover': {
+      color: 'white',
+    },
   },
   historyItemTime: {
     fontSize: 11,
-    color: grey[600],
+    color: 'white',
+    transition: "color 0.2s ease",
+    '&:hover': {
+      color: 'white',
+    },
   },
   undoButton: {
     marginLeft: 8,
@@ -54,11 +77,23 @@ const useStyles = makeStyles({
     minWidth: 0,
     width: 24,
     height: 24,
+    color: 'white',
+    '&:hover': {
+      color: 'white',
+    },
   },
 })
 
-const HistorySidebarBox = ({ history, onRestoreHistory }) => {
+const HistorySidebarBox = ({ history, onRestoreHistory, dispatch }) => {
   const classes = useStyles()
+
+  const handleUndo = (index, actionName) => {
+    onRestoreHistory(index)
+    // If undoing an eraser action, switch back to select tool
+    if (actionName.toLowerCase().includes('eraser')) {
+      dispatch({ type: "SELECT_TOOL", selectedTool: "select" })
+    }
+  }
 
   return (
     <SidebarBoxContainer
@@ -85,7 +120,7 @@ const HistorySidebarBox = ({ history, onRestoreHistory }) => {
           <Button
             className={classes.undoButton}
             size="small"
-            onClick={() => onRestoreHistory(i)}
+            onClick={() => handleUndo(i, name)}
             title="Undo this action"
           >
             <FontAwesomeIcon icon={faUndo} />

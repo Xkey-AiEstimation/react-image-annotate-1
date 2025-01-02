@@ -181,7 +181,6 @@ export const RegionLabel = ({
 
   const shouldDisableMultiPageOCR = useMemo(() => {
     // Return true (disabled) if subType is null/undefined
-    console.log("subType", subType)
     if (!subType) {
       return true;
     }
