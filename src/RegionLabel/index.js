@@ -546,7 +546,6 @@ export const RegionLabel = ({
 
   const handleColorChangeComplete = (color) => {
     setSketchPickerColor(color.hex)
-    console.log(color)
     dispatch({
       type: "CHANGE_CATEGORY_COLOR",
       category: selectedCategory.value,
