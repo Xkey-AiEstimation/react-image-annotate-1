@@ -752,7 +752,7 @@ export const RegionLabel = ({
               }}
             >
               
-              :
+              Category:
             </div>
             <Tooltip
               title={regionLabelCategoryInfo}
