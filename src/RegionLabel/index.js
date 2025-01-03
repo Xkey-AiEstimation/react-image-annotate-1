@@ -570,7 +570,7 @@ export const RegionLabel = ({
   const regionDeviceInfo =
     "If you don't see the device you are looking for, you can add it to the list simply by typing the device name."
 
-  const regionLabelCategoryInfo = `Only user defined devices can have their system changed. Changing the system will update all regions with the same device name.`
+  const regionLabelCategoryInfo = `Only user defined devices can have their category changed. Changing the category will update all regions with the same device name.`
   const regionLabelExtra =
     "Only user defined devices can have their category changed."
 
@@ -751,7 +751,8 @@ export const RegionLabel = ({
                 fontWeight: "bold",
               }}
             >
-              System:
+              
+              Category:
             </div>
             <Tooltip
               title={regionLabelCategoryInfo}
@@ -775,7 +776,7 @@ export const RegionLabel = ({
           /> */}
           <CreatableSelect
             isDisabled={!canChangeCategory}
-            placeholder="Select Category/System or Create New"
+            placeholder="Select Category or Create New"
             onChange={(o, actionMeta) => {
               let isActionCreate = false
               if (actionMeta.action === "create-option") {
@@ -971,7 +972,7 @@ export const RegionLabel = ({
                 fontWeight: "bold",
               }}
             >
-              System:
+              Category:
             </div>
             <Tooltip
               title={regionLabelCategoryInfo}
@@ -997,7 +998,7 @@ export const RegionLabel = ({
           >
             <CreatableSelect
               isDisabled={!canChangeCategory}
-              placeholder="Select Category/System or Create New"
+              placeholder="Select Category or Create New"
               onChange={(o, actionMeta) => {
                 let isActionCreate = false
                 if (actionMeta.action === "create-option") {
