@@ -184,7 +184,7 @@ export const RegionLabel = ({
     if (!subType) {
       return true;
     }
-    
+
     const isMultiPageOcrDisabled = disableMultiPageOCR.includes(subType)
     return isMultiPageOcrDisabled
   }, [subType])
@@ -1228,7 +1228,10 @@ export const RegionLabel = ({
       w: region.w,
       h: region.h,
     }
-    const region_color = region.color
+    
+    // Get the color from the category color map
+    const categoryColor = categoriesColorMap[region.category] || region.color
+
     const endpoint =
       "https://htz91m7wz1.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-project-ocr"
     const json_data = {
@@ -1268,6 +1271,8 @@ export const RegionLabel = ({
         // TODO: result is an array of number of pages with regions
         let results = []
         for (let i = 0; i < res.length; i++) {
+          console.log("region color", region.color)
+          console.log("cls", region.cls)
           let single_page_regions = res[i].map((r) => {
             const new_region = {}
             new_region["isOCR"] = true
@@ -1280,7 +1285,7 @@ export const RegionLabel = ({
             new_region["id"] = getRandomId()
             new_region["cls"] = region.cls
             new_region["type"] = "box"
-            new_region["color"] = region.color
+            new_region["color"] = categoryColor
             new_region["visible"] = true
             new_region["breakout"] =
               (selectedBreakoutIdAutoAdd &&
@@ -1308,7 +1313,6 @@ export const RegionLabel = ({
 
   const handlePageOCR = (region) => {
     setIsTemplateMatchingLoading(true)
-    // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
     let page_properties = {
       user_id: 80808080,
       doc_id: 80808080,
@@ -1322,9 +1326,11 @@ export const RegionLabel = ({
       w: region.w,
       h: region.h,
     }
-    const region_color = region.color
-    const endpoint =
-      "https://6lufq8mux5.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-ocr-arbiter"
+    
+    // Get the color from the category color map
+    const categoryColor = categoriesColorMap[region.category] || region.color
+
+    const endpoint = "https://6lufq8mux5.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-ocr-arbiter"
     const json_data = {
       image_url: imageSrc,
       page_index: page_properties["page_index"],
@@ -1337,7 +1343,7 @@ export const RegionLabel = ({
     }
     onMatchTemplate(region)
     fetch(endpoint, {
-      method: "POST", // or 'PUT'
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -1346,42 +1352,32 @@ export const RegionLabel = ({
       }),
     })
       .then((response) => {
-        if (response.ok) {
-          return response.json()
-        }
+        if (response.ok) return response.json()
         throw new Error("Backend Error")
       })
-      .then((data) => {
-        // result can be empty
-        return data.body ? data.body.result : []
-      })
+      .then((data) => data.body ? data.body.result : [])
       .then((res) => {
-        let results = res.map((r) => {
-          const new_region = {}
-          new_region["isOCR"] = true
-          new_region["x"] = r["x"]
-          new_region["y"] = r["y"]
-          new_region["w"] = r["w"]
-          new_region["h"] = r["h"]
-          new_region["editingLabels"] = false
-          new_region["highlighted"] = false
-          new_region["id"] = getRandomId()
-          new_region["cls"] = region.cls
-          new_region["type"] = "box"
-          new_region["color"] = region.color
-          new_region["visible"] = true
-          new_region["breakout"] =
-            (selectedBreakoutIdAutoAdd &&
-              breakoutList &&
-              breakoutList.length > 0 &&
-              breakoutList.find((b) => b.id === selectedBreakoutIdAutoAdd)) ||
-            (region && region.breakout)
-          new_region["category"] =
-            region?.category ||
-            DeviceList.find((x) => x.symbol_name === region.cls)?.category ||
-            "NOT CLASSIFIED"
-          return new_region
-        })
+        const results = []
+        if (res.length > 0) {
+          const single_page_regions = res.map((new_region) => {
+            new_region["editingLabels"] = false
+            new_region["highlighted"] = false
+            new_region["id"] = getRandomId()
+            new_region["cls"] = region.cls
+            new_region["type"] = "box"
+            new_region["color"] = categoryColor // Use the category color
+            new_region["visible"] = true
+            new_region["category"] = region.category // Ensure category is set
+            new_region["breakout"] =
+              (selectedBreakoutIdAutoAdd &&
+                breakoutList &&
+                breakoutList.length > 0 &&
+                breakoutList.find((b) => b.id === selectedBreakoutIdAutoAdd)) ||
+              (region && region.breakout)
+            return new_region
+          })
+          results.push(single_page_regions)
+        }
         finishMatchTemplate(results, page_properties, "page")
         setIsTemplateMatchingLoading(false)
       })
