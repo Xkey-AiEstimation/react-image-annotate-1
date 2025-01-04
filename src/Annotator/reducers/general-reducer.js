@@ -303,6 +303,21 @@ export default (state: MainLayoutState, action: Action) => {
         )
       }
 
+      // update the categoriesColorMap
+      let categoriesColorMap = getIn(newState, ["categoriesColorMap"])
+      if (!categoriesColorMap) {
+        categoriesColorMap = {}
+      }
+
+
+      // make sure the color is not already in the categoriesColorMap
+      // we have to create a shallow copy of the categoriesColorMap and check if the color is already in the copy
+      let categoriesColorMapCopy = { ...categoriesColorMap }
+      if (!Object.values(categoriesColorMapCopy).includes(color)) {
+        categoriesColorMapCopy[newCategory] = color
+        newState = setIn(newState, ["categoriesColorMap"], categoriesColorMapCopy)
+      }
+
       newState = setIn(newState, ["newCategoriesToSave"], newCategoriesToSave)
       newState = setIn(newState, ["categories"], categories)
 
@@ -337,6 +352,15 @@ export default (state: MainLayoutState, action: Action) => {
         )
         return setIn(image, ["regions"], newRegions)
       })
+      // update the categoriesColorMap
+      let categoriesColorMap = getIn(newState, ["categoriesColorMap"])
+      if (!categoriesColorMap) {
+        categoriesColorMap = {}
+      }
+      // make sure the color is already in the categoriesColorMap
+      let categoriesColorMapCopy = { ...categoriesColorMap }
+      categoriesColorMapCopy[category] = color
+      newState = setIn(newState, ["categoriesColorMap"], categoriesColorMapCopy)
 
       newState = setIn(newState, ["images"], newImages)
       newState = setIn(newState, ["newCategoriesToSave"], newCatToSave)
@@ -1112,18 +1136,18 @@ export default (state: MainLayoutState, action: Action) => {
         editingLabels: r.id === region.id,
         ...(selectedBreakoutIdAutoAdd && r.id === region.id
           ? {
-              breakout: {
-                is_breakout: true,
-                name: state.breakouts.find(
-                  (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-                ).name,
-                id: selectedBreakoutIdAutoAdd,
-                visible: false,
-              },
-            }
+            breakout: {
+              is_breakout: true,
+              name: state.breakouts.find(
+                (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+              ).name,
+              id: selectedBreakoutIdAutoAdd,
+              visible: false,
+            },
+          }
           : {
-              breakout: r.breakout || undefined,
-            }),
+            breakout: r.breakout || undefined,
+          }),
       }))
       return setIn(state, [...pathToActiveImage, "regions"], regions)
     }
@@ -1284,15 +1308,15 @@ export default (state: MainLayoutState, action: Action) => {
             xFree === 0
               ? ow
               : xFree === -1
-              ? ow + (ox - dx)
-              : Math.max(0, ow + (x - ox - ow))
+                ? ow + (ox - dx)
+                : Math.max(0, ow + (x - ox - ow))
           const dy = yFree === 0 ? oy : yFree === -1 ? Math.min(oy + oh, y) : oy
           const dh =
             yFree === 0
               ? oh
               : yFree === -1
-              ? oh + (oy - dy)
-              : Math.max(0, oh + (y - oy - oh))
+                ? oh + (oy - dy)
+                : Math.max(0, oh + (y - oy - oh))
 
           // determine if we should switch the freedom
           if (dw <= 0.001) {
@@ -1486,7 +1510,7 @@ export default (state: MainLayoutState, action: Action) => {
                   scaleValues.push(
                     Math.sqrt(
                       (scale["x1"] - scale["x2"]) ** 2 +
-                        (scale["y1"] - scale["y2"]) ** 2
+                      (scale["y1"] - scale["y2"]) ** 2
                     ) / scaleVal
                   )
                 }
@@ -1589,15 +1613,15 @@ export default (state: MainLayoutState, action: Action) => {
         state.selectedCls !== undefined && state.selectedCls !== null
           ? state.selectedCls
           : Array.isArray(state.regionClsList) && state.regionClsList.length > 0
-          ? state.regionClsList[0]
-          : undefined
+            ? state.regionClsList[0]
+            : undefined
 
       let defaultRegionCategory =
         state.selectedCategory !== undefined && state.selectedCategory !== null
           ? state.selectedCategory
           : defaultRegionCls
-          ? getCategoryBySymbolName(defaultRegionCls)
-          : undefined
+            ? getCategoryBySymbolName(defaultRegionCls)
+            : undefined
       let defaultPointAndBoxColor = getColorByCategory(
         state,
         defaultRegionCategory
@@ -1789,21 +1813,21 @@ export default (state: MainLayoutState, action: Action) => {
           const [[keypointsDefinitionId, { landmarks, connections }]] =
             (Object.entries(state.keypointDefinitions): any)
 
-          newRegion = {
-            type: "keypoints",
-            keypointsDefinitionId,
-            points: getLandmarksWithTransform({
-              landmarks,
-              center: { x, y },
-              scale: 1,
-            }),
-            highlighted: true,
-            editingLabels: false,
-            id: getRandomId(),
-            category: getCategoryBySymbolName(defaultRegionCls),
-            visible: true,
-            breakout: undefined,
-          }
+            newRegion = {
+              type: "keypoints",
+              keypointsDefinitionId,
+              points: getLandmarksWithTransform({
+                landmarks,
+                center: { x, y },
+                scale: 1,
+              }),
+              highlighted: true,
+              editingLabels: false,
+              id: getRandomId(),
+              category: getCategoryBySymbolName(defaultRegionCls),
+              visible: true,
+              breakout: undefined,
+            }
           state = setIn(state, ["mode"], {
             mode: "RESIZE_KEYPOINTS",
             landmarks,
@@ -1869,8 +1893,7 @@ export default (state: MainLayoutState, action: Action) => {
         if (deletedCount > 0) {
           state = saveToHistory(
             state,
-            `Eraser Tool: Deleted ${deletedCount} region${
-              deletedCount !== 1 ? "s" : ""
+            `Eraser Tool: Deleted ${deletedCount} region${deletedCount !== 1 ? "s" : ""
             }`
           )
         }
@@ -1978,22 +2001,22 @@ export default (state: MainLayoutState, action: Action) => {
           highlighted: true,
           editingLabels: true,
           ...(selectedBreakoutIdAutoAdd &&
-          (activeImage.regions || [])[regionIndex].id === region.id
+            (activeImage.regions || [])[regionIndex].id === region.id
             ? {
-                breakout: {
-                  is_breakout: true,
-                  name: state.breakouts.find(
-                    (breakout) => breakout.id === selectedBreakoutIdAutoAdd
-                  ).name,
-                  id: selectedBreakoutIdAutoAdd,
-                  visible: false,
-                },
-              }
+              breakout: {
+                is_breakout: true,
+                name: state.breakouts.find(
+                  (breakout) => breakout.id === selectedBreakoutIdAutoAdd
+                ).name,
+                id: selectedBreakoutIdAutoAdd,
+                visible: false,
+              },
+            }
             : {
-                breakout:
-                  (activeImage.regions || [])[regionIndex].breakout ||
-                  undefined,
-              }),
+              breakout:
+                (activeImage.regions || [])[regionIndex].breakout ||
+                undefined,
+            }),
         }
       )
       return setIn(state, [...pathToActiveImage, "regions"], newRegions)
