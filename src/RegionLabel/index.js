@@ -1460,22 +1460,20 @@ export const RegionLabel = ({
   }
 
   const OCRSection = () => (
-    <Box>
+    <Box sx={{ padding: 1 }}>
       <Grid container alignItems="center" spacing={1}>
         <Grid item>
-          <Typography>Page OCR</Typography>
+          <Typography variant="body2">Page OCR</Typography>
         </Grid>
         <Grid item>
           <RedOCRToggleSwitch
             checked={isOCRProjectChecked}
-            onChange={(e) => {
-              setIsOCRProjectChecked(e.target.checked);
-            }}
+            onChange={handleOCRTypeChange}
             disabled={shouldDisableMultiPageOCR || isTemplateMatchingLoading}
           />
         </Grid>
         <Grid item>
-          <Typography>Project OCR</Typography>
+          <Typography variant="body2">Project OCR</Typography>
         </Grid>
         {shouldDisableMultiPageOCR && (
           <Grid item>
@@ -1486,7 +1484,7 @@ export const RegionLabel = ({
         )}
       </Grid>
     </Box>
-  );
+  )
 
   return (
     <>
@@ -1651,94 +1649,69 @@ export const RegionLabel = ({
                   </Tooltip>
                 )}
 
-                {shouldShowAIEButton
-                  ? (
-                    <>
-                      <Tooltip
-                        title={
-                          "After Annotating object or text, run AiE to search for this device."
-                        }
-                        PopperProps={{
-                          style: { zIndex: 9999999 },
+                {shouldShowAIEButton && (
+                  <>
+                    <Tooltip
+                      title="After Annotating object or text, run AiE to search for this device."
+                      PopperProps={{
+                        style: { zIndex: 9999999 },
+                      }}
+                    >
+                      <IconButton
+                        disabled={isTemplateMatchingLoading}
+                        onClick={() => handleRunOCR(region)}
+                        tabIndex={-1}
+                        style={{
+                          color: "white",
+                          backgroundColor: "#FF0000",
+                          paddingLeft: "12px",
+                          paddingRight: "12px",
+                          borderRadius: "4px",
+                          height: "24px",
                         }}
-                      >
-                        <IconButton
-                          disabled={isTemplateMatchingLoading}
-                          onClick={() => {
-                            handleRunOCR(region)
-                          }}
-                          tabIndex={-1}
-                          style={{
-                            color: "white",
-                            backgroundColor: "#FF0000",
-                            paddingLeft: "12px",
-                            paddingRight: "12px",
-                            borderRadius: "4px",
-                            height: "24px",
-                          }}
-                          classes={{
-                            label: {
-                              display: "flex",
-                              flexDirection: "row",
-                              marginTop: -2,
-                            },
-                          }}
-                          size="small"
-                          variant="outlined"
-                        >
-                          <ImageSearchIcon
-                            style={{ marginTop: -4, width: 16, height: 16 }}
-                          />
-                          <div
-                            style={{
-                              fontSize: "12px",
-                            }}
-                          >
-                            Run AiE
-                          </div>
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip
-                        title={
-                          shouldDisableMultiPageOCR ? "Please contact support to upgrade to a higher tier to use this feature." : "Allow AiE to search for this device on all pages."
-
-                        }
-                        PopperProps={{
-                          style: { zIndex: 9999999 },
+                        classes={{
+                          label: {
+                            display: "flex",
+                            flexDirection: "row",
+                            marginTop: -2,
+                          },
                         }}
+                        size="small"
+                        variant="outlined"
                       >
-                        <FormControlLabel
-                          style={{
-                            paddingLeft: "8px",
-                            color: "black",
-                          }}
-                          control={
-                            <RedOCRToggleSwitch
-                              disabled={shouldDisableMultiPageOCR}
-                              checked={isOCRProjectChecked}
-                              onChange={handleOCRTypeChange}
-                              color="primary"
-                              name="checkedB"
-                              inputProps={{ "aria-label": "primary checkbox" }}
-                            />
-                          }
-                          label={
-                            <Typography
-                              style={{
-                                fontSize: "12px",
-                                marginLeft: "-4px",
-                                color:
-                                  shouldDisableMultiPageOCR ? "gray" : "black",
-                              }}
-                            >
-                              All Pages
-                            </Typography>
-                          }
-                          fontSize="small"
+                        <ImageSearchIcon style={{ marginTop: -4, width: 16, height: 16 }} />
+                        <div style={{ fontSize: "12px" }}>Run AiE</div>
+                      </IconButton>
+                    </Tooltip>
+                    <FormControlLabel
+                      style={{
+                        paddingLeft: "8px",
+                        color: "black",
+                      }}
+                      control={
+                        <RedOCRToggleSwitch
+                          disabled={shouldDisableMultiPageOCR}
+                          checked={isOCRProjectChecked}
+                          onChange={handleOCRTypeChange}
+                          color="primary"
+                          name="checkedB"
+                          inputProps={{ "aria-label": "primary checkbox" }}
                         />
-                      </Tooltip>
-                    </>
-                  ) : null}
+                      }
+                      label={
+                        <Typography
+                          style={{
+                            fontSize: "12px",
+                            marginLeft: "-4px",
+                            color: shouldDisableMultiPageOCR ? "gray" : "black",
+                          }}
+                        >
+                          All Pages
+                        </Typography>
+                      }
+                    />
+                  </>
+                )}
                 <Tooltip
                   title={"Delete Region"}
                   placement="right"
