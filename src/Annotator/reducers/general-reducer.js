@@ -1642,16 +1642,28 @@ export default (state: MainLayoutState, action: Action) => {
               (breakout) => breakout.id === selectedBreakoutIdAutoAdd
             )
           }
+
+          // Get the currently selected device's details
+          const selectedDevice = state.deviceList.find(
+            device => device.symbol_name === state.selectedCls
+          )
+
+          // Use the selected device's category and color if available
+          const deviceCategory = selectedDevice ? selectedDevice.category : defaultRegionCategory
+          const deviceColor = selectedDevice ? 
+            getColorByCategory(state, deviceCategory) : 
+            defaultPointAndBoxColor
+
           newRegion = {
             type: "point",
             x,
             y,
             highlighted: true,
             editingLabels: true,
-            color: defaultPointAndBoxColor,
+            color: deviceColor,
             id: getRandomId(),
-            cls: defaultRegionCls,
-            category: defaultRegionCategory,
+            cls: state.selectedCls || defaultRegionCls,
+            category: deviceCategory,
             visible: true,
             breakout: newRegionBreakout,
           }
