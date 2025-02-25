@@ -131,6 +131,34 @@ const isLineFullyContained = (line, box) => {
   )
 }
 
+// Add this helper function at the top level
+const validateRestoredState = (state) => {
+  // Ensure critical properties exist and have correct types
+  if (!state.images || !Array.isArray(state.images)) {
+    throw new Error("Invalid restored state: missing or invalid images array")
+  }
+
+  // Validate and sanitize each image
+  const sanitizedImages = state.images.map(img => ({
+    ...img,
+    regions: Array.isArray(img.regions) ? img.regions.map(region => ({
+      ...region,
+      highlighted: false, // Reset UI states
+      editingLabels: false,
+    })) : []
+  }))
+
+  // Return sanitized state with validated properties
+  return {
+    ...state,
+    images: sanitizedImages,
+    mode: null, // Reset interaction mode
+    mouseDownAt: null, // Reset mouse state
+    loadingTemplateMatching: false, // Reset loading states
+    history: [], // Start fresh history
+  }
+}
+
 export default (state: MainLayoutState, action: Action) => {
   if (
     state.allowedArea &&
@@ -2264,6 +2292,26 @@ export default (state: MainLayoutState, action: Action) => {
         )
       }
       break
+    }
+    case "RESTORE_STATE": {
+      try {
+        // Validate and sanitize the restored state
+        const restoredState = validateRestoredState(action.state)
+
+        // Preserve any essential runtime properties from current state
+        // that shouldn't be overwritten by restored state
+        return makeImmutable({
+          ...restoredState,
+          // Preserve current session properties
+          settingsOpen: state.settingsOpen,
+          fullScreen: state.fullScreen,
+          // Add any other properties that should be preserved
+        })
+      } catch (e) {
+        console.error("Error restoring state:", e)
+        // Return current state if restoration fails
+        return state
+      }
     }
     default:
       break

@@ -7,7 +7,7 @@ import type {
   Mode,
   ToolEnum,
 } from "../MainLayout/types"
-import React, { useEffect, useMemo, useReducer } from "react"
+import React, { useEffect, useMemo, useReducer, useState } from "react"
 import makeImmutable, { without, setIn, getIn } from "seamless-immutable"
 
 import type { KeypointsDefinition } from "../ImageCanvas/region-tools"
@@ -28,6 +28,48 @@ import DeviceList from "../RegionLabel/DeviceList.js"
 import { AIE_CATEGORIES } from "./constants.js"
 
 const getRandomId = () => Math.random().toString().split(".")[1]
+
+// Add these constants at the top of the file
+const STORAGE_KEY = "annotator_autosave_state"
+const AUTOSAVE_INTERVAL = 30000 // 30 seconds
+
+// Add this recovery modal component
+const RecoveryModal = ({ onRecover, onDiscard }) => {
+  return (
+    <div
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 9999,
+      }}
+    >
+      <div
+        style={{
+          backgroundColor: "white",
+          padding: 24,
+          borderRadius: 8,
+          maxWidth: 400,
+        }}
+      >
+        <h2>Recover Unsaved Work?</h2>
+        <p>We found some unsaved annotation work. Would you like to recover it?</p>
+        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
+          <button onClick={onDiscard}>Discard</button>
+          <button onClick={onRecover} style={{ fontWeight: "bold" }}>
+            Recover
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 type Props = {
   taskDescription?: string,
@@ -63,6 +105,29 @@ type Props = {
   hideSettings?: boolean,
   hideFullScreen?: boolean,
   hideSave?: boolean,
+}
+
+// Helper to prepare state for storage
+const prepareStateForStorage = (state) => {
+  // Create a clean copy of essential state
+  return {
+    selectedImage: state.selectedImage,
+    images: state.images.map(img => ({
+      ...img,
+      // Keep only essential image data and regions
+      regions: img.regions || [],
+      src: img.src,
+      name: img.name,
+      frameTime: img.frameTime
+    })),
+    breakouts: state.breakouts || [],
+    categories: state.categories || [],
+    deviceList: state.deviceList || [],
+    categoriesColorMap: state.categoriesColorMap || {},
+    selectedTool: state.selectedTool,
+    showTags: state.showTags,
+    // Add other essential state properties you need to preserve
+  }
 }
 
 export const Annotator = ({
@@ -144,6 +209,9 @@ export const Annotator = ({
     breakoutNames: new Set(),
   }
 
+  // Add state for recovery modal
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false)
+  const [savedState, setSavedState] = useState(null)
 
   const [state, dispatchToReducer] = useReducer(
     historyHandler(
@@ -204,12 +272,48 @@ export const Annotator = ({
     })
   )
 
+  // Improved autosave effect
+  useEffect(() => {
+    const saveInterval = setInterval(() => {
+      // Only save if there are actual changes
+      if (state.history && state.history.length > 0) {
+        try {
+          const stateToSave = prepareStateForStorage(state)
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave))
+        } catch (e) {
+          console.error("Error saving annotator state:", e)
+        }
+      }
+    }, AUTOSAVE_INTERVAL)
+
+    return () => clearInterval(saveInterval)
+  }, [state])
+
+  // Improved recovery effect
+  useEffect(() => {
+    const savedData = localStorage.getItem(STORAGE_KEY)
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData)
+        // Validate the saved state has required properties
+        if (parsed.images && Array.isArray(parsed.images)) {
+          setSavedState(parsed)
+          setShowRecoveryModal(true)
+        }
+      } catch (e) {
+        console.error("Error parsing saved annotator state:", e)
+        localStorage.removeItem(STORAGE_KEY)
+      }
+    }
+  }, [])
+
   const dispatch = useEventCallback((action: Action) => {
     if (action.type === "HEADER_BUTTON_CLICKED") {
-      //if (["Exit", "Done", "Save", "Complete"].includes(action.buttonName)) {
       if (["Exit", "Done", "Complete"].includes(action.buttonName)) {
+        localStorage.removeItem(STORAGE_KEY) // Clear autosave on exit
         return onExit(without(state, "history"))
       } else if (action.buttonName === "Save") {
+        localStorage.removeItem(STORAGE_KEY) // Clear autosave on save
         onSave(without(state, "history"))
         dispatchToReducer({
           type: "CLEAR_NEW_DEVICES_TO_SAVE",
@@ -247,12 +351,39 @@ export const Annotator = ({
     })
   }, [selectedImage, state.images])
 
+  // Improved recovery handler
+  const handleRecover = () => {
+    if (savedState) {
+      // Merge saved state with initial state to ensure all required properties exist
+      const restoredState = {
+        ...state,
+        ...savedState,
+        mode: null, // Reset mode to prevent stuck states
+        history: [], // Start fresh history
+      }
+      
+      dispatchToReducer({
+        type: "RESTORE_STATE",
+        state: makeImmutable(restoredState)
+      })
+    }
+    setShowRecoveryModal(false)
+  }
+
+  const handleDiscard = () => {
+    localStorage.removeItem(STORAGE_KEY)
+    setShowRecoveryModal(false)
+  }
+
   if (!images && !videoSrc)
     return 'Missing required prop "images" or "videoSrc"'
 
   return (
     <HotKeys keyMap={defaultKeyMap}>
       <SettingsProvider>
+        {showRecoveryModal && (
+          <RecoveryModal onRecover={handleRecover} onDiscard={handleDiscard} />
+        )}
         <MainLayout
           RegionEditLabel={RegionEditLabel}
           alwaysShowNextButton={Boolean(onNextImage)}
