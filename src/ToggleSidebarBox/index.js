@@ -112,14 +112,16 @@ const RowHeader = ({
   categoriesColorMap,
   onCategoryColorChange,
 }) => {
-  const [categoryList, setCategoryList] = useState([...categories])
+  // Deduplicate categories using Set
+  const [categoryList, setCategoryList] = useState([...new Set(categories)])
   const [regionCategorySet, setRegionCategorySet] = useState(
     new Set(regions.map((region) => region.category))
   )
 
+  // Update categoryList when categories prop changes
   useEffect(() => {
-    setRegionCategorySet(new Set(regions.map((region) => region.category)))
-  }, [regions])
+    setCategoryList([...new Set(categories)])
+  }, [categories])
 
   const [checkedList, setCheckedList] = useState(() => {
     const categoryList = [...categories]
@@ -230,8 +232,8 @@ const RowHeader = ({
   }
 
   useEffect(() => {
-    setCategoryList(categories)
-  }, [categories])
+    setRegionCategorySet(new Set(regions.map((region) => region.category)))
+  }, [regions])
 
   Object.keys(categoriesColorMap).forEach(
     (device) =>
