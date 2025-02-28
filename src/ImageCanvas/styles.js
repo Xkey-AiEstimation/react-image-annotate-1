@@ -25,17 +25,17 @@ export default {
     padding: 4,
     zIndex: 10,
   },
-  fixedRegionLabel: {
-    position: "absolute",
-    zIndex: 10,
-    top: 10,
-    left: 10,
-    opacity: 0.5,
-    transition: "opacity 500ms",
-    "&:hover": {
-      opacity: 1,
-    },
-  },
+  // fixedRegionLabel: {
+  //   position: "absolute",
+  //   zIndex: 10,
+  //   top: 10,
+  //   left: 10,
+  //   opacity: 0.5,
+  //   transition: "opacity 500ms",
+  //   "&:hover": {
+  //     opacity: 1,
+  //   },
+  // },
   eraserCursor: {
     cursor: "none",
     "& canvas": {

@@ -2269,9 +2269,6 @@ export default (state: MainLayoutState, action: Action) => {
       const { region } = action
       if (!region || !activeImage) return state
 
-      // Only allow boxes for panning
-      if (region.type !== "box") return state
-
       // First select and highlight the region
       state = setIn(
         state,
@@ -2283,13 +2280,106 @@ export default (state: MainLayoutState, action: Action) => {
         }))
       )
 
-      // For boxes, just pass the coordinates directly
+      // Calculate the region coordinates based on type
+      let regionData = {}
+      
+      if (region.type === "box") {
+        // For boxes, use the coordinates directly
+        regionData = {
+          x: region.x,
+          y: region.y,
+          w: region.w,
+          h: region.h
+        }
+      } else if (region.type === "polygon") {
+        // For polygons, calculate the bounding box
+        const points = region.points || []
+        if (points.length > 0) {
+          let minX = 1, minY = 1, maxX = 0, maxY = 0
+
+          points.forEach(point => {
+            let px, py
+            if (Array.isArray(point)) {
+              px = point[0]
+              py = point[1]
+            } else if (point.x !== undefined && point.y !== undefined) {
+              px = point.x
+              py = point.y
+            }
+
+            minX = Math.min(minX, px)
+            minY = Math.min(minY, py)
+            maxX = Math.max(maxX, px)
+            maxY = Math.max(maxY, py)
+          })
+
+          regionData = {
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxY - minY
+          }
+        }
+      } else if (region.type === "point") {
+        // For points, create a small region around the point
+        regionData = {
+          x: region.x - 0.01, // Small offset for better visibility
+          y: region.y - 0.01,
+          w: 0.02,            // Small width/height
+          h: 0.02
+        }
+      } else if (region.type === "line") {
+        // For lines, calculate a bounding box
+        regionData = {
+          x: Math.min(region.x1, region.x2),
+          y: Math.min(region.y1, region.y2),
+          w: Math.abs(region.x2 - region.x1),
+          h: Math.abs(region.y2 - region.y1)
+        }
+      } else if (region.type === "keypoints") {
+        // For keypoints, calculate the bounding box
+        const points = region.points || {}
+        const pointArray = Object.values(points)
+        
+        if (pointArray.length > 0) {
+          let minX = 1, minY = 1, maxX = 0, maxY = 0
+
+          pointArray.forEach(point => {
+            minX = Math.min(minX, point.x)
+            minY = Math.min(minY, point.y)
+            maxX = Math.max(maxX, point.x)
+            maxY = Math.max(maxY, point.y)
+          })
+
+          regionData = {
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxY - minY
+          }
+        } else {
+          // Fallback for empty keypoints
+          regionData = {
+            x: 0.4,
+            y: 0.4,
+            w: 0.2,
+            h: 0.2
+          }
+        }
+      } else {
+        // Default fallback for other region types
+        regionData = {
+          x: 0.4,
+          y: 0.4,
+          w: 0.2,
+          h: 0.2
+        }
+      }
+
+      // Add the region ID and return
       return setIn(state, ["panToRegion"], {
         regionId: region.id,
-        x: region.x,
-        y: region.y,
-        w: region.w,
-        h: region.h
+        ...regionData
       })
     }
     case "CLEAR_PAN_TO_REGION": {

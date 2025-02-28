@@ -594,49 +594,70 @@ export const ImageCanvas = ({
           />
         </PreventScrollToParents>
       )}
-      {!showTags && highlightedRegion && (
-        <div key="topLeftTag" className={classes.fixedRegionLabel}>
-          <RegionLabel
-            disableClose
-            // allowedClasses is overriden in RegionLabel class to filter conduits, devices, etc.
-            allowedClasses={regionClsList}
-            allowedTags={regionTagList}
-            onAddNewCategory={(category, color) => {
-              dispatch({
-                type: "ADD_NEW_CATEGORY",
-                category,
-                color: color || "#000000",
-              })
-            }}
-            onChangeNewRegion={(region) => {
-              dispatch({
-                type: "CHANGE_NEW_REGION",
-                region,
-              })
-            }}
-            devices={deviceList}
-            onChange={onChangeRegion}
-            onDelete={onDeleteRegion}
-            onMatchTemplate={onMatchRegionTemplate}
-            finishMatchTemplate={finishMatchRegionTemplate}
-            editing
-            region={highlightedRegion}
-            regions={regions}
-            imageSrc={imageSrc}
-            imageSrcs={imageSrcs}
-            pageIndex={pageIndex}
-            regionTemplateMatchingDisabled={regionTemplateMatchingDisabled}
-            onRegionClassAdded={onRegionClassAdded}
-            allowComments={allowComments}
-            breakoutList={breakoutList}
-            dispatch={dispatch}
-            selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
-            subType={subType}
-            categories={categories}
-            categoriesColorMap={categoriesColorMap}
-          />
-        </div>
-      )}
+      {!showTags && highlightedRegion && (() => {
+        // Calculate position for the region label (similar to RegionTags)
+        const pbox = projectRegionBox(highlightedRegion)
+        
+        // Skip if outside visible area or invalid dimensions
+        if (!pbox) return null
+        if (pbox.w === 0 || pbox.h === 0) return null
+        if (pbox.x + pbox.w < 0 || pbox.y + pbox.h < 0) return null
+        if (pbox.x > layoutParams.current.canvasWidth || pbox.y > layoutParams.current.canvasHeight) return null
+        
+        const labelPosition = {
+          left: pbox.x,
+          top: pbox.y - 300, // Move it higher above the region
+          width: Math.max(100, pbox.w),  // Minimum width for readability
+          position: "absolute",
+          zIndex: 10
+        }
+        
+        // Ensure label doesn't go off-screen at the top
+        if (labelPosition.top < 5) labelPosition.top = pbox.y + pbox.h + 5
+        
+        return (
+          <div key={`regionLabel-${highlightedRegion.id}`} style={labelPosition}>
+            <RegionLabel
+              disableClose
+              allowedClasses={regionClsList}
+              allowedTags={regionTagList}
+              onAddNewCategory={(category, color) => {
+                dispatch({
+                  type: "ADD_NEW_CATEGORY",
+                  category,
+                  color: color || "#000000",
+                })
+              }}
+              onChangeNewRegion={(region) => {
+                dispatch({
+                  type: "CHANGE_NEW_REGION",
+                  region,
+                })
+              }}
+              devices={deviceList}
+              onChange={onChangeRegion}
+              onDelete={onDeleteRegion}
+              onMatchTemplate={onMatchRegionTemplate}
+              finishMatchTemplate={finishMatchRegionTemplate}
+              editing
+              region={highlightedRegion}
+              regions={regions}
+              imageSrc={imageSrc}
+              imageSrcs={imageSrcs}
+              pageIndex={pageIndex}
+              regionTemplateMatchingDisabled={regionTemplateMatchingDisabled}
+              onRegionClassAdded={onRegionClassAdded}
+              allowComments={allowComments}
+              breakoutList={breakoutList}
+              dispatch={dispatch}
+              selectedBreakoutIdAutoAdd={selectedBreakoutIdAutoAdd}
+              subType={subType}
+              categories={categories}
+              categoriesColorMap={categoriesColorMap}
+            />
+          </div>
+        )
+      })()}
 
       {zoomWithPrimary && zoomBox !== null && (
         <div
