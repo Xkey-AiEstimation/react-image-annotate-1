@@ -415,11 +415,11 @@ export const ImageCanvas = ({
 
   useEffect(() => {
     if (state.panToRegion && imageLoaded) {
-      const { x, y, w, h } = state.panToRegion;
+      const { x, y, w, h, regionId, shouldHighlight } = state.panToRegion;
       const { iw, ih } = layoutParams.current;
       const canvasWidth = layoutParams.current.canvasWidth || canvasEl.current.width;
       const canvasHeight = layoutParams.current.canvasHeight || canvasEl.current.height;
-
+      
       // Calculate the center point of the annotation in image space
       const centerX = (x + w/2) * iw;
       const centerY = (y + h/2) * ih;
@@ -466,6 +466,13 @@ export const ImageCanvas = ({
           requestAnimationFrame(animate);
         } else {
           dispatch({ type: "CLEAR_PAN_TO_REGION" });
+          
+          if (shouldHighlight && regionId) {
+            dispatch({ 
+              type: "HIGHLIGHT_REGION_AFTER_PAN", 
+              regionId 
+            });
+          }
         }
       };
 

@@ -2269,17 +2269,6 @@ export default (state: MainLayoutState, action: Action) => {
       const { region } = action
       if (!region || !activeImage) return state
 
-      // First select and highlight the region
-      state = setIn(
-        state,
-        [...pathToActiveImage, "regions"],
-        (activeImage.regions || []).map((r) => ({
-          ...r,
-          highlighted: r.id === region.id,
-          editingLabels: r.id === region.id
-        }))
-      )
-
       // Calculate the region coordinates based on type
       let regionData = {}
       
@@ -2376,15 +2365,32 @@ export default (state: MainLayoutState, action: Action) => {
         }
       }
 
-      // Add the region ID and return
+      // First just set the panToRegion with the target region ID,
+      // but don't highlight it yet - we'll do that after panning
       return setIn(state, ["panToRegion"], {
         regionId: region.id,
+        shouldHighlight: true, // Flag to indicate this region should be highlighted after panning
         ...regionData
       })
     }
     case "CLEAR_PAN_TO_REGION": {
       // Only clear the panning state, don't modify region highlighting
       return setIn(state, ["panToRegion"], null)
+    }
+    case "HIGHLIGHT_REGION_AFTER_PAN": {
+      const { regionId } = action
+      if (!regionId || !activeImage) return state
+      
+      // Now highlight the region
+      return setIn(
+        state,
+        [...pathToActiveImage, "regions"],
+        (activeImage.regions || []).map((r) => ({
+          ...r,
+          highlighted: r.id === regionId,
+          editingLabels: r.id === regionId
+        }))
+      )
     }
     default:
       break
