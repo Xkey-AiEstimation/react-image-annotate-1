@@ -613,7 +613,7 @@ export const ImageCanvas = ({
         
         const labelPosition = {
           left: pbox.x,
-          top: pbox.y - 300, // Move it higher above the region
+          top: pbox.y - 250, // Move it higher above the region
           width: Math.max(100, pbox.w),  // Minimum width for readability
           position: "absolute",
           zIndex: 10

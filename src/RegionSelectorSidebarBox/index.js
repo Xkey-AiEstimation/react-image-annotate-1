@@ -69,24 +69,7 @@ const RowLayout = ({
         <Grid item xs={7}>
           {classification}
         </Grid>
-        {/* <Grid item xs={1}>
-          {region && (
-            <Tooltip title="Pan to region"
-              style={{
-                zIndex: 99999,
-              }}
-            >
-              <CenterFocusStrongIcon
-                className="icon2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onPanToRegion(region);
-                }}
-              />
-            </Tooltip>
-          )}
-        </Grid> */}
-        <Grid item xs={2}>
+        <Grid item xs={3}>
           {trash}
         </Grid>
       </Grid>
