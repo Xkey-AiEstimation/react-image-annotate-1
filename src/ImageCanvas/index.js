@@ -431,7 +431,7 @@ export const ImageCanvas = ({
       newMat.translate(centerX, centerY);
       
       // Then apply the desired scale (400% zoom = 0.25 scale)
-      newMat.scaleU(0.25);
+      newMat.scaleU(0.10);
       
       // Finally translate so the origin is at the center of the canvas
       newMat.translate(-canvasWidth/2, -canvasHeight/2);
