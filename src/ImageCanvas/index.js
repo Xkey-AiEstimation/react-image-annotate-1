@@ -371,10 +371,10 @@ export const ImageCanvas = ({
     !zoomStart || !zoomEnd
       ? null
       : {
-          ...mat.clone().inverse().applyToPoint(zoomStart.x, zoomStart.y),
-          w: (zoomEnd.x - zoomStart.x) / mat.a,
-          h: (zoomEnd.y - zoomStart.y) / mat.d,
-        }
+        ...mat.clone().inverse().applyToPoint(zoomStart.x, zoomStart.y),
+        w: (zoomEnd.x - zoomStart.x) / mat.a,
+        h: (zoomEnd.y - zoomStart.y) / mat.d,
+      }
   if (zoomBox) {
     if (zoomBox.w < 0) {
       zoomBox.x += zoomBox.w
@@ -413,6 +413,66 @@ export const ImageCanvas = ({
 
   const resetMat = () => changeMat(getDefaultMat())
 
+  useEffect(() => {
+    if (state.panToRegion && imageLoaded) {
+      const { x, y, w, h } = state.panToRegion;
+      const { iw, ih } = layoutParams.current;
+      const canvasWidth = layoutParams.current.canvasWidth || canvasEl.current.width;
+      const canvasHeight = layoutParams.current.canvasHeight || canvasEl.current.height;
+
+      // Calculate the center point of the annotation in image space
+      const centerX = (x + w/2) * iw;
+      const centerY = (y + h/2) * ih;
+      
+      // Create a new matrix starting with default
+      const newMat = new Matrix();
+      
+      // First translate so the region center is at origin
+      newMat.translate(centerX, centerY);
+      
+      // Then apply the desired scale (400% zoom = 0.25 scale)
+      newMat.scaleU(0.25);
+      
+      // Finally translate so the origin is at the center of the canvas
+      newMat.translate(-canvasWidth/2, -canvasHeight/2);
+      
+      // This flips the matrix because our goal is different from normal:
+      // We want to position the image so that the region is at canvas center
+      newMat.inverse();
+      
+      console.log("Target matrix:", newMat);
+      
+      // Animate the transition
+      const startMat = mat.clone();
+      const startTime = performance.now();
+      const duration = 300;
+
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+        
+        const animatedMat = new Matrix();
+        animatedMat.a = startMat.a + (newMat.a - startMat.a) * easeProgress;
+        animatedMat.b = startMat.b + (newMat.b - startMat.b) * easeProgress;
+        animatedMat.c = startMat.c + (newMat.c - startMat.c) * easeProgress;
+        animatedMat.d = startMat.d + (newMat.d - startMat.d) * easeProgress;
+        animatedMat.e = startMat.e + (newMat.e - startMat.e) * easeProgress;
+        animatedMat.f = startMat.f + (newMat.f - startMat.f) * easeProgress;
+        
+        changeMat(animatedMat);
+        
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          dispatch({ type: "CLEAR_PAN_TO_REGION" });
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }
+  }, [state.panToRegion, imageLoaded]);
+
   return (
     <div
       style={{
@@ -424,16 +484,16 @@ export const ImageCanvas = ({
         cursor: createWithPrimary
           ? "crosshair"
           : dragging
-          ? "grabbing"
-          : dragWithPrimary
-          ? "grab"
-          : zoomWithPrimary
-          ? mat.a < 1
-            ? "zoom-out"
-            : "zoom-in"
-          : state.selectedTool === "multi-delete-select"
-          ? `crosshair`
-          : undefined,
+            ? "grabbing"
+            : dragWithPrimary
+              ? "grab"
+              : zoomWithPrimary
+                ? mat.a < 1
+                  ? "zoom-out"
+                  : "zoom-in"
+                : state.selectedTool === "multi-delete-select"
+                  ? `crosshair`
+                  : undefined,
       }}
     >
       {showCrosshairs && (
@@ -465,19 +525,19 @@ export const ImageCanvas = ({
             !modifyingAllowedArea || !allowedArea
               ? regions
               : [
-                  {
-                    type: "box",
-                    id: "$$allowed_area",
-                    cls: "allowed_area",
-                    highlighted: true,
-                    x: allowedArea.x,
-                    y: allowedArea.y,
-                    w: allowedArea.w,
-                    h: allowedArea.h,
-                    visible: true,
-                    color: "#ff0",
-                  },
-                ]
+                {
+                  type: "box",
+                  id: "$$allowed_area",
+                  cls: "allowed_area",
+                  highlighted: true,
+                  x: allowedArea.x,
+                  y: allowedArea.y,
+                  w: allowedArea.w,
+                  h: allowedArea.h,
+                  visible: true,
+                  color: "#ff0",
+                },
+              ]
           }
           mouseEvents={mouseEvents}
           projectRegionBox={projectRegionBox}

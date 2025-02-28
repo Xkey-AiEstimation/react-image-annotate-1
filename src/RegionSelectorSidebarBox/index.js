@@ -13,6 +13,7 @@ import LockIcon from "@material-ui/icons/Lock"
 import UnlockIcon from "@material-ui/icons/LockOpen"
 import VisibleIcon from "@material-ui/icons/Visibility"
 import VisibleOffIcon from "@material-ui/icons/VisibilityOff"
+import CenterFocusStrongIcon from "@material-ui/icons/CenterFocusStrong"
 import styles from "./styles"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
@@ -49,6 +50,8 @@ const RowLayout = ({
   tags,
   trash,
   onClick,
+  onPanToRegion,
+  region,
 }) => {
   const classes = useStyles()
   const [mouseOver, changeMouseOver] = useState(false)
@@ -57,14 +60,31 @@ const RowLayout = ({
       onClick={onClick}
       onMouseEnter={() => changeMouseOver(true)}
       onMouseLeave={() => changeMouseOver(false)}
-      // className={classnames(classes.row, { header, highlighted })}
+      className={classnames(classes.row, { header, highlighted })}
     >
       <Grid container>
         <Grid item xs={2}>
           <div style={{ textAlign: "right", paddingRight: 10 }}>{order}</div>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={7}>
           {classification}
+        </Grid>
+        <Grid item xs={1}>
+          {region && (
+            <Tooltip title="Pan to region"
+              style={{
+                zIndex: 99999,
+              }}
+            >
+              <CenterFocusStrongIcon 
+                className="icon2" 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onPanToRegion(region);
+                }}
+              />
+            </Tooltip>
+          )}
         </Grid>
         <Grid item xs={2}>
           {trash}
@@ -96,6 +116,7 @@ const Row = ({
   onSelectRegion,
   onDeleteRegion,
   onChangeRegion,
+  onPanToRegion,
   visible,
   locked,
   color,
@@ -107,6 +128,8 @@ const Row = ({
       header={false}
       highlighted={highlighted}
       onClick={() => onSelectRegion(r)}
+      onPanToRegion={onPanToRegion}
+      region={r}
       order={`#${index + 1}`}
       classification={<Chip text={cls || ""} color={color || "#ddd"} />}
       area=""
@@ -160,6 +183,7 @@ export const RegionSelectorSidebarBox = ({
   onDeleteRegion,
   onChangeRegion,
   onSelectRegion,
+  onPanToRegion,
 }) => {
   const classes = useStyles()
   return (
@@ -180,6 +204,7 @@ export const RegionSelectorSidebarBox = ({
             onSelectRegion={onSelectRegion}
             onDeleteRegion={onDeleteRegion}
             onChangeRegion={onChangeRegion}
+            onPanToRegion={onPanToRegion}
           />
         ))}
       </div>

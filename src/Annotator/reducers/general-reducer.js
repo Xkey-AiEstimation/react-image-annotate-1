@@ -1650,8 +1650,8 @@ export default (state: MainLayoutState, action: Action) => {
 
           // Use the selected device's category and color if available
           const deviceCategory = selectedDevice ? selectedDevice.category : defaultRegionCategory
-          const deviceColor = selectedDevice ? 
-            getColorByCategory(state, deviceCategory) : 
+          const deviceColor = selectedDevice ?
+            getColorByCategory(state, deviceCategory) :
             defaultPointAndBoxColor
 
           newRegion = {
@@ -2264,6 +2264,37 @@ export default (state: MainLayoutState, action: Action) => {
         )
       }
       break
+    }
+    case "PAN_TO_REGION": {
+      const { region } = action
+      if (!region || !activeImage) return state
+
+      // Only allow boxes for panning
+      if (region.type !== "box") return state
+
+      // First select and highlight the region
+      state = setIn(
+        state,
+        [...pathToActiveImage, "regions"],
+        (activeImage.regions || []).map((r) => ({
+          ...r,
+          highlighted: r.id === region.id,
+          editingLabels: r.id === region.id
+        }))
+      )
+
+      // For boxes, just pass the coordinates directly
+      return setIn(state, ["panToRegion"], {
+        regionId: region.id,
+        x: region.x,
+        y: region.y,
+        w: region.w,
+        h: region.h
+      })
+    }
+    case "CLEAR_PAN_TO_REGION": {
+      // Only clear the panning state, don't modify region highlighting
+      return setIn(state, ["panToRegion"], null)
     }
     default:
       break
