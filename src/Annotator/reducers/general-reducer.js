@@ -1650,8 +1650,8 @@ export default (state: MainLayoutState, action: Action) => {
 
           // Use the selected device's category and color if available
           const deviceCategory = selectedDevice ? selectedDevice.category : defaultRegionCategory
-          const deviceColor = selectedDevice ? 
-            getColorByCategory(state, deviceCategory) : 
+          const deviceColor = selectedDevice ?
+            getColorByCategory(state, deviceCategory) :
             defaultPointAndBoxColor
 
           newRegion = {
@@ -2264,6 +2264,133 @@ export default (state: MainLayoutState, action: Action) => {
         )
       }
       break
+    }
+    case "PAN_TO_REGION": {
+      const { region } = action
+      if (!region || !activeImage) return state
+
+      // Calculate the region coordinates based on type
+      let regionData = {}
+      
+      if (region.type === "box") {
+        // For boxes, use the coordinates directly
+        regionData = {
+          x: region.x,
+          y: region.y,
+          w: region.w,
+          h: region.h
+        }
+      } else if (region.type === "polygon") {
+        // For polygons, calculate the bounding box
+        const points = region.points || []
+        if (points.length > 0) {
+          let minX = 1, minY = 1, maxX = 0, maxY = 0
+
+          points.forEach(point => {
+            let px, py
+            if (Array.isArray(point)) {
+              px = point[0]
+              py = point[1]
+            } else if (point.x !== undefined && point.y !== undefined) {
+              px = point.x
+              py = point.y
+            }
+
+            minX = Math.min(minX, px)
+            minY = Math.min(minY, py)
+            maxX = Math.max(maxX, px)
+            maxY = Math.max(maxY, py)
+          })
+
+          regionData = {
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxY - minY
+          }
+        }
+      } else if (region.type === "point") {
+        // For points, create a small region around the point
+        regionData = {
+          x: region.x - 0.01, // Small offset for better visibility
+          y: region.y - 0.01,
+          w: 0.02,            // Small width/height
+          h: 0.02
+        }
+      } else if (region.type === "line") {
+        // For lines, calculate a bounding box
+        regionData = {
+          x: Math.min(region.x1, region.x2),
+          y: Math.min(region.y1, region.y2),
+          w: Math.abs(region.x2 - region.x1),
+          h: Math.abs(region.y2 - region.y1)
+        }
+      } else if (region.type === "keypoints") {
+        // For keypoints, calculate the bounding box
+        const points = region.points || {}
+        const pointArray = Object.values(points)
+        
+        if (pointArray.length > 0) {
+          let minX = 1, minY = 1, maxX = 0, maxY = 0
+
+          pointArray.forEach(point => {
+            minX = Math.min(minX, point.x)
+            minY = Math.min(minY, point.y)
+            maxX = Math.max(maxX, point.x)
+            maxY = Math.max(maxY, point.y)
+          })
+
+          regionData = {
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxY - minY
+          }
+        } else {
+          // Fallback for empty keypoints
+          regionData = {
+            x: 0.4,
+            y: 0.4,
+            w: 0.2,
+            h: 0.2
+          }
+        }
+      } else {
+        // Default fallback for other region types
+        regionData = {
+          x: 0.4,
+          y: 0.4,
+          w: 0.2,
+          h: 0.2
+        }
+      }
+
+      // First just set the panToRegion with the target region ID,
+      // but don't highlight it yet - we'll do that after panning
+      return setIn(state, ["panToRegion"], {
+        regionId: region.id,
+        shouldHighlight: true, // Flag to indicate this region should be highlighted after panning
+        ...regionData
+      })
+    }
+    case "CLEAR_PAN_TO_REGION": {
+      // Only clear the panning state, don't modify region highlighting
+      return setIn(state, ["panToRegion"], null)
+    }
+    case "HIGHLIGHT_REGION_AFTER_PAN": {
+      const { regionId } = action
+      if (!regionId || !activeImage) return state
+      
+      // Now highlight the region
+      return setIn(
+        state,
+        [...pathToActiveImage, "regions"],
+        (activeImage.regions || []).map((r) => ({
+          ...r,
+          highlighted: r.id === regionId,
+          editingLabels: r.id === regionId
+        }))
+      )
     }
     default:
       break

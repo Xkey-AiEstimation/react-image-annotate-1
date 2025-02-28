@@ -274,6 +274,14 @@ const isBreakoutDisabled = useMemo(() => {
   return false
 }, [state.subType])
 
+const onPanToRegion = useEventCallback((region) => {
+  if (!region) return
+  dispatch({
+    type: "PAN_TO_REGION",
+    region
+  })
+})
+
 return (
   <FullScreenContainer>
     <FullScreen
@@ -548,6 +556,7 @@ return (
               onDeleteRegion={action("DELETE_REGION", "region")}
               onChangeRegion={action("CHANGE_REGION", "region")}
               onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
+              onPanToRegion={onPanToRegion}
             />,
             state.keyframes && (
               <KeyframesSelector

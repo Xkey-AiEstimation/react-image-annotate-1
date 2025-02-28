@@ -13,6 +13,7 @@ import LockIcon from "@material-ui/icons/Lock"
 import UnlockIcon from "@material-ui/icons/LockOpen"
 import VisibleIcon from "@material-ui/icons/Visibility"
 import VisibleOffIcon from "@material-ui/icons/VisibilityOff"
+import CenterFocusStrongIcon from "@material-ui/icons/CenterFocusStrong"
 import styles from "./styles"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
@@ -49,6 +50,8 @@ const RowLayout = ({
   tags,
   trash,
   onClick,
+  onPanToRegion,
+  region,
 }) => {
   const classes = useStyles()
   const [mouseOver, changeMouseOver] = useState(false)
@@ -57,16 +60,16 @@ const RowLayout = ({
       onClick={onClick}
       onMouseEnter={() => changeMouseOver(true)}
       onMouseLeave={() => changeMouseOver(false)}
-      // className={classnames(classes.row, { header, highlighted })}
+      className={classnames(classes.row, { header, highlighted })}
     >
       <Grid container>
         <Grid item xs={2}>
           <div style={{ textAlign: "right", paddingRight: 10 }}>{order}</div>
         </Grid>
-        <Grid item xs={8}>
+        <Grid item xs={7}>
           {classification}
         </Grid>
-        <Grid item xs={2}>
+        <Grid item xs={3}>
           {trash}
         </Grid>
       </Grid>
@@ -74,7 +77,7 @@ const RowLayout = ({
   )
 }
 
-const RowHeader = ({}) => {
+const RowHeader = ({ }) => {
   return (
     <RowLayout
       header
@@ -96,6 +99,7 @@ const Row = ({
   onSelectRegion,
   onDeleteRegion,
   onChangeRegion,
+  onPanToRegion,
   visible,
   locked,
   color,
@@ -106,11 +110,16 @@ const Row = ({
     <RowLayout
       header={false}
       highlighted={highlighted}
-      onClick={() => onSelectRegion(r)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onPanToRegion(r);
+      }}
+      onPanToRegion={onPanToRegion}
+      region={r}
       order={`#${index + 1}`}
-      classification={<Chip text={cls || ""} color={color || "#ddd"} />}
+      classification={< Chip text={cls || ""} color={color || "#ddd"} />}
       area=""
-      trash={<TrashIcon onClick={() => onDeleteRegion(r)} className="icon2" />}
+      trash={< TrashIcon onClick={() => onDeleteRegion(r)} className="icon2" />}
       lock={
         r.locked ? (
           <LockIcon
@@ -160,6 +169,7 @@ export const RegionSelectorSidebarBox = ({
   onDeleteRegion,
   onChangeRegion,
   onSelectRegion,
+  onPanToRegion,
 }) => {
   const classes = useStyles()
   return (
@@ -180,6 +190,7 @@ export const RegionSelectorSidebarBox = ({
             onSelectRegion={onSelectRegion}
             onDeleteRegion={onDeleteRegion}
             onChangeRegion={onChangeRegion}
+            onPanToRegion={onPanToRegion}
           />
         ))}
       </div>
