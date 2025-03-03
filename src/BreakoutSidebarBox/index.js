@@ -65,7 +65,7 @@ const RowLayout = ({
       onClick={onClick}
       onMouseEnter={() => changeMouseOver(true)}
       onMouseLeave={() => changeMouseOver(false)}
-      // className={classnames(classes.row, { header, highlighted })}
+    // className={classnames(classes.row, { header, highlighted })}
     >
       <Grid
         container
@@ -100,7 +100,7 @@ const RowLayout = ({
   )
 }
 
-const RowHeader = ({}) => {
+const RowHeader = ({ }) => {
   return (
     <Grid
       container
@@ -247,7 +247,7 @@ export const BreakoutSidebarBox = ({
     <SidebarBoxContainer
       title="Breakouts"
       icon={<DashboardIcon style={{ color: "white" }} />}
-      expandedByDefault
+      expandedByDefault={false}
     >
       <div className={classes.container}>
         <MemoRowHeader />

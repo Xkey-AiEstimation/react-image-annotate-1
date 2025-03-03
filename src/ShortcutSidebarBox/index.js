@@ -33,6 +33,24 @@ const useStyles = makeStyles({
     textAlign: "center",
     padding: 20,
   },
+  shortcutKey: {
+    backgroundColor: "#f8f8f8",
+    border: "1px solid #ddd",
+    borderRadius: 2,
+    padding: "2px 6px",
+    fontSize: 11,
+    fontWeight: 500,
+    marginRight: 4,
+    display: "inline-block",
+  },
+  shortcutText: {
+    fontSize: 12,
+    color: grey[800],
+    marginBottom: 4,
+  },
+  shortcutContainer: {
+    marginBottom: 8,
+  }
 })
 
 const listItemTextStyle = { paddingLeft: 16 }

@@ -1,27 +1,24 @@
 // @flow
 import {
-  Button,
-  ClickAwayListener,
   FormControlLabel,
   FormGroup,
   IconButton,
-  Popover,
   Switch,
   Tooltip,
-  Typography,
-  createTheme,
+  createTheme
 } from "@material-ui/core"
+import { grey } from "@material-ui/core/colors"
 import Grid from "@material-ui/core/Grid"
 import { makeStyles } from "@material-ui/core/styles"
+import CategoryIcon from "@material-ui/icons/Category"
+import CloseIcon from "@material-ui/icons/Close"
 import DashboardIcon from "@material-ui/icons/Dashboard"
 import TrashIcon from "@material-ui/icons/Delete"
+import EditIcon from "@material-ui/icons/Edit"
 import LockIcon from "@material-ui/icons/Lock"
 import PieChartIcon from "@material-ui/icons/PieChart"
 import ReorderIcon from "@material-ui/icons/SwapVert"
-import EditIcon from "@material-ui/icons/Edit"
-import ToggleOnIcon from "@material-ui/icons/ToggleOn"
 import isEqual from "lodash/isEqual"
-import ColorPicker from "material-ui-color-picker"
 import React, {
   memo,
   useCallback,
@@ -30,14 +27,40 @@ import React, {
   useRef,
   useState,
 } from "react"
+import { SketchPicker } from "react-color"
 import { ColorMapping } from "../RegionLabel/ColorMapping"
 import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
-import styles from "./styles"
-import { SketchPicker } from "react-color"
-import CloseIcon from "@material-ui/icons/Close"
 
-const useStyles = makeStyles(styles)
+const useStyles = makeStyles({
+  categoryContainer: {
+    display: "flex",
+    alignItems: "center",
+    padding: "4px 0",
+  },
+  checkbox: {
+    padding: 0,
+    width: 24,
+    height: 24,
+  },
+  categoryLabel: {
+    fontSize: 12,
+    color: grey[800],
+    flexGrow: 1,
+    paddingLeft: 4,
+  },
+  colorSwatch: {
+    width: 16,
+    height: 16,
+    borderRadius: 2,
+    marginRight: 8,
+    cursor: "pointer",
+    border: "1px solid #ccc",
+  },
+  tooltipRoot: {
+    zIndex: 9999999999,
+  }
+})
 
 const DEVICE_LIST = [...new Set(DeviceList.map((item) => item.category))]
 
@@ -70,21 +93,21 @@ const theme = createTheme({
 
 Object.keys(ColorMapping).forEach(
   (device) =>
-    (theme.overrides.MuiSwitch = {
-      ...theme.overrides.MuiSwitch,
-      [device]: {
-        switchBase: {
-          // Controls default (unchecked) color for the thumb
-          color: "#ccc",
-        },
-        colorSecondary: {
-          "&$checked": {
-            // Controls checked color for the thumb
-            color: ColorMapping[device],
-          },
+  (theme.overrides.MuiSwitch = {
+    ...theme.overrides.MuiSwitch,
+    [device]: {
+      switchBase: {
+        // Controls default (unchecked) color for the thumb
+        color: "#ccc",
+      },
+      colorSecondary: {
+        "&$checked": {
+          // Controls checked color for the thumb
+          color: ColorMapping[device],
         },
       },
-    })
+    },
+  })
 )
 
 const RowLayout = ({ visible, onClick }) => {
@@ -237,21 +260,21 @@ const RowHeader = ({
 
   Object.keys(categoriesColorMap).forEach(
     (device) =>
-      (theme.overrides.MuiSwitch = {
-        ...theme.overrides.MuiSwitch,
-        [device]: {
-          switchBase: {
-            // Controls default (unchecked) color for the thumb
-            color: "#ccc",
-          },
-          colorSecondary: {
-            "&$checked": {
-              // Controls checked color for the thumb
-              color: ColorMapping[device],
-            },
+    (theme.overrides.MuiSwitch = {
+      ...theme.overrides.MuiSwitch,
+      [device]: {
+        switchBase: {
+          // Controls default (unchecked) color for the thumb
+          color: "#ccc",
+        },
+        colorSecondary: {
+          "&$checked": {
+            // Controls checked color for the thumb
+            color: ColorMapping[device],
           },
         },
-      })
+      },
+    })
   )
 
   const body = (
@@ -333,14 +356,17 @@ const RowHeader = ({
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    padding: 10,
+                    padding: "4px 0",
+                    marginBottom: 2,
                   }}
                 >
                   <FormControlLabel
+                    style={{ margin: 0, marginRight: 4 }}
                     control={
                       <Switch
                         style={{
                           color: "white",
+                          padding: 4,
                         }}
                         size="small"
                         id={category}
@@ -359,7 +385,11 @@ const RowHeader = ({
                           alignItems: "center",
                         }}
                       >
-                        <div style={{ paddingRight: 10, fontSize: "0.75em" }}>
+                        <div style={{
+                          paddingRight: 10,
+                          fontSize: "12px",
+                          color: "white"
+                        }}>
                           {category}
                         </div>
                       </div>
@@ -370,10 +400,10 @@ const RowHeader = ({
                     interactive
                     title={
                       <div>
-                        <div style={{ 
-                          display: 'flex', 
-                          justifyContent: 'flex-end', 
-                          marginBottom: 8 
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'flex-end',
+                          marginBottom: 8
                         }}>
                           <IconButton
                             size="small"
@@ -384,7 +414,7 @@ const RowHeader = ({
                                 [category]: false
                               }));
                             }}
-                            style={{ 
+                            style={{
                               backgroundColor: 'white',
                               width: 24,
                               height: 24,
@@ -392,7 +422,7 @@ const RowHeader = ({
                               color: 'black'
                             }}
                           >
-                            <CloseIcon 
+                            <CloseIcon
                               fontSize="small"
                               style={{ fontSize: 16 }}
                             />
@@ -437,7 +467,12 @@ const RowHeader = ({
                   </Tooltip>
 
                   {!isBreakoutDisabled && (
-                    <Tooltip title="Add a System Breakout">
+                    <Tooltip title="Add a System Breakout"
+                      PopperProps={{ style: { zIndex: 9999999999 } }}
+                      classes={{
+                        tooltip: classes.tooltipRoot
+                      }}
+                    >
                       <IconButton
                         style={{ color: "white" }}
                         disabled={!regionCategorySet.has(category)}
@@ -499,7 +534,7 @@ export const ToggleSidebarBox = ({
   return (
     <SidebarBoxContainer
       title="Categories"
-      icon={<ToggleOnIcon style={{ color: "white" }} />}
+      icon={<CategoryIcon style={{ color: "white" }} />}
       expandedByDefault={true}
     >
       <div className={classes.container}>
