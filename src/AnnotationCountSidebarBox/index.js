@@ -739,7 +739,7 @@ export const AnnotationCountSidebarBox = ({
                               className={classes.regionItem}
                               style={{ paddingLeft: 32 }} // Further indent for third level
                               button
-                              onClick={(e) => handleSelectRegion(region, e)}
+                              onClick={(e) => handlePanToRegion(region, e)}
                             >
                               <div
                                 className={classes.regionIcon}
