@@ -28,7 +28,6 @@ import {
   AIE_CATEGORIES,
   defaultColor,
   defaultSystem,
-  disableAIESubscription,
   disableBreakoutSubscription,
   disableMultiPageOCR,
   subTypes,
@@ -42,7 +41,7 @@ import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
 // import { ColorPicker } from "material-ui-color"
-import { state } from "../Annotator/reducers/general-reducer"
+import generalReducer from '../Annotator/reducers/general-reducer'
 
 const useStyles = makeStyles(styles)
 
@@ -481,7 +480,7 @@ export const RegionLabel = ({
     return onChange({
       ...region,
       category: category,
-      color: getColorByCategory(state, category),
+      color: getColorByCategory(generalReducer, category),
     })
   }
 
@@ -1453,7 +1452,7 @@ export const RegionLabel = ({
     return (
       isValidRegionType && region.cls && region.cls !== NOT_CLASSIFED
     )
-  }, [region, subType, disableAIESubscription])
+  }, [region, subType])
 
   const handleBreakoutClick = () => {
     setOpenBreakout((open) => !open)

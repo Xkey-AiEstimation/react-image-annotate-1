@@ -2318,12 +2318,12 @@ export default (state: MainLayoutState, action: Action) => {
           h: 0.02
         }
       } else if (region.type === "line") {
-        // For lines, calculate a bounding box
+        // For lines, focus on the starting point (x1, y1) instead of the middle
         regionData = {
-          x: Math.min(region.x1, region.x2),
-          y: Math.min(region.y1, region.y2),
-          w: Math.abs(region.x2 - region.x1),
-          h: Math.abs(region.y2 - region.y1)
+          x: region.x1 - 0.01, // Small offset for better visibility
+          y: region.y1 - 0.01,
+          w: 0.02,            // Small width/height like points
+          h: 0.02
         }
       } else if (region.type === "keypoints") {
         // For keypoints, calculate the bounding box
