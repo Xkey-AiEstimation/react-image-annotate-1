@@ -7,7 +7,7 @@ import ChevronRightIcon from "@material-ui/icons/ChevronRight"
 import ChevronLeftIcon from "@material-ui/icons/ChevronLeft"
 import DragHandleIcon from "@material-ui/icons/DragHandle"
 import classnames from "classnames"
-
+import { zIndices } from "../Annotator/constants"
 const MIN_WIDTH = 250;
 const MAX_WIDTH = 600;
 const DEFAULT_WIDTH = 400;
@@ -18,7 +18,7 @@ const useStyles = makeStyles((theme) => ({
         right: 0,
         top: props.topOffset || 48,
         bottom: 0,
-        zIndex: 9,
+        zIndex: zIndices.sidebar,
         display: "flex",
         flexDirection: "row",
         transition: props.isResizing ? "none" : "transform 300ms ease-in-out",
@@ -32,7 +32,7 @@ const useStyles = makeStyles((theme) => ({
         left: -28,
         top: "50%",
         transform: "translateY(-50%)",
-        zIndex: 10,
+        zIndex: zIndices.sidebar,
         backgroundColor: '#0a0a0a',
         border: `1px solid ${theme.palette.divider}`,
         borderRight: "none",
@@ -51,6 +51,7 @@ const useStyles = makeStyles((theme) => ({
         borderLeft: `1px solid ${theme.palette.divider}`,
         boxShadow: "-2px 0px 5px rgba(0,0,0,0.1)",
         padding: "8px 0",
+        zIndex: zIndices.sidebar,
         "&::-webkit-scrollbar": {
             width: "8px",
             height: "8px",
@@ -78,7 +79,7 @@ const useStyles = makeStyles((theme) => ({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 11,
+        zIndex: zIndices.sidebar,
         "&:hover": {
             "& $resizeHandleBar": {
                 backgroundColor: theme.palette.primary.main,
@@ -106,7 +107,7 @@ export const CollapsibleRightSidebar = ({ children, topOffset }) => {
     const sidebarRef = useRef(null);
     const startXRef = useRef(0);
     const startWidthRef = useRef(width);
-    
+
     const classes = useStyles({ topOffset, width, isResizing });
 
     // Handle mouse down on resize handle
@@ -115,34 +116,34 @@ export const CollapsibleRightSidebar = ({ children, topOffset }) => {
         setIsResizing(true);
         startXRef.current = e.clientX;
         startWidthRef.current = width;
-        
+
         // Add event listeners for mouse move and mouse up
         document.addEventListener('mousemove', handleResizeMove);
         document.addEventListener('mouseup', handleResizeEnd);
     };
-    
+
     // Handle mouse move during resize
     const handleResizeMove = (e) => {
         if (!isResizing) return;
-        
+
         const deltaX = startXRef.current - e.clientX;
         const newWidth = Math.max(MIN_WIDTH, Math.min(MAX_WIDTH, startWidthRef.current + deltaX));
-        
+
         setWidth(newWidth);
     };
-    
+
     // Handle mouse up to end resize
     const handleResizeEnd = () => {
         setIsResizing(false);
-        
+
         // Remove event listeners
         document.removeEventListener('mousemove', handleResizeMove);
         document.removeEventListener('mouseup', handleResizeEnd);
-        
+
         // Save the width to localStorage for persistence
         localStorage.setItem('sidebarWidth', width.toString());
     };
-    
+
     // Load saved width from localStorage on mount
     useEffect(() => {
         const savedWidth = localStorage.getItem('sidebarWidth');
@@ -153,7 +154,7 @@ export const CollapsibleRightSidebar = ({ children, topOffset }) => {
             }
         }
     }, []);
-    
+
     // Clean up event listeners on unmount
     useEffect(() => {
         return () => {
@@ -163,7 +164,7 @@ export const CollapsibleRightSidebar = ({ children, topOffset }) => {
     }, [isResizing]);
 
     return (
-        <div 
+        <div
             className={classnames(classes.sidebarContainer, collapsed && "collapsed")}
             ref={sidebarRef}
         >
@@ -175,9 +176,9 @@ export const CollapsibleRightSidebar = ({ children, topOffset }) => {
             >
                 {collapsed ? <ChevronLeftIcon /> : <ChevronRightIcon />}
             </IconButton>
-            
+
             {!collapsed && (
-                <div 
+                <div
                     className={classes.resizeHandle}
                     onMouseDown={handleResizeStart}
                     title="Drag to resize"
@@ -185,7 +186,7 @@ export const CollapsibleRightSidebar = ({ children, topOffset }) => {
                     <div className={classes.resizeHandleBar} />
                 </div>
             )}
-            
+
             <Paper className={classes.sidebarContent} elevation={3}>
                 {children}
             </Paper>

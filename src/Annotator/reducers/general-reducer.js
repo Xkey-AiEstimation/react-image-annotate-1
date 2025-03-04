@@ -2392,6 +2392,37 @@ export default (state: MainLayoutState, action: Action) => {
         }))
       )
     }
+    case "CHANGE_DEVICE_NAME": {
+      const { oldName, newName } = action
+      
+      // Find all regions with the old device name and update them
+      let newState = state
+      
+      // Get the current image
+      const { currentImageIndex, activeImage } = getActiveImage(state)
+      if (!activeImage) return state
+      
+      // Update all regions with the matching device name
+      const updatedRegions = (activeImage.regions || []).map(region => {
+        if (region.cls === oldName) {
+          return {
+            ...region,
+            cls: newName
+          }
+        }
+        return region
+      })
+      
+      // Set the updated regions in the state
+      newState = setIn(
+        newState,
+        ["images", currentImageIndex, "regions"],
+        updatedRegions
+      )
+      
+      // Save to history
+      return saveToHistory(newState, `Renamed device "${oldName}" to "${newName}"`)
+    }
     default:
       break
   }

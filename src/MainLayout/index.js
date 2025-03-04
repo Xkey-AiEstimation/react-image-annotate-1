@@ -522,6 +522,7 @@ return (
               onSelectRegion={action("SELECT_REGION", "region")}
               onDeleteRegion={action("DELETE_REGION", "region")}
               onChangeRegion={action("CHANGE_REGION", "region")}
+              onChangeDeviceName={action("CHANGE_DEVICE_NAME", "oldName", "newName")}
               onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
               onPanToRegion={onPanToRegion}
             />
