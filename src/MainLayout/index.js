@@ -18,7 +18,7 @@ import HistorySidebarBox from "../HistorySidebarBox"
 import ImageCanvas from "../ImageCanvas"
 import KeyframeTimeline from "../KeyframeTimeline"
 import KeyframesSelector from "../KeyframesSelectorSidebarBox"
-import RegionSelector from "../RegionSelectorSidebarBox"
+import LinearMeasurementsSelector from "../LinearMeasurementsSelectorSidebarBox"
 import SettingsDialog from "../SettingsDialog"
 import { useSettings } from "../SettingsProvider"
 import ShortcutSidebarBox from "../ShortcutSidebarBox"
@@ -547,7 +547,7 @@ return (
               onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
               onPanToRegion={onPanToRegion}
             />
-            <RegionSelector
+            <LinearMeasurementsSelector
               regions={activeImage ? activeImage.regions : emptyArr}
               onSelectRegion={action("SELECT_REGION", "region")}
               onDeleteRegion={action("DELETE_REGION", "region")}
