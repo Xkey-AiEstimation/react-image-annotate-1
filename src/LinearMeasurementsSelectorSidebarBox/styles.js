@@ -26,15 +26,15 @@ export default {
     cursor: "pointer",
     "&.header:hover": {
       backgroundColor: "#fff",
-      color: "white",
+      color: "black",
     },
     "&.highlighted": {
       backgroundColor: grey[100],
-      color: "white",
+      color: "black",
     },
     "&:hover": {
       backgroundColor: grey[50],
-      color: "white",
+      color: "black",
     },
   },
   chip: {

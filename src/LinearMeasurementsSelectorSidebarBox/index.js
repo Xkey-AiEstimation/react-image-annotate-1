@@ -107,7 +107,7 @@ const RowHeader = ({ }) => {
       highlighted={false}
       order={<ReorderIcon className="icon" />}
       classification={<div style={{ paddingLeft: 10 }}>Class</div>}
-      length={<div style={{ textAlign: "center" }}>Length</div>}
+      length={<div style={{ textAlign: "center" }}>Length (ft)</div>}
       area={<CenterFocusStrongIcon className="icon" />}
       trash={<TrashIcon className="icon" />}
       lock={<LockIcon className="icon" />}
@@ -147,7 +147,7 @@ const Row = ({
       region={r}
       order={`#${index + 1}`}
       classification={<Chip text={cls || ""} color={color || "#ddd"} />}
-      length={<div style={{ textAlign: "center", fontWeight: "500" }}>{lengthValue}</div>}
+      length={<div style={{ textAlign: "center", fontWeight: "500" }}>{lengthValue} ft</div>}
       area={
         <Tooltip 
           title="Locate" 
@@ -310,7 +310,7 @@ const MemoRow = memo(
 
 const emptyArr = []
 
-export const RegionSelectorSidebarBox = ({
+export const LinearMeasurementsSelectorSidebarBox = ({
   regions = emptyArr,
   onDeleteRegion,
   onChangeRegion,
@@ -358,7 +358,7 @@ const mapUsedRegionProperties = (r) => [
   r.highlighted,
 ]
 
-export default memo(RegionSelectorSidebarBox, (prevProps, nextProps) =>
+export default memo(LinearMeasurementsSelectorSidebarBox, (prevProps, nextProps) =>
   isEqual(
     (prevProps.regions || emptyArr).map(mapUsedRegionProperties),
     (nextProps.regions || emptyArr).map(mapUsedRegionProperties)
