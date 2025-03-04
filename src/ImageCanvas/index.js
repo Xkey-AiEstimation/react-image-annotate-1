@@ -440,7 +440,6 @@ export const ImageCanvas = ({
       // We want to position the image so that the region is at canvas center
       newMat.inverse();
       
-      console.log("Target matrix:", newMat);
       
       // Animate the transition
       const startMat = mat.clone();

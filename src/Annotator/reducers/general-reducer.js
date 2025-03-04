@@ -321,9 +321,6 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["newCategoriesToSave"], newCategoriesToSave)
       newState = setIn(newState, ["categories"], categories)
 
-      console.log("Updated newCategoriesToSave", newCategoriesToSave)
-      console.log("Updated categories", categories)
-
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
