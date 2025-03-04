@@ -502,6 +502,27 @@ return (
               categoriesColorMap={state.categoriesColorMap}
             />
 
+            {!isBreakoutDisabled && (
+              <BreakoutSidebarBox
+                regions={activeImage ? activeImage.regions : emptyArr}
+                onBreakoutDelete={action(
+                  "DELETE_BREAKOUT_BY_BREAKOUT_ID",
+                  "breakoutId"
+                )}
+                onBreakoutVisible={action(
+                  "TOGGLE_BREAKOUT_VISIBILITY",
+                  "breakoutId"
+                )}
+                onBreakoutAutoAdd={action(
+                  "TOGGLE_BREAKOUT_AUTO_ADD",
+                  "breakoutId"
+                )}
+                selectedBreakoutToggle={state.selectedBreakoutToggle}
+                selectedBreakoutIdAutoAdd={state.selectedBreakoutIdAutoAdd}
+                breakouts={state.breakouts}
+              />
+            )}
+
             <AnnotationCountSidebarBox
               regions={activeImage ? activeImage.regions : emptyArr}
               onToggleDevice={action(
@@ -526,26 +547,6 @@ return (
               onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
               onPanToRegion={onPanToRegion}
             />
-            {!isBreakoutDisabled && (
-              <BreakoutSidebarBox
-                regions={activeImage ? activeImage.regions : emptyArr}
-                onBreakoutDelete={action(
-                  "DELETE_BREAKOUT_BY_BREAKOUT_ID",
-                  "breakoutId"
-                )}
-                onBreakoutVisible={action(
-                  "TOGGLE_BREAKOUT_VISIBILITY",
-                  "breakoutId"
-                )}
-                onBreakoutAutoAdd={action(
-                  "TOGGLE_BREAKOUT_AUTO_ADD",
-                  "breakoutId"
-                )}
-                selectedBreakoutToggle={state.selectedBreakoutToggle}
-                selectedBreakoutIdAutoAdd={state.selectedBreakoutIdAutoAdd}
-                breakouts={state.breakouts}
-              />
-            )}
             <RegionSelector
               regions={activeImage ? activeImage.regions : emptyArr}
               onSelectRegion={action("SELECT_REGION", "region")}

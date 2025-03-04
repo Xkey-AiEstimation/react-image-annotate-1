@@ -99,7 +99,6 @@ const HistorySidebarBox = ({ history, onRestoreHistory, dispatch }) => {
     <SidebarBoxContainer
       title="History"
       icon={<HistoryIcon style={{ color: "white" }} />}
-      expandedByDefault
     >
       {history.length === 0 && (
         <div className={classes.emptyText}>No History Yet</div>

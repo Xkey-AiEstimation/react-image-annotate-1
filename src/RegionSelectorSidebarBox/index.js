@@ -1,26 +1,21 @@
 // @flow
-import React, { Fragment, useState, memo, useCallback } from "react"
-import { SwitchProps } from "@material-ui/core"
-import SidebarBoxContainer from "../SidebarBoxContainer"
-import { makeStyles, styled } from "@material-ui/core/styles"
 import { grey } from "@material-ui/core/colors"
-import RegionIcon from "@material-ui/icons/PictureInPicture"
 import Grid from "@material-ui/core/Grid"
-import ReorderIcon from "@material-ui/icons/SwapVert"
-import PieChartIcon from "@material-ui/icons/PieChart"
+import { makeStyles, styled } from "@material-ui/core/styles"
 import TrashIcon from "@material-ui/icons/Delete"
+import LinearScaleIcon from '@material-ui/icons/LinearScale'
 import LockIcon from "@material-ui/icons/Lock"
 import UnlockIcon from "@material-ui/icons/LockOpen"
+import PieChartIcon from "@material-ui/icons/PieChart"
+import ReorderIcon from "@material-ui/icons/SwapVert"
 import VisibleIcon from "@material-ui/icons/Visibility"
 import VisibleOffIcon from "@material-ui/icons/VisibilityOff"
-import CenterFocusStrongIcon from "@material-ui/icons/CenterFocusStrong"
-import styles from "./styles"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
-import Tooltip from "@material-ui/core/Tooltip"
-import { FormControlLabel, FormGroup, Switch } from "@material-ui/core"
+import React, { memo, useState } from "react"
 import DeviceList from "../RegionLabel/DeviceList"
-import { action } from "@storybook/addon-actions"
+import SidebarBoxContainer from "../SidebarBoxContainer"
+import styles from "./styles"
 
 const useStyles = makeStyles(styles)
 
@@ -172,16 +167,20 @@ export const RegionSelectorSidebarBox = ({
   onPanToRegion,
 }) => {
   const classes = useStyles()
+
+  // Filter regions to only include those of type "line"
+  const lineRegions = regions.filter(r => r.type === "line")
+
   return (
     <SidebarBoxContainer
-      title="Regions"
+      title="Linear Measurements"
       subTitle=""
-      icon={<RegionIcon style={{ color: "white" }} />}
+      icon={<LinearScaleIcon style={{ color: "white" }} />}
     >
       <div className={classes.container}>
         <MemoRowHeader />
         <HeaderSep />
-        {regions.map((r, i) => (
+        {lineRegions.map((r, i) => (
           <MemoRow
             key={r.id}
             {...r}
