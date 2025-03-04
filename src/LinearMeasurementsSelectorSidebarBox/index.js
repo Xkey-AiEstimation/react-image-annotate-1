@@ -19,6 +19,12 @@ import CenterFocusStrongIcon from '@material-ui/icons/CenterFocusStrong';
 import styles from "./styles"
 import Tooltip from "@material-ui/core/Tooltip"
 import { zIndices } from "../Annotator/constants"
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
+import ExpandLessIcon from '@material-ui/icons/ExpandLess'
+import IconButton from '@material-ui/core/IconButton'
+import Collapse from '@material-ui/core/Collapse'
+import List from '@material-ui/core/List'
+import Typography from '@material-ui/core/Typography'
 const useStyles = makeStyles(styles)
 
 const HeaderSep = styled("div")({
@@ -45,9 +51,9 @@ const Chip = ({ color, text }) => {
     >
       <span className={classes.chip}>
         <div className="color" style={{ backgroundColor: color }} />
-        <div className="text" style={{ 
-          whiteSpace: "nowrap", 
-          overflow: "hidden", 
+        <div className="text" style={{
+          whiteSpace: "nowrap",
+          overflow: "hidden",
           textOverflow: "ellipsis",
           maxWidth: "100%"
         }}>
@@ -149,8 +155,8 @@ const Row = ({
       classification={<Chip text={cls || ""} color={color || "#ddd"} />}
       length={<div style={{ textAlign: "center", fontWeight: "500" }}>{lengthValue} ft</div>}
       area={
-        <Tooltip 
-          title="Locate" 
+        <Tooltip
+          title="Locate"
           placement="top"
           PopperProps={{
             style: {
@@ -162,7 +168,7 @@ const Row = ({
           }}
           arrow
         >
-          <CenterFocusStrongIcon 
+          <CenterFocusStrongIcon
             className="icon"
             onClick={(e) => {
               e.stopPropagation();
@@ -175,8 +181,8 @@ const Row = ({
         </Tooltip>
       }
       trash={
-        <Tooltip 
-          title="Delete Line" 
+        <Tooltip
+          title="Delete Line"
           placement="top"
           PopperProps={{
             style: {
@@ -193,15 +199,15 @@ const Row = ({
             onClick={(e) => {
               e.stopPropagation();
               onDeleteRegion(r);
-            }} 
-            className="icon2" 
+            }}
+            className="icon2"
           />
         </Tooltip>
       }
       lock={
         r.locked ? (
-          <Tooltip 
-            title="Unlock" 
+          <Tooltip
+            title="Unlock"
             placement="top"
             PopperProps={{
               style: {
@@ -222,8 +228,8 @@ const Row = ({
             />
           </Tooltip>
         ) : (
-          <Tooltip 
-            title="Lock" 
+          <Tooltip
+            title="Lock"
             placement="top"
             PopperProps={{
               style: {
@@ -247,8 +253,8 @@ const Row = ({
       }
       visible={
         r.visible || r.visible === undefined ? (
-          <Tooltip 
-            title="Hide" 
+          <Tooltip
+            title="Hide"
             placement="top"
             PopperProps={{
               style: {
@@ -269,8 +275,8 @@ const Row = ({
             />
           </Tooltip>
         ) : (
-          <Tooltip 
-            title="Show" 
+          <Tooltip
+            title="Show"
             placement="top"
             PopperProps={{
               style: {
@@ -310,6 +316,163 @@ const MemoRow = memo(
 
 const emptyArr = []
 
+const ScalesSection = ({
+  regions,
+  onDeleteRegion,
+}) => {
+  const classes = useStyles()
+  const [expanded, setExpanded] = useState(true)
+
+  const scaleRegions = regions.filter(r => r.type === "scale")
+
+  return (
+    <div>
+      <div
+        className={classes.sectionHeader}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <Grid container alignItems="center" spacing={1}>
+          <Grid item>
+            <IconButton
+              size="small"
+              className={classes.expandIcon}
+              onClick={(e) => {
+                e.stopPropagation()
+                setExpanded(!expanded)
+              }}
+            >
+              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Grid>
+          <Grid item xs>
+            <div className={classes.sectionTitle}>
+              Scales ({scaleRegions.length})
+            </div>
+          </Grid>
+        </Grid>
+      </div>
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <List className={classes.nestedList} disablePadding>
+          {scaleRegions.length === 0 ? (
+            <Typography className={classes.emptyMessage}>
+              No scales added yet
+            </Typography>
+          ) : (
+            scaleRegions.map((r, i) => (
+              <div key={r.id} className={classes.scaleRow}>
+                <Grid container alignItems="center" spacing={1}>
+                  <Grid item xs={3}>
+                    <Typography className={classes.scaleNumber}>
+                      Scale #{i + 1}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography className={classes.scaleLength}>
+                      {r.length ? `${r.length} ft` : "0 ft"}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={3} style={{ textAlign: "right" }}>
+                    <Tooltip
+                      title="Delete Scale"
+                      placement="top"
+                      PopperProps={{
+                        style: {
+                          zIndex: zIndices.tooltip
+                        }
+                      }}
+                      classes={{
+                        tooltip: classes.tooltipRoot
+                      }}
+                      arrow
+                    >
+                      <IconButton
+                        size="small"
+                        className={classes.actionIcon}
+                        onClick={() => onDeleteRegion(r)}
+                      >
+                        <TrashIcon
+                          style={{
+                            color: "rgb(245, 0, 87)",
+                            fontSize: 14
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  </Grid>
+                </Grid>
+              </div>
+            ))
+          )}
+        </List>
+      </Collapse>
+    </div>
+  )
+}
+
+const LinesSection = ({
+  regions,
+  onSelectRegion,
+  onDeleteRegion,
+  onChangeRegion,
+  onPanToRegion,
+}) => {
+  const classes = useStyles()
+  const [expanded, setExpanded] = useState(true)
+
+  return (
+    <div>
+      <div
+        className={classes.sectionHeader}
+        onClick={() => setExpanded(!expanded)}
+      >
+        <Grid container alignItems="center" spacing={1}>
+          <Grid item>
+            <IconButton
+              size="small"
+              className={classes.expandIcon}
+              onClick={(e) => {
+                e.stopPropagation()
+                setExpanded(!expanded)
+              }}
+            >
+              {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          </Grid>
+          <Grid item xs>
+            <div className={classes.sectionTitle}>
+              Conduits/Lines/Wires ({regions.length})
+            </div>
+          </Grid>
+        </Grid>
+      </div>
+      <Collapse in={expanded} timeout="auto" unmountOnExit>
+        {regions.length === 0 ? (
+          <Typography className={classes.emptyMessage}>
+            No linear measurements added yet
+          </Typography>
+        ) : (
+          <>
+            <MemoRowHeader />
+            <HeaderSep />
+            {regions.map((r, i) => (
+              <MemoRow
+                key={r.id}
+                {...r}
+                region={r}
+                index={i}
+                onSelectRegion={onSelectRegion}
+                onDeleteRegion={onDeleteRegion}
+                onChangeRegion={onChangeRegion}
+                onPanToRegion={onPanToRegion}
+              />
+            ))}
+          </>
+        )}
+      </Collapse>
+    </div>
+  )
+}
+
 export const LinearMeasurementsSelectorSidebarBox = ({
   regions = emptyArr,
   onDeleteRegion,
@@ -318,9 +481,6 @@ export const LinearMeasurementsSelectorSidebarBox = ({
   onPanToRegion,
 }) => {
   const classes = useStyles()
-
-
-  // Filter regions to only include those of type "line"
   const lineRegions = regions.filter(r => r.type === "line")
 
   return (
@@ -331,20 +491,18 @@ export const LinearMeasurementsSelectorSidebarBox = ({
       expandedByDefault
     >
       <div className={classes.container}>
-        <MemoRowHeader />
+        <ScalesSection
+          regions={regions}
+          onDeleteRegion={onDeleteRegion}
+        />
         <HeaderSep />
-        {lineRegions.map((r, i) => (
-          <MemoRow
-            key={r.id}
-            {...r}
-            region={r}
-            index={i}
-            onSelectRegion={onSelectRegion}
-            onDeleteRegion={onDeleteRegion}
-            onChangeRegion={onChangeRegion}
-            onPanToRegion={onPanToRegion}
-          />
-        ))}
+        <LinesSection
+          regions={lineRegions}
+          onSelectRegion={onSelectRegion}
+          onDeleteRegion={onDeleteRegion}
+          onChangeRegion={onChangeRegion}
+          onPanToRegion={onPanToRegion}
+        />
       </div>
     </SidebarBoxContainer>
   )

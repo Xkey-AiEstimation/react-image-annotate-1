@@ -283,6 +283,16 @@ const onPanToRegion = useEventCallback((region) => {
   })
 })
 
+const annotationCountSidebarBoxRegions = useMemo(() => {
+  const regions = activeImage ? activeImage.regions : emptyArr
+  return regions.filter(r =>  r.type !== "scale")
+}, [activeImage])
+
+const linearMeasurementsSidebarBoxRegions = useMemo(() => {
+  const regions = activeImage ? activeImage.regions : emptyArr
+  return regions.filter(r => r.type === "line" || r.type === "scale")
+}, [activeImage])
+
 return (
   <FullScreenContainer>
     <FullScreen
@@ -524,7 +534,7 @@ return (
             )}
 
             <AnnotationCountSidebarBox
-              regions={activeImage ? activeImage.regions : emptyArr}
+              regions={annotationCountSidebarBoxRegions}
               onToggleDevice={action(
                 "TOGGLE_DEVICE_VISIBILITY",
                 "deviceName"
@@ -548,7 +558,7 @@ return (
               onPanToRegion={onPanToRegion}
             />
             <LinearMeasurementsSelector
-              regions={activeImage ? activeImage.regions : emptyArr}
+              regions={linearMeasurementsSidebarBoxRegions}
               onSelectRegion={action("SELECT_REGION", "region")}
               onDeleteRegion={action("DELETE_REGION", "region")}
               onChangeRegion={action("CHANGE_REGION", "region")}
