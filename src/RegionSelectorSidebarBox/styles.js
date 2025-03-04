@@ -1,4 +1,4 @@
-import { grey, blue, orange, purple } from "@material-ui/core/colors"
+import { grey } from "@material-ui/core/colors"
 
 export default {
   container: {
@@ -26,13 +26,15 @@ export default {
     cursor: "pointer",
     "&.header:hover": {
       backgroundColor: "#fff",
+      color: "white",
     },
     "&.highlighted": {
-      backgroundColor: blue[100],
+      backgroundColor: grey[100],
+      color: "white",
     },
     "&:hover": {
-      backgroundColor: blue[50],
-      color: grey[800],
+      backgroundColor: grey[50],
+      color: "white",
     },
   },
   chip: {
@@ -50,5 +52,13 @@ export default {
       marginRight: 4,
     },
     "& .text": {},
+  },
+  tooltipRoot: {
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    color: "white",
+    fontSize: 12,
+    padding: "8px 12px",
+    maxWidth: 300,
+    border: "1px solid rgba(255, 255, 255, 0.2)",
   },
 }

@@ -15,8 +15,10 @@ import isEqual from "lodash/isEqual"
 import React, { memo, useState } from "react"
 import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
+import CenterFocusStrongIcon from '@material-ui/icons/CenterFocusStrong';
 import styles from "./styles"
-
+import Tooltip from "@material-ui/core/Tooltip"
+import { zIndices } from "../Annotator/constants"
 const useStyles = makeStyles(styles)
 
 const HeaderSep = styled("div")({
@@ -30,10 +32,29 @@ const DEVICE_LIST = [...new Set(DeviceList.map((item) => item.category))]
 const Chip = ({ color, text }) => {
   const classes = useStyles()
   return (
-    <span className={classes.chip}>
-      <div className="color" style={{ backgroundColor: color }} />
-      <div className="text">{text}</div>
-    </span>
+    <Tooltip title={text || ""} placement="top"
+      PopperProps={{
+        style: {
+          zIndex: zIndices.tooltip
+        }
+      }}
+      classes={{
+        tooltip: classes.tooltipRoot
+      }}
+      arrow
+    >
+      <span className={classes.chip}>
+        <div className="color" style={{ backgroundColor: color }} />
+        <div className="text" style={{ 
+          whiteSpace: "nowrap", 
+          overflow: "hidden", 
+          textOverflow: "ellipsis",
+          maxWidth: "100%"
+        }}>
+          {text}
+        </div>
+      </span>
+    </Tooltip>
   )
 }
 
@@ -42,8 +63,9 @@ const RowLayout = ({
   highlighted,
   order,
   classification,
-  tags,
+  length,
   trash,
+  area,
   onClick,
   onPanToRegion,
   region,
@@ -57,14 +79,20 @@ const RowLayout = ({
       onMouseLeave={() => changeMouseOver(false)}
       className={classnames(classes.row, { header, highlighted })}
     >
-      <Grid container>
-        <Grid item xs={2}>
-          <div style={{ textAlign: "right", paddingRight: 10 }}>{order}</div>
+      <Grid container alignItems="center" spacing={1}>
+        <Grid item xs={1}>
+          <div style={{ textAlign: "right" }}>{order}</div>
         </Grid>
         <Grid item xs={7}>
           {classification}
         </Grid>
-        <Grid item xs={3}>
+        <Grid item xs={2}>
+          {length}
+        </Grid>
+        <Grid item xs={1}>
+          {area}
+        </Grid>
+        <Grid item xs={1}>
           {trash}
         </Grid>
       </Grid>
@@ -79,7 +107,8 @@ const RowHeader = ({ }) => {
       highlighted={false}
       order={<ReorderIcon className="icon" />}
       classification={<div style={{ paddingLeft: 10 }}>Class</div>}
-      area={<PieChartIcon className="icon" />}
+      length={<div style={{ textAlign: "center" }}>Length</div>}
+      area={<CenterFocusStrongIcon className="icon" />}
       trash={<TrashIcon className="icon" />}
       lock={<LockIcon className="icon" />}
     />
@@ -101,6 +130,11 @@ const Row = ({
   cls,
   index,
 }) => {
+  // Use the existing length_ft property with optional chaining
+  const lengthValue = r?.length_ft ? r.length_ft.toString() : "0";
+
+  const classes = useStyles()
+
   return (
     <RowLayout
       header={false}
@@ -112,33 +146,150 @@ const Row = ({
       onPanToRegion={onPanToRegion}
       region={r}
       order={`#${index + 1}`}
-      classification={< Chip text={cls || ""} color={color || "#ddd"} />}
-      area=""
-      trash={< TrashIcon onClick={() => onDeleteRegion(r)} className="icon2" />}
+      classification={<Chip text={cls || ""} color={color || "#ddd"} />}
+      length={<div style={{ textAlign: "center", fontWeight: "500" }}>{lengthValue}</div>}
+      area={
+        <Tooltip 
+          title="Locate" 
+          placement="top"
+          PopperProps={{
+            style: {
+              zIndex: zIndices.tooltip
+            }
+          }}
+          classes={{
+            tooltip: classes.tooltipRoot
+          }}
+          arrow
+        >
+          <CenterFocusStrongIcon 
+            className="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              onPanToRegion(r);
+            }}
+            style={{
+              color: "#3CD2BC",
+            }}
+          />
+        </Tooltip>
+      }
+      trash={
+        <Tooltip 
+          title="Delete Line" 
+          placement="top"
+          PopperProps={{
+            style: {
+              zIndex: zIndices.tooltip
+            }
+          }}
+          classes={{
+            tooltip: classes.tooltipRoot
+          }}
+          arrow
+        >
+          <TrashIcon
+            style={{ color: "red" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDeleteRegion(r);
+            }} 
+            className="icon2" 
+          />
+        </Tooltip>
+      }
       lock={
         r.locked ? (
-          <LockIcon
-            onClick={() => onChangeRegion({ ...r, locked: false })}
-            className="icon2"
-          />
+          <Tooltip 
+            title="Unlock" 
+            placement="top"
+            PopperProps={{
+              style: {
+                zIndex: zIndices.tooltip
+              }
+            }}
+            classes={{
+              tooltip: classes.tooltipRoot
+            }}
+            arrow
+          >
+            <LockIcon
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeRegion({ ...r, locked: false });
+              }}
+              className="icon2"
+            />
+          </Tooltip>
         ) : (
-          <UnlockIcon
-            onClick={() => onChangeRegion({ ...r, locked: true })}
-            className="icon2"
-          />
+          <Tooltip 
+            title="Lock" 
+            placement="top"
+            PopperProps={{
+              style: {
+                zIndex: zIndices.tooltip
+              }
+            }}
+            classes={{
+              tooltip: classes.tooltipRoot
+            }}
+            arrow
+          >
+            <UnlockIcon
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeRegion({ ...r, locked: true });
+              }}
+              className="icon2"
+            />
+          </Tooltip>
         )
       }
       visible={
         r.visible || r.visible === undefined ? (
-          <VisibleIcon
-            onClick={() => onChangeRegion({ ...r, visible: false })}
-            className="icon2"
-          />
+          <Tooltip 
+            title="Hide" 
+            placement="top"
+            PopperProps={{
+              style: {
+                zIndex: zIndices.tooltip
+              }
+            }}
+            classes={{
+              tooltip: classes.tooltipRoot
+            }}
+            arrow
+          >
+            <VisibleIcon
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeRegion({ ...r, visible: false });
+              }}
+              className="icon2"
+            />
+          </Tooltip>
         ) : (
-          <VisibleOffIcon
-            onClick={() => onChangeRegion({ ...r, visible: true })}
-            className="icon2"
-          />
+          <Tooltip 
+            title="Show" 
+            placement="top"
+            PopperProps={{
+              style: {
+                zIndex: zIndices.tooltip
+              }
+            }}
+            classes={{
+              tooltip: classes.tooltipRoot
+            }}
+            arrow
+          >
+            <VisibleOffIcon
+              onClick={(e) => {
+                e.stopPropagation();
+                onChangeRegion({ ...r, visible: true });
+              }}
+              className="icon2"
+            />
+          </Tooltip>
         )
       }
     />
@@ -168,6 +319,7 @@ export const RegionSelectorSidebarBox = ({
 }) => {
   const classes = useStyles()
 
+
   // Filter regions to only include those of type "line"
   const lineRegions = regions.filter(r => r.type === "line")
 
@@ -176,6 +328,7 @@ export const RegionSelectorSidebarBox = ({
       title="Linear Measurements"
       subTitle=""
       icon={<LinearScaleIcon style={{ color: "white" }} />}
+      expandedByDefault
     >
       <div className={classes.container}>
         <MemoRowHeader />

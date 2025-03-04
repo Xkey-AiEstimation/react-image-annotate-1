@@ -80,6 +80,16 @@ const useStyles = makeStyles({
     textOverflow: "ellipsis",
     maxWidth: "calc(100% - 80px)",
   },
+  locationIcon: {
+    padding: 2,
+    width: 18,
+    height: 18,
+    color: "#3CD2BC",
+    marginLeft: 2,
+    "& svg": {
+      fontSize: 14,
+    }
+  },
   actionIcon: {
     padding: 2,
     width: 18,
@@ -557,13 +567,13 @@ export const AnnotationCountSidebarBox = ({
     // Check if the device exists in the device list
     const device = deviceList.find(d => d.symbol_name === deviceName);
 
-    // Check if any regions with this device name are lines
-    const hasLineRegions = regions.some(r => r.cls === deviceName && r.type === "line");
+    // WE DONT NEED TO CHECK FOR LINES BECAUSE WE ARE EDITING ANY DEVICE
+    // const hasLineRegions = regions.some(r => r.cls === deviceName && r.type === "line");
 
     // Only allow editing if:
     // 1. It's a line region, AND
     // 2. Either it's not in the device list OR it has user_defined=true
-    return hasLineRegions && (!device || device.user_defined === true);
+    return (!device || device.user_defined === true);
   };
 
   // useEffect(() => {
@@ -634,18 +644,27 @@ export const AnnotationCountSidebarBox = ({
           </div>
 
           <ListItemSecondaryAction>
-            <IconButton
-              edge="end"
-              size="small"
-              onClick={() => onDeleteAll()}
-              className={classes.actionIcon}
+            <Tooltip
+              title="Delete all devices"
+              placement="top"
+              PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+              classes={{ tooltip: classes.tooltipRoot }}
+              arrow
             >
-              <TrashIcon
-                style={{
-                  color: "rgb(245, 0, 87)",
-                }}
-              />
-            </IconButton>
+
+              <IconButton
+                edge="end"
+                size="small"
+                onClick={() => onDeleteAll()}
+                className={classes.actionIcon}
+              >
+                <TrashIcon
+                  style={{
+                    color: "rgb(245, 0, 87)",
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
           </ListItemSecondaryAction>
         </ListItem>
 
@@ -796,9 +815,7 @@ export const AnnotationCountSidebarBox = ({
                           <Tooltip
                             title={isUserDefinedDevice(deviceName)
                               ? "Edit Device Name (Applies to all instances of this device)"
-                              : regions.some(r => r.cls === deviceName && r.type === "line")
-                                ? "Only user-defined line devices can be edited"
-                                : "Only line devices can be edited"}
+                              : "Only user-defined devices can be edited"}
                             PopperProps={{ style: { zIndex: zIndices.tooltip } }}
                             classes={{ tooltip: classes.tooltipRoot }}
                             arrow
@@ -823,18 +840,25 @@ export const AnnotationCountSidebarBox = ({
                               </IconButton>
                             </span>
                           </Tooltip>
-
-                          <IconButton
-                            size="small"
-                            onClick={(e) => { e.stopPropagation(); onDelete(deviceName); }}
-                            className={classes.actionIcon}
+                          <Tooltip
+                            title="Delete all instances of this device"
+                            placement="top"
+                            PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                            classes={{ tooltip: classes.tooltipRoot }}
+                            arrow
                           >
-                            <TrashIcon
-                              style={{
-                                color: "rgb(245, 0, 87)",
-                              }}
-                            />
-                          </IconButton>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => { e.stopPropagation(); onDelete(deviceName); }}
+                              className={classes.actionIcon}
+                            >
+                              <TrashIcon
+                                style={{
+                                  color: "rgb(245, 0, 87)",
+                                }}
+                              />
+                            </IconButton>
+                          </Tooltip>
                         </div>
                       </ListItem>
 
@@ -895,7 +919,7 @@ export const AnnotationCountSidebarBox = ({
                                 >
                                   <span>
                                     <IconButton
-                                      className={classes.actionIcon}
+                                      className={classes.locationIcon}
                                       onClick={(e) => { e.stopPropagation(); handlePanToRegion(region, e); }}
                                       size="small"
                                     >
@@ -1061,7 +1085,7 @@ export const AnnotationCountSidebarBox = ({
                       >
                         <span>
                           <IconButton
-                            className={classes.actionIcon}
+                            className={classes.locationIcon}
                             onClick={(e) => { e.stopPropagation(); handlePanToRegion(regionsByDevice[deviceName][0], e); }}
                             size="small"
                           >
