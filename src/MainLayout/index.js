@@ -502,29 +502,6 @@ return (
               categoriesColorMap={state.categoriesColorMap}
             />
 
-            <AnnotationCountSidebarBox
-              regions={activeImage ? activeImage.regions : emptyArr}
-              onToggleDevice={action(
-                "TOGGLE_DEVICE_VISIBILITY",
-                "deviceName"
-              )}
-              onDeleteDevices={action(
-                "DELETE_DEVICES_WITH_DEVICENAME",
-                "deviceName"
-              )}
-              onAddDeviceOldDeviceToList={action(
-                "ADD_OLD_DEVICE_TO_NEW_DEVICES",
-                "device"
-              )}
-              onDeleteAll={action("DELETE_ALL_DEVICES")}
-              selectedDeviceToggle={state.selectedDeviceToggle}
-              deviceList={state.deviceList}
-              onSelectRegion={action("SELECT_REGION", "region")}
-              onDeleteRegion={action("DELETE_REGION", "region")}
-              onChangeRegion={action("CHANGE_REGION", "region")}
-              onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
-              onPanToRegion={onPanToRegion}
-            />
             {!isBreakoutDisabled && (
               <BreakoutSidebarBox
                 regions={activeImage ? activeImage.regions : emptyArr}
@@ -545,6 +522,31 @@ return (
                 breakouts={state.breakouts}
               />
             )}
+
+            <AnnotationCountSidebarBox
+              regions={activeImage ? activeImage.regions : emptyArr}
+              onToggleDevice={action(
+                "TOGGLE_DEVICE_VISIBILITY",
+                "deviceName"
+              )}
+              onDeleteDevices={action(
+                "DELETE_DEVICES_WITH_DEVICENAME",
+                "deviceName"
+              )}
+              onAddDeviceOldDeviceToList={action(
+                "ADD_OLD_DEVICE_TO_NEW_DEVICES",
+                "device"
+              )}
+              onDeleteAll={action("DELETE_ALL_DEVICES")}
+              selectedDeviceToggle={state.selectedDeviceToggle}
+              deviceList={state.deviceList}
+              onSelectRegion={action("SELECT_REGION", "region")}
+              onDeleteRegion={action("DELETE_REGION", "region")}
+              onChangeRegion={action("CHANGE_REGION", "region")}
+              onChangeDeviceName={action("CHANGE_DEVICE_NAME", "oldName", "newName")}
+              onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
+              onPanToRegion={onPanToRegion}
+            />
             <RegionSelector
               regions={activeImage ? activeImage.regions : emptyArr}
               onSelectRegion={action("SELECT_REGION", "region")}

@@ -59,3 +59,13 @@ export const AIE_CATEGORIES = [
 
 export const defaultColor = "#C4A484"
 export const defaultSystem = "NOT CLASSIFIED"
+
+
+export const absoluteMaxZIndex = 2147483647;
+
+export const zIndices = {
+  tooltip: 2100000001,
+  sidebar: 2100000000,
+  modal: 2100000003,
+  backdrop: 2100000002
+};

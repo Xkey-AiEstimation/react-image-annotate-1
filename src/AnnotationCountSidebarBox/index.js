@@ -28,6 +28,7 @@ import Visibility from "@material-ui/icons/Visibility"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
 import React, { memo, useMemo, useState } from "react"
+import { zIndices } from "../Annotator/constants"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 
 const useStyles = makeStyles({
@@ -78,6 +79,16 @@ const useStyles = makeStyles({
     overflow: "hidden",
     textOverflow: "ellipsis",
     maxWidth: "calc(100% - 80px)",
+  },
+  locationIcon: {
+    padding: 2,
+    width: 18,
+    height: 18,
+    color: "#3CD2BC",
+    marginLeft: 2,
+    "& svg": {
+      fontSize: 14,
+    }
   },
   actionIcon: {
     padding: 2,
@@ -243,6 +254,8 @@ const useStyles = makeStyles({
   },
 })
 
+const ALL_DEVICES_TOGGLE_KEY = "ALL"
+
 export const AnnotationCountSidebarBox = ({
   regions,
   onToggleDevice,
@@ -254,6 +267,7 @@ export const AnnotationCountSidebarBox = ({
   onSelectRegion,
   onDeleteRegion,
   onChangeRegion,
+  onChangeDeviceName,
   onPanToRegion,
 }) => {
   const classes = useStyles()
@@ -261,10 +275,12 @@ export const AnnotationCountSidebarBox = ({
   const [expandedDevices, setExpandedDevices] = useState({})
   const [expandedCategories, setExpandedCategories] = useState({})
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
-  const [bulkEditCategory, setBulkEditCategory] = useState("")
-  const [bulkEditNewName, setBulkEditNewName] = useState("")
+  const [deviceToEdit, setDeviceToEdit] = useState("")
+  const [newDeviceName, setNewDeviceName] = useState("")
   const [expandedTypes, setExpandedTypes] = useState({})
   const [expandedDeviceGroups, setExpandedDeviceGroups] = useState({})
+  const [nameError, setNameError] = useState("")
+  const [allDevicesExpanded, setAllDevicesExpanded] = useState(false)
 
   // Toggle expansion state for a device
   const toggleDeviceExpand = (deviceName, event) => {
@@ -304,42 +320,85 @@ export const AnnotationCountSidebarBox = ({
   };
 
   // Open bulk edit dialog
-  const openBulkEditDialog = (category, event) => {
-    event.stopPropagation()
-    setBulkEditCategory(category)
-    setBulkEditNewName("")
-    setBulkEditDialogOpen(true)
+  const openBulkEditDialog = (deviceName, e) => {
+    if (e) e.stopPropagation();
+    setDeviceToEdit(deviceName);
+    setNewDeviceName("");
+    setNameError("");
+    setBulkEditDialogOpen(true);
   }
+
+  // Add validation function to check for duplicate names in the same category
+  const validateDeviceName = (newName) => {
+    if (!newName.trim()) {
+      setNameError("Device name cannot be empty");
+      return false;
+    }
+
+    // Find the original device to get its category
+    const originalDevice = deviceList.find(d => d.symbol_name === deviceToEdit);
+    const category = originalDevice ? originalDevice.category : "User Defined";
+
+    // Check if there's already a device with this name in the same category
+    const existingDevice = deviceList.find(d =>
+      d.symbol_name === newName &&
+      d.category === category &&
+      d.symbol_name !== deviceToEdit // Exclude the current device being edited
+    );
+
+    if (existingDevice) {
+      setNameError(`A device named "${newName}" already exists in the "${category}" category`);
+      return false;
+    }
+
+    // Clear any previous errors
+    setNameError("");
+    return true;
+  };
 
   // Handle bulk edit submission
   const handleBulkEdit = () => {
-    // Get all regions with the selected category
-    const regionsToEdit = regions.filter(r => 
-      (bulkEditCategory === "Uncategorized" && !r.category) || 
-      r.category === bulkEditCategory
-    );
-    
-    if (regionsToEdit.length === 0) {
+    if (!validateDeviceName(newDeviceName)) {
+      return; // Don't proceed if validation fails
+    }
+
+    if (!deviceToEdit || !newDeviceName.trim()) {
       setBulkEditDialogOpen(false);
       return;
     }
-    
-    // Update each region with the new name
-    regionsToEdit.forEach(region => {
-      if (onChangeRegion) {
-        onChangeRegion({
-          ...region,
-          cls: bulkEditNewName
-        });
-      }
-    });
-    
-    // Close the dialog
+
+    // Use the CHANGE_DEVICE_NAME action to update all instances
+    if (onChangeDeviceName) {
+      onChangeDeviceName(deviceToEdit, newDeviceName);
+    }
+
+    // Add the new device to the device list if it's not already there
+    if (onAddDeviceOldDeviceToList) {
+      // Find the original device to get its category
+      const originalDevice = deviceList.find(d => d.symbol_name === deviceToEdit);
+
+      // Create a new device entry, preserving the category if it exists
+      const newDevice = {
+        symbol_name: newDeviceName,
+        category: originalDevice ? originalDevice.category : "User Defined", // Preserve the category
+        user_defined: true, // Set the user_defined flag
+        // Copy any other properties from the original device
+        ...(originalDevice && {
+          // Spread other properties except symbol_name which we're changing
+          ...Object.fromEntries(
+            Object.entries(originalDevice)
+              .filter(([key]) => key !== 'symbol_name')
+          )
+        })
+      };
+
+      onAddDeviceOldDeviceToList(newDevice);
+    }
+
+    // Close the dialog and reset form
     setBulkEditDialogOpen(false);
-    
-    // Reset the form
-    setBulkEditNewName("");
-  }
+    setNewDeviceName("");
+  };
 
   const counts = useMemo(() => {
     return regions.reduce(
@@ -446,7 +505,19 @@ export const AnnotationCountSidebarBox = ({
 
   const handlePanToRegion = (region, e) => {
     if (e) e.stopPropagation();
-    if (onPanToRegion) onPanToRegion(region);
+
+    // If the device is not visible, make it visible first
+    if (region.cls && selectedDeviceToggle !== region.cls) {
+      // Toggle visibility to make it visible
+      if (onToggleDevice) {
+        onToggleDevice(ALL_DEVICES_TOGGLE_KEY);
+      }
+    }
+
+    // Then pan to the region
+    if (onPanToRegion) {
+      onPanToRegion(region);
+    }
   }
 
   const handleSelectRegion = (region, e) => {
@@ -491,6 +562,35 @@ export const AnnotationCountSidebarBox = ({
     }, {});
   }, [regions]);
 
+  // First, let's update the function to check if a device is user-defined and is a line
+  const isUserDefinedDevice = (deviceName) => {
+    // Check if the device exists in the device list
+    const device = deviceList.find(d => d.symbol_name === deviceName);
+
+    // WE DONT NEED TO CHECK FOR LINES BECAUSE WE ARE EDITING ANY DEVICE
+    // const hasLineRegions = regions.some(r => r.cls === deviceName && r.type === "line");
+
+    // Only allow editing if:
+    // 1. It's a line region, AND
+    // 2. Either it's not in the device list OR it has user_defined=true
+    return (!device || device.user_defined === true);
+  };
+
+  // useEffect(() => {
+  //   // Add a style tag to ensure MUI tooltips have high z-index
+  //   const styleTag = document.createElement('style');
+  //   styleTag.innerHTML = `
+  //     .MuiPopover-root, .MuiTooltip-popper {
+  //       z-index: ${zIndices.tooltip} !important;
+  //     }
+  //   `;
+  //   document.head.appendChild(styleTag);
+
+  //   return () => {
+  //     document.head.removeChild(styleTag);
+  //   };
+  // }, []);
+
   return (
     <SidebarBoxContainer
       title="Device Counts"
@@ -501,12 +601,12 @@ export const AnnotationCountSidebarBox = ({
         <ListItem
           className={classes.deviceItem}
           button
-          onClick={() => onToggle("ALL")}
+          onClick={() => onToggle(ALL_DEVICES_TOGGLE_KEY)}
         >
           <Tooltip
             title="Toggle all devices"
             placement="top"
-            PopperProps={{ style: { zIndex: 9999999 } }}
+            PopperProps={{ style: { zIndex: zIndices.tooltip } }}
             classes={{
               tooltip: classes.tooltipRoot
             }}
@@ -515,11 +615,14 @@ export const AnnotationCountSidebarBox = ({
             <IconButton
               edge="start"
               size="small"
+              style={{
+                marginLeft: 8,
+              }}
               className={classes.actionIcon}
             >
               <Visibility
                 style={{
-                  color: selectedDeviceToggle === "ALL" ? "green" : "white",
+                  color: selectedDeviceToggle === ALL_DEVICES_TOGGLE_KEY ? "green" : "white",
                 }}
               />
             </IconButton>
@@ -527,7 +630,7 @@ export const AnnotationCountSidebarBox = ({
 
           <div className={classes.deviceHeader}>
             <Typography className={classes.deviceName}>
-              All Devices
+              Show All Devices
             </Typography>
             <Typography className={classes.deviceCount}>
               Total: {
@@ -541,18 +644,27 @@ export const AnnotationCountSidebarBox = ({
           </div>
 
           <ListItemSecondaryAction>
-            <IconButton
-              edge="end"
-              size="small"
-              onClick={() => onDeleteAll()}
-              className={classes.actionIcon}
+            <Tooltip
+              title="Delete all devices"
+              placement="top"
+              PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+              classes={{ tooltip: classes.tooltipRoot }}
+              arrow
             >
-              <TrashIcon
-                style={{
-                  color: "rgb(245, 0, 87)",
-                }}
-              />
-            </IconButton>
+
+              <IconButton
+                edge="end"
+                size="small"
+                onClick={() => onDeleteAll()}
+                className={classes.actionIcon}
+              >
+                <TrashIcon
+                  style={{
+                    color: "rgb(245, 0, 87)",
+                  }}
+                />
+              </IconButton>
+            </Tooltip>
           </ListItemSecondaryAction>
         </ListItem>
 
@@ -576,21 +688,6 @@ export const AnnotationCountSidebarBox = ({
 
               <div style={{ flexGrow: 1 }} />
 
-              <Tooltip
-                title="Bulk edit devices in this category"
-                PopperProps={{ style: { zIndex: 9999999999 } }}
-                classes={{ tooltip: classes.tooltipRoot }}
-                arrow
-              >
-                <IconButton
-                  size="small"
-                  className={classnames(classes.actionIcon, classes.bulkEditIcon)}
-                  onClick={(e) => { e.stopPropagation(); openBulkEditDialog(category, e); }}
-                  style={{ zIndex: 9999 }}
-                >
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
 
               <IconButton
                 size="small"
@@ -621,9 +718,9 @@ export const AnnotationCountSidebarBox = ({
                         onClick={(e) => toggleDeviceGroupExpand(category, deviceName, e)}
                       >
                         <Tooltip
-                          title="Toggle device visibility"
+                          title="Toggle device visibility. Click to show only this device. Unclick to show all devices."
                           placement="top"
-                          PopperProps={{ style: { zIndex: 9999999 } }}
+                          PopperProps={{ style: { zIndex: zIndices.tooltip } }}
                           classes={{
                             tooltip: classes.tooltipRoot
                           }}
@@ -654,7 +751,7 @@ export const AnnotationCountSidebarBox = ({
                               }
                               placement="top"
                               PopperProps={{
-                                style: { zIndex: 9999999 }
+                                style: { zIndex: zIndices.tooltip }
                               }}
                               classes={{
                                 tooltip: classes.tooltipRoot
@@ -676,7 +773,7 @@ export const AnnotationCountSidebarBox = ({
                                       title="This device is not in the device list. Click to add."
                                       placement="top"
                                       PopperProps={{
-                                        style: { zIndex: 9999999 }
+                                        style: { zIndex: zIndices.tooltip }
                                       }}
                                       classes={{
                                         tooltip: classes.tooltipRoot
@@ -715,18 +812,53 @@ export const AnnotationCountSidebarBox = ({
                               <ExpandMoreIcon fontSize="small" />
                             }
                           </IconButton>
-
-                          <IconButton
-                            size="small"
-                            onClick={(e) => { e.stopPropagation(); onDelete(deviceName); }}
-                            className={classes.actionIcon}
+                          <Tooltip
+                            title={isUserDefinedDevice(deviceName)
+                              ? "Edit Device Name (Applies to all instances of this device)"
+                              : "Only user-defined devices can be edited"}
+                            PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                            classes={{ tooltip: classes.tooltipRoot }}
+                            arrow
                           >
-                            <TrashIcon
-                              style={{
-                                color: "rgb(245, 0, 87)",
-                              }}
-                            />
-                          </IconButton>
+                            <span> {/* Wrap in span to ensure tooltip shows when button is disabled */}
+                              <IconButton
+                                size="small"
+                                className={classnames(classes.actionIcon, classes.bulkEditIcon)}
+                                onClick={(e) => {
+                                  if (isUserDefinedDevice(deviceName)) {
+                                    e.stopPropagation();
+                                    openBulkEditDialog(deviceName, e);
+                                  }
+                                }}
+                                style={{
+                                  zIndex: zIndices.tooltip,
+                                  color: isUserDefinedDevice(deviceName) ? "#64b5f6" : "rgba(255,255,255,0.3)"
+                                }}
+                                disabled={!isUserDefinedDevice(deviceName)}
+                              >
+                                <EditIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                          <Tooltip
+                            title="Delete all instances of this device"
+                            placement="top"
+                            PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                            classes={{ tooltip: classes.tooltipRoot }}
+                            arrow
+                          >
+                            <IconButton
+                              size="small"
+                              onClick={(e) => { e.stopPropagation(); onDelete(deviceName); }}
+                              className={classes.actionIcon}
+                            >
+                              <TrashIcon
+                                style={{
+                                  color: "rgb(245, 0, 87)",
+                                }}
+                              />
+                            </IconButton>
+                          </Tooltip>
                         </div>
                       </ListItem>
 
@@ -762,7 +894,7 @@ export const AnnotationCountSidebarBox = ({
                                 }
                                 placement="top"
                                 PopperProps={{
-                                  style: { zIndex: 9999999999 }
+                                  style: { zIndex: zIndices.tooltip }
                                 }}
                                 classes={{
                                   tooltip: classes.tooltipRoot
@@ -778,7 +910,7 @@ export const AnnotationCountSidebarBox = ({
                                 <Tooltip
                                   title="Locate"
                                   PopperProps={{
-                                    style: { zIndex: 9999999999 }
+                                    style: { zIndex: zIndices.tooltip }
                                   }}
                                   classes={{
                                     tooltip: classes.tooltipRoot
@@ -787,7 +919,7 @@ export const AnnotationCountSidebarBox = ({
                                 >
                                   <span>
                                     <IconButton
-                                      className={classes.actionIcon}
+                                      className={classes.locationIcon}
                                       onClick={(e) => { e.stopPropagation(); handlePanToRegion(region, e); }}
                                       size="small"
                                     >
@@ -799,7 +931,7 @@ export const AnnotationCountSidebarBox = ({
                                 <Tooltip
                                   title="Delete"
                                   PopperProps={{
-                                    style: { zIndex: 9999999999 }
+                                    style: { zIndex: zIndices.tooltip }
                                   }}
                                   classes={{
                                     tooltip: classes.tooltipRoot
@@ -829,143 +961,160 @@ export const AnnotationCountSidebarBox = ({
 
         {/* Original device listing - keep for backward compatibility */}
         <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", margin: "8px 0" }} />
-        <Typography style={{ padding: "4px 8px", fontSize: 12, color: "white", opacity: 0.7 }}>
-          All Devices (By Name)
-        </Typography>
+        <React.Fragment>
+          <ListItem
+            button
+            onClick={() => setAllDevicesExpanded(!allDevicesExpanded)}
+            className={classes.categoryHeader}
+            style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", marginTop: 8 }}
+          >
+            <FormatListNumbered className={classes.categoryIcon} />
+            <div style={{ flexGrow: 1 }}>All Devices (By Name)</div>
+            {allDevicesExpanded ? (
+              <ExpandLessIcon className={classes.expandIcon} />
+            ) : (
+              <ExpandMoreIcon className={classes.expandIcon} />
+            )}
+          </ListItem>
 
-        {Object.keys(counts).map((deviceName, i) => (
-          <React.Fragment key={i}>
-            <ListItem
-              button
-              className={classes.deviceItem}
-              onClick={() => onToggle(deviceName)}
-            >
-              <Tooltip
-                title="Toggle device visibility"
-                placement="top"
-                PopperProps={{ style: { zIndex: 9999999 } }}
-                classes={{
-                  tooltip: classes.tooltipRoot
-                }}
-              >
-                <IconButton
-                  edge="start"
-                  size="small"
-                  className={classnames(classes.actionIcon, classes.deviceVisibilityIcon)}
-                >
-                  <Visibility
-                    style={{
-                      color: selectedDeviceToggle === deviceName ? "green" : "white",
-                    }}
-                  />
-                </IconButton>
-              </Tooltip>
-
-              <div className={classes.deviceContent}>
-                <div className={classes.deviceNameRow}>
-                  <Tooltip
-                    title={
-                      <div>
-                        <div><strong>Device Name:</strong> {deviceName}</div>
-                        {deviceList.find(d => d.symbol_name === deviceName) && (
-                          <div><strong>Category:</strong> {deviceList.find(d => d.symbol_name === deviceName).category}</div>
-                        )}
-                      </div>
-                    }
-                    placement="top"
-                    PopperProps={{
-                      style: { zIndex: 9999 }
-                    }}
-                    classes={{
-                      tooltip: classes.tooltipRoot
-                    }}
-                    arrow
-                    enterDelay={100}
-                    leaveDelay={200}
+          <Collapse in={allDevicesExpanded} timeout="auto" unmountOnExit>
+            <List className={classes.listRoot}>
+              {Object.keys(counts).map((deviceName, i) => (
+                <React.Fragment key={i}>
+                  <ListItem
+                    button
+                    className={classes.deviceItem}
+                    onClick={() => onToggle(deviceName)}
                   >
-                    <div style={{ display: 'inline-block' }}>
-                      <Typography
-                        className={classes.deviceName}
-                        style={{
-                          color: clsStatus[deviceName] ? "red" : "#FFFFFF",
+                    <Tooltip
+                      title="Toggle device visibility"
+                      placement="top"
+                      PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                      classes={{
+                        tooltip: classes.tooltipRoot
+                      }}
+                    >
+                      <IconButton
+                        edge="start"
+                        size="small"
+                        className={classnames(classes.actionIcon, classes.deviceVisibilityIcon)}
+                      >
+                        <Visibility
+                          style={{
+                            color: selectedDeviceToggle === deviceName ? "green" : "white",
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+
+                    <div className={classes.deviceContent}>
+                      <div className={classes.deviceNameRow}>
+                        <Tooltip
+                          title={
+                            <div>
+                              <div><strong>Device Name:</strong> {deviceName}</div>
+                              {deviceList.find(d => d.symbol_name === deviceName) && (
+                                <div><strong>Category:</strong> {deviceList.find(d => d.symbol_name === deviceName).category}</div>
+                              )}
+                            </div>
+                          }
+                          placement="top"
+                          PopperProps={{
+                            style: { zIndex: zIndices.tooltip }
+                          }}
+                          classes={{
+                            tooltip: classes.tooltipRoot
+                          }}
+                          arrow
+                          enterDelay={100}
+                          leaveDelay={200}
+                        >
+                          <div style={{ display: 'inline-block' }}>
+                            <Typography
+                              className={classes.deviceName}
+                              style={{
+                                color: clsStatus[deviceName] ? "red" : "#FFFFFF",
+                              }}
+                            >
+                              {deviceName}
+
+                              {clsStatus[deviceName] && (
+                                <Tooltip
+                                  title="This device is not in the device list. Click to add."
+                                  placement="top"
+                                  PopperProps={{
+                                    style: { zIndex: zIndices.tooltip }
+                                  }}
+                                  classes={{
+                                    tooltip: classes.tooltipRoot
+                                  }}
+                                  arrow
+                                >
+                                  <IconButton
+                                    onClick={(e) => onAddDeviceToList(deviceName, e)}
+                                    size="small"
+                                    className={classes.warningIcon}
+                                  >
+                                    <InfoIcon />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Typography>
+                          </div>
+                        </Tooltip>
+                      </div>
+
+                      <div className={classes.deviceCountRow}>
+                        <Typography className={classes.deviceCount}>
+                          Total: {counts[deviceName]}
+                        </Typography>
+                      </div>
+                    </div>
+
+                    <div className={classes.deviceActions}>
+                      <Tooltip
+                        title="Locate"
+                        PopperProps={{
+                          style: { zIndex: zIndices.tooltip }
+                        }}
+                        classes={{
+                          tooltip: classes.tooltipRoot
+                        }}
+                        arrow
+                        enterDelay={100}
+                      >
+                        <span>
+                          <IconButton
+                            className={classes.locationIcon}
+                            onClick={(e) => { e.stopPropagation(); handlePanToRegion(regionsByDevice[deviceName][0], e); }}
+                            size="small"
+                          >
+                            <CenterFocusStrongIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+
+                      <Tooltip
+                        title="Delete"
+                        PopperProps={{
+                          style: { zIndex: zIndices.tooltip }
                         }}
                       >
-                        {deviceName}
-  
-                        {clsStatus[deviceName] && (
-                          <Tooltip
-                            title="This device is not in the device list. Click to add."
-                            placement="top"
-                            PopperProps={{
-                              style: { zIndex: 9999999999 }
-                            }}
-                            classes={{
-                              tooltip: classes.tooltipRoot
-                            }}
-                            arrow
-                          >
-                            <IconButton
-                              onClick={(e) => onAddDeviceToList(deviceName, e)}
-                              size="small"
-                              className={classes.warningIcon}
-                            >
-                              <InfoIcon />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Typography>
+                        <IconButton
+                          className={classes.actionIcon}
+                          onClick={(e) => handleDeleteRegion(regionsByDevice[deviceName][0], e)}
+                          size="small"
+                        >
+                          <TrashIcon fontSize="small" style={{ color: "rgb(245, 0, 87)" }} />
+                        </IconButton>
+                      </Tooltip>
                     </div>
-                  </Tooltip>
-                </div>
-
-                <div className={classes.deviceCountRow}>
-                  <Typography className={classes.deviceCount}>
-                    Total: {counts[deviceName]}
-                  </Typography>
-                </div>
-              </div>
-
-              <div className={classes.deviceActions}>
-                <Tooltip
-                  title="Locate"
-                  PopperProps={{
-                    style: { zIndex: 9999999999 }
-                  }}
-                  classes={{
-                    tooltip: classes.tooltipRoot
-                  }}
-                  arrow
-                  enterDelay={100}
-                >
-                  <span>
-                    <IconButton
-                      className={classes.actionIcon}
-                      onClick={(e) => { e.stopPropagation(); handlePanToRegion(regionsByDevice[deviceName][0], e); }}
-                      size="small"
-                    >
-                      <CenterFocusStrongIcon fontSize="small" />
-                    </IconButton>
-                  </span>
-                </Tooltip>
-
-                <Tooltip
-                  title="Delete"
-                  PopperProps={{
-                    style: { zIndex: 9999 }
-                  }}
-                >
-                  <IconButton
-                    className={classes.actionIcon}
-                    onClick={(e) => handleDeleteRegion(regionsByDevice[deviceName][0], e)}
-                    size="small"
-                  >
-                    <TrashIcon fontSize="small" style={{ color: "rgb(245, 0, 87)" }} />
-                  </IconButton>
-                </Tooltip>
-              </div>
-            </ListItem>
-          </React.Fragment>
-        ))}
+                  </ListItem>
+                </React.Fragment>
+              ))}
+            </List>
+          </Collapse>
+        </React.Fragment>
       </List>
 
       {/* Bulk Edit Dialog */}
@@ -974,29 +1123,46 @@ export const AnnotationCountSidebarBox = ({
         onClose={() => setBulkEditDialogOpen(false)}
         aria-labelledby="bulk-edit-dialog-title"
         BackdropProps={{
-          style: { backgroundColor: 'rgba(0, 0, 0, 0.7)' }
+          style: {
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            zIndex: zIndices.backdrop // Maximum z-index - 1
+          }
         }}
         PaperProps={{
-          style: { 
-            zIndex: 10000000, 
+          style: {
+            zIndex: zIndices.modal, // Maximum possible z-index
             backgroundColor: '#333',
             color: 'white'
           }
         }}
+        style={{ zIndex: zIndices.modal }} // Maximum possible z-index
       >
         <DialogTitle id="bulk-edit-dialog-title" style={{ color: 'white' }}>
-          Bulk Edit Devices in Category: {bulkEditCategory}
+          Edit Device Name
         </DialogTitle>
         <DialogContent className={classes.dialogContent}>
           <Typography variant="body2" style={{ marginBottom: 16, color: 'white' }}>
-            This will rename all devices in the "{bulkEditCategory}" category.
+            This will rename all instances of "{deviceToEdit}" to the new name.
+            {isUserDefinedDevice(deviceToEdit) && (
+              <div style={{ marginTop: 8, color: '#64b5f6' }}>
+                {deviceList.find(d => d.symbol_name === deviceToEdit)?.user_defined
+                  ? "This is a user-defined device."
+                  : "This device will be added to your device list as a user-defined device."}
+              </div>
+            )}
           </Typography>
           <TextField
             label="New Device Name"
             variant="outlined"
             className={classes.dialogTextField}
-            value={bulkEditNewName}
-            onChange={(e) => setBulkEditNewName(e.target.value)}
+            value={newDeviceName}
+            onChange={(e) => {
+              setNewDeviceName(e.target.value);
+              // Optional: validate on each change to provide immediate feedback
+              validateDeviceName(e.target.value);
+            }}
+            error={!!nameError}
+            helperText={nameError}
             autoFocus
             InputProps={{
               style: { color: 'white' }
@@ -1004,16 +1170,19 @@ export const AnnotationCountSidebarBox = ({
             InputLabelProps={{
               style: { color: 'rgba(255, 255, 255, 0.7)' }
             }}
+            FormHelperTextProps={{
+              style: { color: 'rgb(245, 0, 87)' }
+            }}
           />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setBulkEditDialogOpen(false)} style={{ color: '#64b5f6' }}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleBulkEdit} 
+          <Button
+            onClick={handleBulkEdit}
             style={{ color: '#64b5f6' }}
-            disabled={!bulkEditNewName.trim()}
+            disabled={!newDeviceName.trim() || !!nameError}
           >
             Apply
           </Button>
@@ -1023,10 +1192,22 @@ export const AnnotationCountSidebarBox = ({
   )
 }
 
-export default memo(AnnotationCountSidebarBox, (prevProps, nextProps) =>
-  isEqual(
-    prevProps.counts?.map((a) => [a.name, a.count]),
-    nextProps.counts?.map((a) => [a.name, a.count])
-  ) &&
-  isEqual(prevProps.regions, nextProps.regions)
-)
+export default memo(AnnotationCountSidebarBox, (prevProps, nextProps) => {
+  // Check if regions have changed
+  if (!isEqual(prevProps.regions, nextProps.regions)) {
+    return false; // Re-render if regions changed
+  }
+
+  // Check if device toggle state has changed
+  if (prevProps.selectedDeviceToggle !== nextProps.selectedDeviceToggle) {
+    return false; // Re-render if toggle state changed
+  }
+
+  // Check if device list has changed
+  if (!isEqual(prevProps.deviceList, nextProps.deviceList)) {
+    return false; // Re-render if device list changed
+  }
+
+  // Otherwise, don't re-render
+  return true;
+})
