@@ -27,7 +27,7 @@ import InfoIcon from "@material-ui/icons/Info"
 import Visibility from "@material-ui/icons/Visibility"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
-import React, { memo, useMemo, useState } from "react"
+import React, { memo, useMemo, useState, useEffect } from "react"
 import { zIndices } from "../Annotator/constants"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 
@@ -122,6 +122,13 @@ const useStyles = makeStyles({
     padding: "4px 8px 4px 0",
     borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
     position: "relative",
+    "&:hover": {
+      backgroundColor: "#2e2e2e",
+    },
+    "&.highlighted": {
+      backgroundColor: "#1e1e1e !important",
+    },
+    transition: "background-color 0.2s ease",
   },
   actionContainer: {
     display: "flex",
@@ -252,6 +259,17 @@ const useStyles = makeStyles({
     maxWidth: 300,
     border: "1px solid rgba(255, 255, 255, 0.2)",
   },
+  highlighted: {
+    backgroundColor: "#1e1e1e !important",
+    "& $deviceName": {
+      color: "#2196f3 !important",
+      fontWeight: "bold",
+    },
+    "& $regionName": {
+      color: "#2196f3 !important",
+      fontWeight: "bold",
+    }
+  },
 })
 
 const ALL_DEVICES_TOGGLE_KEY = "ALL"
@@ -281,6 +299,8 @@ export const AnnotationCountSidebarBox = ({
   const [expandedDeviceGroups, setExpandedDeviceGroups] = useState({})
   const [nameError, setNameError] = useState("")
   const [allDevicesExpanded, setAllDevicesExpanded] = useState(false)
+  const [selectedDevice, setSelectedDevice] = useState(null)
+  const [selectedRegionId, setSelectedRegionId] = useState(null)
 
   // Toggle expansion state for a device
   const toggleDeviceExpand = (deviceName, event) => {
@@ -522,7 +542,9 @@ export const AnnotationCountSidebarBox = ({
 
   const handleSelectRegion = (region, e) => {
     if (e) e.stopPropagation();
+    setSelectedRegionId(region.id);
     if (onSelectRegion) onSelectRegion(region);
+    if (onPanToRegion) onPanToRegion(region);
   }
 
   const handleDeleteRegion = (region, e) => {
@@ -576,20 +598,17 @@ export const AnnotationCountSidebarBox = ({
     return (!device || device.user_defined === true);
   };
 
-  // useEffect(() => {
-  //   // Add a style tag to ensure MUI tooltips have high z-index
-  //   const styleTag = document.createElement('style');
-  //   styleTag.innerHTML = `
-  //     .MuiPopover-root, .MuiTooltip-popper {
-  //       z-index: ${zIndices.tooltip} !important;
-  //     }
-  //   `;
-  //   document.head.appendChild(styleTag);
-
-  //   return () => {
-  //     document.head.removeChild(styleTag);
-  //   };
-  // }, []);
+  // Add this useEffect to update selectedDevice when regions change
+  useEffect(() => {
+    // Find the first highlighted region
+    const highlightedRegion = regions.find(r => r.highlighted);
+    if (highlightedRegion) {
+      setSelectedRegionId(highlightedRegion.id);
+    } else if (selectedRegionId && !regions.some(r => r.id === selectedRegionId)) {
+      // If the selected region no longer exists, clear it
+      setSelectedRegionId(null);
+    }
+  }, [regions]);
 
   return (
     <SidebarBoxContainer
@@ -707,15 +726,23 @@ export const AnnotationCountSidebarBox = ({
                 {Object.keys(devicesByCategory[category] || {}).map((deviceName, deviceIndex) => {
                   const deviceInstances = devicesByCategory[category][deviceName];
                   const deviceGroupKey = `${category}-${deviceName}`;
+                  const isHighlighted = selectedDeviceToggle === deviceName;
 
                   return (
                     <React.Fragment key={`${category}-device-${deviceIndex}`}>
                       {/* Device Type Header */}
                       <ListItem
                         button
-                        className={classes.deviceItem}
-                        style={{ paddingLeft: 16 }} // Indent for hierarchy
-                        onClick={(e) => toggleDeviceGroupExpand(category, deviceName, e)}
+                        className={classnames(classes.deviceItem, {
+                          [classes.highlighted]: isHighlighted || selectedDevice === deviceName
+                        })}
+                        style={{
+                          paddingLeft: 16,
+                          backgroundColor: isHighlighted || selectedDevice === deviceName ? "#1e1e1e" : "transparent"
+                        }}
+                        onClick={(e) => {
+                          toggleDeviceGroupExpand(category, deviceName, e);
+                        }}
                       >
                         <Tooltip
                           title="Toggle device visibility. Click to show only this device. Unclick to show all devices."
@@ -868,10 +895,15 @@ export const AnnotationCountSidebarBox = ({
                           {deviceInstances.map((region, regionIndex) => (
                             <ListItem
                               key={regionIndex}
-                              className={classes.regionItem}
-                              style={{ paddingLeft: 32 }} // Further indent for third level
+                              className={classnames(classes.regionItem, {
+                                [classes.highlighted]: region.highlighted || region.id === selectedRegionId
+                              })}
+                              style={{
+                                paddingLeft: 32,
+                                backgroundColor: region.highlighted || region.id === selectedRegionId ? "#1e1e1e" : "transparent"
+                              }}
                               button
-                              onClick={(e) => handlePanToRegion(region, e)}
+                              onClick={(e) => handleSelectRegion(region, e)}
                             >
                               <div
                                 className={classes.regionIcon}
