@@ -368,7 +368,7 @@ const ScalesSection = ({
                   </Grid>
                   <Grid item xs={6}>
                     <Typography className={classes.scaleLength}>
-                      {r.length ? `${r.length} ft` : "0 ft"}
+                      {r.cls ? `${r.cls} ft` : "0 ft"}
                     </Typography>
                   </Grid>
                   <Grid item xs={3} style={{ textAlign: "right" }}>

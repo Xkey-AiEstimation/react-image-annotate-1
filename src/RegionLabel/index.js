@@ -176,14 +176,48 @@ export const RegionLabel = ({
   )
 
   const min = 1
-  const max = 1000
+  // const max = 1000
+  const values = [
+    {
+      value: 10,
+      label: 10,
+    },
+    {
+      value: 20,
+      label: 20,
+    },
+    {
+      value: 30,
+      label: 30,
+    },
+    {
+      value: 40,
+      label: 40,
+    },
+    {
+      value: 50,
+      label: 50,
+    },
+    {
+      value: 100,
+      label: 100,
+    },
+    {
+      value: 1000,
+      label: 1000
+    },
+    {
+      value: 10000,
+      label: 10000
+    }
+  ]
 
   const shouldDisableMultiPageOCR = useMemo(() => {
     // Return true (disabled) if subType is null/undefined
     if (!subType) {
       return true;
     }
-    
+
     const isMultiPageOcrDisabled = disableMultiPageOCR.includes(subType)
     return isMultiPageOcrDisabled
   }, [subType])
@@ -236,18 +270,25 @@ export const RegionLabel = ({
     return !isNaN(str) && str.trim() !== "" && str !== null
   }
   const changeScaleHandler = (e) => {
-    // check if e.value is a number and if it is  >0
-    if (isNaN(e.value) || Number(e.value) < 0) {
-      setScaleInputVal(1)
-      return
+    // check if e.value is a number and if it is >0
+    let newValue = e.value;
+
+    if (isNaN(newValue) || Number(newValue) < 0) {
+      newValue = min;
+    } else if (Number(newValue) < min) {
+      newValue = min;
     }
 
-    if (Number(e.value) > max) {
-      setScaleInputVal(max)
-    } else if (Number(e.value) < min) {
-      setScaleInputVal(min)
-    } else {
-      setScaleInputVal(Number(e.value))
+    setScaleInputVal(newValue);
+
+    // Immediately update the region with the new scale value
+    onChange({
+      ...region,
+      cls: newValue.toString()
+    });
+
+    if (onClose) {
+      onClose(region);
     }
   }
 
@@ -578,32 +619,6 @@ export const RegionLabel = ({
 
   const conditionalRegionTextField = (region, regionType) => {
     if (regionType === "scale") {
-      const values = [
-        {
-          value: 10,
-          label: 10,
-        },
-        {
-          value: 20,
-          label: 20,
-        },
-        {
-          value: 30,
-          label: 30,
-        },
-        {
-          value: 40,
-          label: 40,
-        },
-        {
-          value: 50,
-          label: 50,
-        },
-        {
-          value: 100,
-          label: 100,
-        },
-      ]
 
       // do scale
       return (
@@ -614,7 +629,8 @@ export const RegionLabel = ({
           }}
         >
           <div>
-            min = {min} ft, max = {max} ft
+            <div>Current Scale Length: {region.cls} ft</div>
+            <div>Min = {min} ft, Max = any ft.</div>
           </div>
           <CreatableSelect
             placeholder="Length"
@@ -639,25 +655,7 @@ export const RegionLabel = ({
             }
             options={values}
           />
-          {/* <TextField
-            id="outlined-number"
-            type="number"
-            fullWidth
-            InputProps={{
-              inputProps: {
-                min,
-                max,
-                step: "1",
-                style: { textAlign: "right" },
-              },
-              className: classes.textfieldClass,
-              endAdornment: <InputAdornment position="end"> ft</InputAdornment>,
-            }}
-            variant="outlined"
-            onChange={changeScaleHandler}
-            value={scaleInputVal}
-          /> */}
-          <Button
+          {/* <Button
             style={{
               marginTop: "10px",
               marginLeft: "8px",
@@ -674,7 +672,7 @@ export const RegionLabel = ({
             size="small"
           >
             Save Scale
-          </Button>
+          </Button> */}
         </div>
       )
     } else if (regionType === "line") {
@@ -750,7 +748,7 @@ export const RegionLabel = ({
                 fontWeight: "bold",
               }}
             >
-              
+
               Category:
             </div>
             <Tooltip
@@ -1520,7 +1518,9 @@ export const RegionLabel = ({
                 )}
 
                 {region.type === "scale" ? (
-                  <div>Scale Length: {region.cls} ft</div>
+                  <div>
+                    <div>Current Scale Length: {region.cls} ft</div>
+                  </div>
                 ) : region.type === "line" ? (
                   <>
                     <div
