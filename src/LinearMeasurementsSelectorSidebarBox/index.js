@@ -34,7 +34,7 @@ const HeaderSep = styled("div")({
 
 const DEVICE_LIST = [...new Set(DeviceList.map((item) => item.category))]
 
-const Chip = ({ color, text }) => {
+const Chip = ({ color, text, highlighted }) => {
   const classes = useStyles()
   return (
     <Tooltip title={text || ""} placement="top"
@@ -54,7 +54,8 @@ const Chip = ({ color, text }) => {
           whiteSpace: "nowrap",
           overflow: "hidden",
           textOverflow: "ellipsis",
-          maxWidth: "100%"
+          maxWidth: "100%",
+          color: highlighted ? "#2196f3" : "white"
         }}>
           {text}
         </div>
@@ -63,44 +64,26 @@ const Chip = ({ color, text }) => {
   )
 }
 
-const RowLayout = ({
-  header,
-  highlighted,
-  order,
-  classification,
-  length,
-  trash,
-  area,
-  onClick,
-  onPanToRegion,
-  region,
-}) => {
+const RowLayout = ({ header, highlighted, children, onClick, order, classification, length, area, actions, region, onPanToRegion }) => {
   const classes = useStyles()
-  const [mouseOver, changeMouseOver] = useState(false)
   return (
     <div
+      className={classnames(classes.row, {
+        header,
+        highlighted,
+        [classes.highlighted]: highlighted,
+      })}
       onClick={onClick}
-      onMouseEnter={() => changeMouseOver(true)}
-      onMouseLeave={() => changeMouseOver(false)}
-      className={classnames(classes.row, { header, highlighted })}
     >
-      <Grid container alignItems="center" spacing={1}>
-        <Grid item xs={1}>
-          <div style={{ textAlign: "right" }}>{order}</div>
-        </Grid>
-        <Grid item xs={7}>
-          {classification}
-        </Grid>
-        <Grid item xs={2}>
-          {length}
-        </Grid>
-        <Grid item xs={1}>
-          {area}
-        </Grid>
-        <Grid item xs={1}>
-          {trash}
-        </Grid>
-      </Grid>
+      <div style={{ display: "flex", width: "100%", alignItems: "center" }}>
+        <div style={{ width: 30, textAlign: "right", marginRight: 10 }}>
+          {order}
+        </div>
+        <div style={{ flexGrow: 1 }}>{classification}</div>
+        <div style={{ width: 60, textAlign: "center" }}>{length}</div>
+        <div style={{ width: 30, textAlign: "center" }}>{area}</div>
+        <div style={{ width: 30, textAlign: "center" }}>{actions}</div>
+      </div>
     </div>
   )
 }
@@ -136,7 +119,7 @@ const Row = ({
   index,
 }) => {
   const classes = useStyles()
-  
+
   // Format length value with 2 decimal places if needed
   const lengthValue = useMemo(() => {
     if (r?.length_ft) {
@@ -152,12 +135,16 @@ const Row = ({
       highlighted={highlighted}
       onClick={(e) => {
         e.stopPropagation();
-        onPanToRegion(r);
+        if (onSelectRegion) onSelectRegion(r);
+        if (onPanToRegion) onPanToRegion(r);
       }}
-      onPanToRegion={onPanToRegion}
       region={r}
       order={`#${index + 1}`}
-      classification={<Chip text={cls || ""} color={color || "#ddd"} />}
+      classification={
+        <div className={highlighted ? classes.highlighted : ""}>
+          <Chip text={cls || ""} color={color || "#ddd"} highlighted={highlighted} />
+        </div>
+      }
       length={
         <Tooltip
           title={lengthValue}
@@ -172,14 +159,18 @@ const Row = ({
           }}
           arrow
         >
-          <div style={{ 
-            textAlign: "center", 
-            fontWeight: "500",
-            width: "100%",
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis"
-          }}>
+          <div
+            className={classnames("length-value", { "highlighted-text": highlighted })}
+            style={{
+              textAlign: "center",
+              fontWeight: "500",
+              width: "100%",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              color: highlighted ? "#2196f3" : "white"
+            }}
+          >
             {lengthValue} ft
           </div>
         </Tooltip>
