@@ -131,7 +131,51 @@ const isLineFullyContained = (line, box) => {
   )
 }
 
+// Add this helper function at the top with other helpers
+const calculateLineLengthFt = (line, scales) => {
+  if (scales.length === 0) return 0;
+
+  // Calculate the pixel length of the line
+  const lineLength = Math.sqrt(
+    (line.x1 - line.x2) ** 2 + (line.y1 - line.y2) ** 2
+  );
+
+  // Calculate scale values (pixels per foot)
+  const scaleValues = scales.map(scale => {
+    const scaleVal = parseFloat(scale.cls);
+    if (scaleVal > 0) {
+      const scaleLength = Math.sqrt(
+        (scale.x1 - scale.x2) ** 2 + (scale.y1 - scale.y2) ** 2
+      );
+      return scaleLength / scaleVal;
+    }
+    return 0;
+  }).filter(val => val > 0);
+
+  // Calculate average scale
+  if (scaleValues.length === 0) return 0;
+  const averageScale = scaleValues.reduce((a, b) => a + b, 0) / scaleValues.length;
+
+  // Calculate length in feet
+  return averageScale === 0 ? 0 : lineLength / averageScale;
+}
+
+// Add this helper function to update all line lengths
+const updateLineLengths = (regions) => {
+  const scales = regions.filter(r => r.type === "scale");
+  return regions.map(region => {
+    if (region.type === "line") {
+      return {
+        ...region,
+        length_ft: calculateLineLengthFt(region, scales)
+      };
+    }
+    return region;
+  });
+};
+
 export default (state: MainLayoutState, action: Action) => {
+
   if (
     state.allowedArea &&
     state.selectedTool !== "modify-allowed-area" &&
@@ -1378,10 +1422,29 @@ export default (state: MainLayoutState, action: Action) => {
           const { regionId } = state.mode
           const [region, regionIndex] = getRegion(regionId)
           if (!region) return setIn(state, ["mode"], null)
+
+
+          // const scales = activeImage.regions.filter(region => region.type === "scale");
+          // let relativeLineLengthFt = 0;
+          // if (scales.length > 0) {
+          //   const scaleValues = [];
+          //   scales.forEach(scale => {
+          //     const scaleVal = parseFloat(scale.cls);
+          //     if (!isNaN(scaleVal) && scaleVal > 0) {
+          //       const pixelDistance = Math.sqrt((scale.x1 - scale.x2) ** 2 + (scale.y1 - scale.y2) ** 2);
+          //       scaleValues.push(pixelDistance / scaleVal);
+          //     }
+          //   });
+          //   const averageTotalScale = scaleValues.reduce((sum, val) => sum + val, 0) / scaleValues.length;
+          //   const distance = Math.sqrt((region.x1 - region.x2) ** 2 + (region.y1 - region.y2) ** 2);
+          //   relativeLineLengthFt = distance / averageTotalScale;
+          // }
+
           return setIn(state, [...pathToActiveImage, "regions", regionIndex], {
             ...region,
             x2: x,
             y2: y,
+            // length_ft: relativeLineLengthFt,
           })
         }
         case "ASSIGN_SCALE": {
@@ -1467,6 +1530,7 @@ export default (state: MainLayoutState, action: Action) => {
         })
       }
 
+
       if (state.mode) {
         switch (state.mode.mode) {
           case "DRAW_POLYGON": {
@@ -1495,38 +1559,35 @@ export default (state: MainLayoutState, action: Action) => {
                 activeImage.regions.filter((r) => r.id !== line.id)
               )
             }
-            const scales = activeImage.regions.filter(
-              (region) => region.type === "scale"
-            )
-            let relativeLineLengthFt = 0
-            if (scales.length !== 0) {
-              const scaleValues = []
-              scales.map((scale) => {
-                let scaleVal = parseFloat(scale["cls"])
-                if (scaleVal > 0) {
-                  scaleValues.push(
-                    Math.sqrt(
-                      (scale["x1"] - scale["x2"]) ** 2 +
-                      (scale["y1"] - scale["y2"]) ** 2
-                    ) / scaleVal
-                  )
+            const scales = activeImage.regions.filter(region => region.type === "scale");
+            let relativeLineLengthFt = 0;
+
+            if (scales.length > 0) {
+              const scaleValues = [];
+              scales.forEach(scale => {
+                const scaleVal = parseFloat(scale.cls);
+                if (!isNaN(scaleVal) && scaleVal > 0) {
+                  const pixelDistance = Math.sqrt((scale.x1 - scale.x2) ** 2 + (scale.y1 - scale.y2) ** 2);
+                  scaleValues.push(pixelDistance / scaleVal);
                 }
-              })
-              const average_total_scale =
-                scaleValues.reduce((a, b) => a + b, 0) / scaleValues.length
-              const relativeLineLength = Math.sqrt(
-                (line.x1 - x) ** 2 + (line.y1 - y) ** 2
-              )
-              relativeLineLengthFt = relativeLineLength / average_total_scale
+              });
+
+
+              if (scaleValues.length > 0) {
+                const averageTotalScale = scaleValues.reduce((sum, val) => sum + val, 0) / scaleValues.length;
+
+                const relativeLineLength = Math.sqrt((line.x1 - x) ** 2 + (line.y1 - y) ** 2);
+                relativeLineLengthFt = relativeLineLength / averageTotalScale;
+              }
             }
             state = saveToHistory(state, "Create Line")
-            setIn(state, [...pathToActiveImage, "regions", regionIndex], {
+            const newState = setIn(state, [...pathToActiveImage, "regions", regionIndex], {
               ...line,
               x2: x,
               y2: y,
               length_ft: relativeLineLengthFt,
             })
-            return setIn(state, ["mode"], null)
+            return setIn(newState, ["mode"], null)
           }
           case "ASSIGN_SCALE": {
             const [line, regionIndex] = getRegion(state.mode.regionId)
@@ -1786,6 +1847,7 @@ export default (state: MainLayoutState, action: Action) => {
             category: getCategoryBySymbolName(defaultRegionCls),
             visible: true,
             breakout: newRegionBreakout,
+            length_ft: 0,
           }
           state = setIn(state, ["mode"], {
             mode: "DRAW_LINE",
@@ -1806,7 +1868,7 @@ export default (state: MainLayoutState, action: Action) => {
             highlighted: true,
             editingLabels: false,
             color: "#C4A484",
-            cls: "1",
+            cls: "1", // Make sure this is set
             id: getRandomId(),
             visible: true,
             breakout: undefined,
@@ -1986,6 +2048,13 @@ export default (state: MainLayoutState, action: Action) => {
             newExpandingLine
           )
         }
+        case "ASSIGN_SCALE": {
+          // When finishing drawing a scale
+          const regions = updateLineLengths([
+            ...(getIn(state, pathToActiveImage).regions || [])
+          ]);
+          return setIn(state, [...pathToActiveImage, "regions"], regions);
+        }
         default:
           return state
       }
@@ -2037,7 +2106,17 @@ export default (state: MainLayoutState, action: Action) => {
       if (regionIndex === null) return state
       let regionColor = getColor(state, region.cls)
 
-      return setIn(state, [...pathToActiveImage, "regions", regionIndex], {
+      let newState = state;
+
+      // If editing a scale, update all line lengths
+      if (region.type === "scale") {
+        const regions = updateLineLengths([
+          ...(getIn(state, pathToActiveImage).regions || [])
+        ]);
+        newState = setIn(state, [...pathToActiveImage, "regions"], regions);
+      }
+
+      return setIn(newState, [...pathToActiveImage, "regions", regionIndex], {
         ...(activeImage.regions || [])[regionIndex],
         color: regionColor,
         editingLabels: false,
@@ -2045,13 +2124,22 @@ export default (state: MainLayoutState, action: Action) => {
       })
     }
     case "DELETE_REGION": {
-      const regionIndex = getRegionIndex(action.region)
-      if (regionIndex === null) return state
+      const regionIndex = getRegionIndex(action.region);
+      if (regionIndex === null) return state;
+
+      // If deleting a scale, update all line lengths
+      if (action.region.type === "scale") {
+        const newRegions = (activeImage.regions || [])
+          .filter(r => r.id !== action.region.id);
+        const updatedRegions = updateLineLengths(newRegions);
+        return setIn(state, [...pathToActiveImage, "regions"], updatedRegions);
+      }
+
       return setIn(
         state,
         [...pathToActiveImage, "regions"],
         (activeImage.regions || []).filter((r) => r.id !== action.region.id)
-      )
+      );
     }
     case "DELETE_SELECTED_REGION": {
       return setIn(
@@ -2268,7 +2356,7 @@ export default (state: MainLayoutState, action: Action) => {
 
       // Calculate the region coordinates based on type
       let regionData = {}
-      
+
       if (region.type === "box") {
         // For boxes, use the coordinates directly
         regionData = {
@@ -2326,7 +2414,7 @@ export default (state: MainLayoutState, action: Action) => {
         // For keypoints, calculate the bounding box
         const points = region.points || {}
         const pointArray = Object.values(points)
-        
+
         if (pointArray.length > 0) {
           let minX = 1, minY = 1, maxX = 0, maxY = 0
 
@@ -2377,7 +2465,7 @@ export default (state: MainLayoutState, action: Action) => {
     case "HIGHLIGHT_REGION_AFTER_PAN": {
       const { regionId } = action
       if (!regionId || !activeImage) return state
-      
+
       // Now highlight the region
       return setIn(
         state,
@@ -2391,14 +2479,14 @@ export default (state: MainLayoutState, action: Action) => {
     }
     case "CHANGE_DEVICE_NAME": {
       const { oldName, newName } = action
-      
+
       // Find all regions with the old device name and update them
       let newState = state
-      
+
       // Get the current image
       const { currentImageIndex, activeImage } = getActiveImage(state)
       if (!activeImage) return state
-      
+
       // Update all regions with the matching device name
       const updatedRegions = (activeImage.regions || []).map(region => {
         if (region.cls === oldName) {
@@ -2409,14 +2497,14 @@ export default (state: MainLayoutState, action: Action) => {
         }
         return region
       })
-      
+
       // Set the updated regions in the state
       newState = setIn(
         newState,
         ["images", currentImageIndex, "regions"],
         updatedRegions
       )
-      
+
       // Save to history
       return saveToHistory(newState, `Renamed device "${oldName}" to "${newName}"`)
     }

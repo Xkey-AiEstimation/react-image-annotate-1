@@ -25,16 +25,16 @@ export default {
     padding: 4,
     cursor: "pointer",
     "&.header:hover": {
-      backgroundColor: "#fff",
-      color: "black",
+      backgroundColor: "rgba(255, 255, 255, 0.15)",
+      color: "white",
     },
     "&.highlighted": {
-      backgroundColor: grey[100],
-      color: "black",
+      backgroundColor: "rgba(255, 255, 255, 0.15)",
+      color: "white",
     },
     "&:hover": {
-      backgroundColor: grey[50],
-      color: "black",
+      backgroundColor: "rgba(255, 255, 255, 0.15)",
+      color: "white",
     },
   },
   chip: {
