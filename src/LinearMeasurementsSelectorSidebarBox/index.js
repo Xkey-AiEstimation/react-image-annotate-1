@@ -1,30 +1,29 @@
 // @flow
+import Collapse from '@material-ui/core/Collapse'
 import { grey } from "@material-ui/core/colors"
 import Grid from "@material-ui/core/Grid"
+import IconButton from '@material-ui/core/IconButton'
+import List from '@material-ui/core/List'
 import { makeStyles, styled } from "@material-ui/core/styles"
+import Tooltip from "@material-ui/core/Tooltip"
+import Typography from '@material-ui/core/Typography'
+import CenterFocusStrongIcon from '@material-ui/icons/CenterFocusStrong'
 import TrashIcon from "@material-ui/icons/Delete"
+import ExpandLessIcon from '@material-ui/icons/ExpandLess'
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
 import LinearScaleIcon from '@material-ui/icons/LinearScale'
 import LockIcon from "@material-ui/icons/Lock"
 import UnlockIcon from "@material-ui/icons/LockOpen"
-import PieChartIcon from "@material-ui/icons/PieChart"
 import ReorderIcon from "@material-ui/icons/SwapVert"
 import VisibleIcon from "@material-ui/icons/Visibility"
 import VisibleOffIcon from "@material-ui/icons/VisibilityOff"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
-import React, { memo, useState } from "react"
+import React, { memo, useMemo, useState } from "react"
+import { zIndices } from "../Annotator/constants"
 import DeviceList from "../RegionLabel/DeviceList"
 import SidebarBoxContainer from "../SidebarBoxContainer"
-import CenterFocusStrongIcon from '@material-ui/icons/CenterFocusStrong';
 import styles from "./styles"
-import Tooltip from "@material-ui/core/Tooltip"
-import { zIndices } from "../Annotator/constants"
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore'
-import ExpandLessIcon from '@material-ui/icons/ExpandLess'
-import IconButton from '@material-ui/core/IconButton'
-import Collapse from '@material-ui/core/Collapse'
-import List from '@material-ui/core/List'
-import Typography from '@material-ui/core/Typography'
 const useStyles = makeStyles(styles)
 
 const HeaderSep = styled("div")({
@@ -137,7 +136,12 @@ const Row = ({
   index,
 }) => {
   // Use the existing length_ft property with optional chaining
-  const lengthValue = r?.length_ft ? r.length_ft.toString() : "0";
+  const lengthValue = useMemo(() => {
+    if (r?.length_ft) {
+      return r.length_ft.toString();
+    }
+    return "0";
+  }, [r?.length_ft]);
 
   const classes = useStyles()
 
@@ -514,6 +518,8 @@ const mapUsedRegionProperties = (r) => [
   r.locked,
   r.visible,
   r.highlighted,
+  r.cls,
+  r.length_ft,
 ]
 
 export default memo(LinearMeasurementsSelectorSidebarBox, (prevProps, nextProps) =>
