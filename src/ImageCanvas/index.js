@@ -419,28 +419,28 @@ export const ImageCanvas = ({
       const { iw, ih } = layoutParams.current;
       const canvasWidth = layoutParams.current.canvasWidth || canvasEl.current.width;
       const canvasHeight = layoutParams.current.canvasHeight || canvasEl.current.height;
-      
+
       // Calculate the center point of the annotation in image space
-      const centerX = (x + w/2) * iw;
-      const centerY = (y + h/2) * ih;
-      
+      const centerX = (x + w / 2) * iw;
+      const centerY = (y + h / 2) * ih;
+
       // Create a new matrix starting with default
       const newMat = new Matrix();
-      
+
       // First translate so the region center is at origin
       newMat.translate(centerX, centerY);
-      
+
       // Then apply the desired scale (400% zoom = 0.25 scale)
       newMat.scaleU(0.10);
-      
+
       // Finally translate so the origin is at the center of the canvas
-      newMat.translate(-canvasWidth/2, -canvasHeight/2);
-      
+      newMat.translate(-canvasWidth / 2, -canvasHeight / 2);
+
       // This flips the matrix because our goal is different from normal:
       // We want to position the image so that the region is at canvas center
       newMat.inverse();
-      
-      
+
+
       // Animate the transition
       const startMat = mat.clone();
       const startTime = performance.now();
@@ -450,7 +450,7 @@ export const ImageCanvas = ({
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
         const easeProgress = 1 - Math.pow(1 - progress, 3);
-        
+
         const animatedMat = new Matrix();
         animatedMat.a = startMat.a + (newMat.a - startMat.a) * easeProgress;
         animatedMat.b = startMat.b + (newMat.b - startMat.b) * easeProgress;
@@ -458,18 +458,18 @@ export const ImageCanvas = ({
         animatedMat.d = startMat.d + (newMat.d - startMat.d) * easeProgress;
         animatedMat.e = startMat.e + (newMat.e - startMat.e) * easeProgress;
         animatedMat.f = startMat.f + (newMat.f - startMat.f) * easeProgress;
-        
+
         changeMat(animatedMat);
-        
+
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
           dispatch({ type: "CLEAR_PAN_TO_REGION" });
-          
+
           if (shouldHighlight && regionId) {
-            dispatch({ 
-              type: "HIGHLIGHT_REGION_AFTER_PAN", 
-              regionId 
+            dispatch({
+              type: "HIGHLIGHT_REGION_AFTER_PAN",
+              regionId
             });
           }
         }
@@ -603,24 +603,24 @@ export const ImageCanvas = ({
       {!showTags && highlightedRegion && (() => {
         // Calculate position for the region label (similar to RegionTags)
         const pbox = projectRegionBox(highlightedRegion)
-        
+
         // Skip if outside visible area or invalid dimensions
         if (!pbox) return null
         if (pbox.w === 0 || pbox.h === 0) return null
         if (pbox.x + pbox.w < 0 || pbox.y + pbox.h < 0) return null
         if (pbox.x > layoutParams.current.canvasWidth || pbox.y > layoutParams.current.canvasHeight) return null
-        
+
         const labelPosition = {
           left: pbox.x,
-          top: pbox.y - 250, // Move it higher above the region
+          top: highlightedRegion?.breakout ? pbox.y - 400 : pbox.y - 250,
           width: Math.max(100, pbox.w),  // Minimum width for readability
           position: "absolute",
           zIndex: 10
         }
-        
+
         // Ensure label doesn't go off-screen at the top
         if (labelPosition.top < 5) labelPosition.top = pbox.y + pbox.h + 5
-        
+
         return (
           <div key={`regionLabel-${highlightedRegion.id}`} style={labelPosition}>
             <RegionLabel

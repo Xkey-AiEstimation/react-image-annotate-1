@@ -633,13 +633,13 @@ export const AnnotationCountSidebarBox = ({
               Show All Devices
             </Typography>
             <Typography className={classes.deviceCount}>
-              Total: {
+              Total: <span style={{ fontWeight: "bold" }}>{
                 regions.filter(
                   (region) =>
                     region.cls &&
                     (region.type === "box" || region.type === "point" || region.type === "polygon" || region.type === "line")
                 ).length
-              }
+              }</span> counted
             </Typography>
           </div>
 
@@ -796,7 +796,7 @@ export const AnnotationCountSidebarBox = ({
 
                           <div className={classes.deviceCountRow}>
                             <Typography className={classes.deviceCount}>
-                              Total: {deviceInstances.length} instances
+                              Total: <span style={{ fontWeight: "bold" }}>{deviceInstances.length}</span> counted
                             </Typography>
                           </div>
                         </div>
