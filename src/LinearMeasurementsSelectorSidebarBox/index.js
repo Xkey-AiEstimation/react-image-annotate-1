@@ -135,15 +135,16 @@ const Row = ({
   cls,
   index,
 }) => {
-  // Use the existing length_ft property with optional chaining
+  const classes = useStyles()
+  
+  // Format length value with 2 decimal places if needed
   const lengthValue = useMemo(() => {
     if (r?.length_ft) {
-      return r.length_ft.toString();
+      const num = parseFloat(r.length_ft);
+      return Number.isInteger(num) ? num.toString() : num.toFixed(2);
     }
     return "0";
   }, [r?.length_ft]);
-
-  const classes = useStyles()
 
   return (
     <RowLayout
@@ -157,7 +158,32 @@ const Row = ({
       region={r}
       order={`#${index + 1}`}
       classification={<Chip text={cls || ""} color={color || "#ddd"} />}
-      length={<div style={{ textAlign: "center", fontWeight: "500" }}>{lengthValue} ft</div>}
+      length={
+        <Tooltip
+          title={lengthValue}
+          placement="top"
+          PopperProps={{
+            style: {
+              zIndex: zIndices.tooltip
+            }
+          }}
+          classes={{
+            tooltip: classes.tooltipRoot
+          }}
+          arrow
+        >
+          <div style={{ 
+            textAlign: "center", 
+            fontWeight: "500",
+            width: "100%",
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis"
+          }}>
+            {lengthValue} ft
+          </div>
+        </Tooltip>
+      }
       area={
         <Tooltip
           title="Locate"
