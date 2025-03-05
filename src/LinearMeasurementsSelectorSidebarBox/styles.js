@@ -134,4 +134,11 @@ export default {
     fontStyle: "italic",
     backgroundColor: "rgba(255, 255, 255, 0.05)",
   },
+  highlighted: {
+    backgroundColor: "#1e1e1e !important",
+  },
+  highlightedText: {
+    color: "#2196f3 !important",
+    fontWeight: "bold !important",
+  },
 }
