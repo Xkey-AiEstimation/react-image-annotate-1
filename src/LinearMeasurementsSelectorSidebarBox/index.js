@@ -340,6 +340,7 @@ const emptyArr = []
 const ScalesSection = ({
   regions,
   onDeleteRegion,
+  onPanToRegion,
 }) => {
   const classes = useStyles()
   const [expanded, setExpanded] = useState(true)
@@ -387,12 +388,40 @@ const ScalesSection = ({
                       Scale #{i + 1}
                     </Typography>
                   </Grid>
-                  <Grid item xs={6}>
+                  <Grid item xs={5}>
                     <Typography className={classes.scaleLength}>
                       {r.cls ? `${r.cls} ft` : "0 ft"}
                     </Typography>
                   </Grid>
-                  <Grid item xs={3} style={{ textAlign: "right" }}>
+                  <Grid item xs={2} style={{ textAlign: "center" }}>
+                    <Tooltip
+                      title="Locate"
+                      placement="top"
+                      PopperProps={{
+                        style: {
+                          zIndex: zIndices.tooltip
+                        }
+                      }}
+                      classes={{
+                        tooltip: classes.tooltipRoot
+                      }}
+                      arrow
+                    >
+                      <IconButton
+                        size="small"
+                        className={classes.actionIcon}
+                        onClick={() => onPanToRegion && onPanToRegion(r)}
+                      >
+                        <CenterFocusStrongIcon
+                          style={{
+                            color: "#3CD2BC",
+                            fontSize: 14
+                          }}
+                        />
+                      </IconButton>
+                    </Tooltip>
+                  </Grid>
+                  <Grid item xs={2} style={{ textAlign: "right" }}>
                     <Tooltip
                       title="Delete Scale"
                       placement="top"
@@ -515,6 +544,7 @@ export const LinearMeasurementsSelectorSidebarBox = ({
         <ScalesSection
           regions={regions}
           onDeleteRegion={onDeleteRegion}
+          onPanToRegion={onPanToRegion}
         />
         <HeaderSep />
         <LinesSection
