@@ -250,19 +250,24 @@ export const RegionLabel = ({
 
   useEffect(() => {
     if (region.type === "line") {
-      if (region.length_ft) {
-        setRelativeLineLengthFt(region.length_ft);
-      } else if (scales.length !== 0 && averageTotalScale !== 0) {
-        const relativeLineLength = Math.sqrt(
-          (region.x1 - region.x2) ** 2 + (region.y1 - region.y2) ** 2
-        );
-        setRelativeLineLengthFt(relativeLineLength / averageTotalScale);
+      if (region.length_ft !== undefined) {
+        setRelativeLineLengthFt(region.length_ft)
+      } else {
+        if (scales.length !== 0) {
+          const relativeLineLength = Math.sqrt(
+            (region.x1 - region.x2) ** 2 + (region.y1 - region.y2) ** 2
+          )
+          if (averageTotalScale !== 0) {
+            setRelativeLineLengthFt(relativeLineLength / averageTotalScale)
+          }
+        } else {
+          setRelativeLineLengthFt(0)
+        }
       }
     }
-  }, [scales, region, averageTotalScale]);
+  }, [scales, region])
 
-
-
+  
   const isNumeric = (str) => {
     return !isNaN(str) && str.trim() !== "" && str !== null
   }

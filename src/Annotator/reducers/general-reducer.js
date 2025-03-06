@@ -1847,7 +1847,7 @@ export default (state: MainLayoutState, action: Action) => {
             category: getCategoryBySymbolName(defaultRegionCls),
             visible: true,
             breakout: newRegionBreakout,
-            length_ft: 0,
+            length_ft: undefined,
           }
           state = setIn(state, ["mode"], {
             mode: "DRAW_LINE",
@@ -2402,7 +2402,7 @@ export default (state: MainLayoutState, action: Action) => {
           w: 0.02,            // Small width/height
           h: 0.02
         }
-      } else if (region.type === "line") {
+      } else if (region.type === "line" || region.type === "scale") {
         // For lines, focus on the starting point (x1, y1) instead of the middle
         regionData = {
           x: region.x1 - 0.01, // Small offset for better visibility
