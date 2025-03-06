@@ -139,6 +139,7 @@ const calculateLineLengthFt = (line, scales) => {
   const lineLength = Math.sqrt(
     (line.x1 - line.x2) ** 2 + (line.y1 - line.y2) ** 2
   );
+  console.log("lineLength", lineLength)
 
   // Calculate scale values (pixels per foot)
   const scaleValues = scales.map(scale => {
@@ -1123,10 +1124,72 @@ export default (state: MainLayoutState, action: Action) => {
       )
     }
     case "CHANGE_REGION": {
-      const regionIndex = getRegionIndex(action.region)
-      if (regionIndex === null) return state
-      const oldRegion = activeImage.regions[regionIndex]
-      if (oldRegion.cls !== action.region.cls) {
+      console.log("CHANGE_REGION", action.region, action.region.cls)
+      // if region.type is a scale then set cls to action.region.cls and all regions with type line need to have their length_ft recaculated
+      const regions = getIn(state, ["images", currentImageIndex, "regions"]);
+      const regionIndex = getRegionIndex(action.region);
+      if (regionIndex === null) return state;
+      const oldRegion = regions[regionIndex];
+      if (action.region.type === "scale") {
+        if (oldRegion.cls !== action.region.cls) {
+          action.region.visible = true;
+          action.region.category = getCategoryBySymbolName(action.region.cls);
+          action.region.color = getColorByCategory(state, action.region.category);
+          state = saveToHistory(state, "Change Scale");
+
+          const calcLineLengthFt = (line, scales) => {
+            let relativeLineLengthFt = 0;
+            if (scales.length > 0) {
+              const scaleValues = scales.map((scale) => {
+                const scaleVal = parseFloat(scale.cls);
+                if (!isNaN(scaleVal) && scaleVal > 0) {
+                  const pixelDistance = Math.sqrt(
+                    (scale.x1 - scale.x2) ** 2 + (scale.y1 - scale.y2) ** 2
+                  );
+                  return pixelDistance / scaleVal;
+                }
+                return 0;
+              }).filter(val => val > 0);
+
+              const averageTotalScale =
+                scaleValues.reduce((sum, val) => sum + val, 0) / scaleValues.length;
+              const distance = Math.sqrt(
+                (line.x1 - line.x2) ** 2 + (line.y1 - line.y2) ** 2
+              );
+              relativeLineLengthFt = distance / averageTotalScale;
+            }
+            return relativeLineLengthFt;
+          };
+          const lineRegions = regions.filter(region => region.type === "line");
+          const scaleRegions = regions.filter(region => region.type === "scale");
+
+          // Create a new array with the updated scale region
+          const updatedScaleRegions = regions.map((region, index) =>
+            index === regionIndex ? action.region : region
+          ).filter(region => region.type === "scale");
+
+          const updatedLineRegions = lineRegions.map(lineRegion => {
+            const length = calcLineLengthFt(lineRegion, updatedScaleRegions);
+            console.log(length)
+            return { ...lineRegion, length_ft: length };
+          });
+
+          // Merge updatedLineRegions and updatedScaleRegions back into regions immutably
+          const updatedRegions = regions.map(region => {
+            if (region.type === "line") {
+              return updatedLineRegions.find(updatedRegion => updatedRegion.id === region.id) || region;
+            } else if (region.type === "scale") {
+              return updatedScaleRegions.find(updatedRegion => updatedRegion.id === region.id) || region;
+            }
+            return region;
+          });
+
+          return setIn(state, [...pathToActiveImage, "regions"], updatedRegions);
+        }
+      }
+      if (
+        oldRegion.type !== "scale" &&
+        oldRegion.cls !== action.region.cls) {
         action.region.visible = true
         action.region.category = getCategoryBySymbolName(action.region.cls)
         action.region.color = getColorByCategory(state, action.region.category)
