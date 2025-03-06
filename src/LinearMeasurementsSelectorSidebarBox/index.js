@@ -127,7 +127,7 @@ const Row = ({
       return Number.isInteger(num) ? num.toString() : num.toFixed(2);
     }
     return "0";
-  }, [r?.length_ft]);
+  }, [r]);
 
   return (
     <RowLayout
@@ -332,7 +332,8 @@ const MemoRow = memo(
     prevProps.id === nextProps.id &&
     prevProps.index === nextProps.index &&
     prevProps.cls === nextProps.cls &&
-    prevProps.color === nextProps.color
+    prevProps.color === nextProps.color &&
+    prevProps.length_ft === nextProps.length_ft 
 )
 
 const emptyArr = []

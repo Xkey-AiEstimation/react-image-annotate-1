@@ -1847,7 +1847,6 @@ export default (state: MainLayoutState, action: Action) => {
             category: getCategoryBySymbolName(defaultRegionCls),
             visible: true,
             breakout: newRegionBreakout,
-            length_ft: 0,
           }
           state = setIn(state, ["mode"], {
             mode: "DRAW_LINE",
