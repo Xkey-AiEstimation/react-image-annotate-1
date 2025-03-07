@@ -41,7 +41,7 @@ import BreakoutSection from "./BreakoutSection.js"
 import DeviceList from "./DeviceList"
 import styles from "./styles"
 // import { ColorPicker } from "material-ui-color"
-import generalReducer from '../Annotator/reducers/general-reducer'
+import generalReducer, { calculateLineLengthFt } from '../Annotator/reducers/general-reducer'
 
 const useStyles = makeStyles(styles)
 
@@ -138,6 +138,8 @@ export const RegionLabel = ({
   categoriesColorMap,
   disableAddingClasses = false,
   subType,
+  imageWidth,
+  imageHeight,
 }: Props) => {
   const classes = useStyles()
   const [openBreakout, setOpenBreakout] = React.useState(false)
@@ -179,6 +181,42 @@ export const RegionLabel = ({
   // const max = 1000
   const values = [
     {
+      value: 1,
+      label: 1,
+    },
+    {
+      value: 2,
+      label: 2,
+    },
+    {
+      value: 3,
+      label: 3,
+    },
+    {
+      value: 4,
+      label: 4,
+    },
+    {
+      value: 5,
+      label: 5,
+    },
+    {
+      value: 6,
+      label: 6,
+    },
+    {
+      value: 7,
+      label: 7,
+    },
+    {
+      value: 8,
+      label: 8,
+    },
+    {
+      value: 9,
+      label: 9,
+    },
+    {
       value: 10,
       label: 10,
     },
@@ -205,10 +243,6 @@ export const RegionLabel = ({
     {
       value: 1000,
       label: 1000
-    },
-    {
-      value: 10000,
-      label: 10000
     }
   ]
 
@@ -254,11 +288,17 @@ export const RegionLabel = ({
         setRelativeLineLengthFt(region.length_ft)
       } else {
         if (scales.length !== 0) {
-          const relativeLineLength = Math.sqrt(
-            (region.x1 - region.x2) ** 2 + (region.y1 - region.y2) ** 2
-          )
-          if (averageTotalScale !== 0) {
-            setRelativeLineLengthFt(relativeLineLength / averageTotalScale)
+          const scales = regions.filter((r) => r.type === "scale") || []
+          console.log(regions, imageSrc)
+          const relativeLineLength = calculateLineLengthFt(region,
+            imageWidth,
+            imageHeight,
+            scales)
+          if (relativeLineLength !== 0) {
+            setRelativeLineLengthFt(relativeLineLength)
+          }
+          else {
+            setRelativeLineLengthFt(0)
           }
         } else {
           setRelativeLineLengthFt(0)
@@ -267,7 +307,7 @@ export const RegionLabel = ({
     }
   }, [scales, region])
 
-  
+
   const isNumeric = (str) => {
     return !isNaN(str) && str.trim() !== "" && str !== null
   }
@@ -681,10 +721,10 @@ export const RegionLabel = ({
       // do line
       return (
         <>
-          {relativeLineLengthFt === 0 ? (
+          {region?.length_ft === undefined || region?.length_ft === 0 ? (
             <div>No Scales Found</div>
           ) : (
-            <div>Length: {relativeLineLengthFt.toFixed(2)} ft</div>
+            <div>Length: {region.length_ft.toFixed(2)} ft</div>
           )}
           <div style={{ display: "flex", alignItems: "center" }}>
             <div

@@ -132,7 +132,7 @@ const isLineFullyContained = (line, box) => {
 }
 
 // Add this helper function at the top with other helpers
-const calculateLineLengthFt = (line, image_width, image_height, scales) => {
+export const calculateLineLengthFt = (line, image_width, image_height, scales) => {
   if (scales.length === 0) return 0;
 
   // Calculate the pixel length of the line
@@ -1137,54 +1137,14 @@ export default (state: MainLayoutState, action: Action) => {
           action.region.color = getColorByCategory(state, action.region.category);
           state = saveToHistory(state, "Change Scale");
 
-          const calcLineLengthFt = (line, scales) => {
-            let relativeLineLengthFt = 0;
-            if (scales.length > 0) {
-              const scaleValues = scales.map((scale) => {
-                const scaleVal = parseFloat(scale.cls);
-                if (!isNaN(scaleVal) && scaleVal > 0) {
-                  const pixelDistance = Math.sqrt(
-                    (scale.x1 - scale.x2) ** 2 + (scale.y1 - scale.y2) ** 2
-                  );
-                  return pixelDistance / scaleVal;
-                }
-                return 0;
-              }).filter(val => val > 0);
-
-              const averageTotalScale =
-                scaleValues.reduce((sum, val) => sum + val, 0) / scaleValues.length;
-              const distance = Math.sqrt(
-                (line.x1 - line.x2) ** 2 + (line.y1 - line.y2) ** 2
-              );
-              relativeLineLengthFt = distance / averageTotalScale;
-            }
-            return relativeLineLengthFt;
-          };
-          const lineRegions = regions.filter(region => region.type === "line");
-          const scaleRegions = regions.filter(region => region.type === "scale");
-
-          // Create a new array with the updated scale region
-          const updatedScaleRegions = regions.map((region, index) =>
+          // GET THE IMAGE WIDTH AND HEIGHT 
+          const updatedRegionsWithNewScale = regions.map((region, index) =>
             index === regionIndex ? action.region : region
-          ).filter(region => region.type === "scale");
-
-          const updatedLineRegions = lineRegions.map(lineRegion => {
-            const length = calcLineLengthFt(lineRegion, updatedScaleRegions);
-            console.log(length)
-            return { ...lineRegion, length_ft: length };
-          });
-
-          // Merge updatedLineRegions and updatedScaleRegions back into regions immutably
-          const updatedRegions = regions.map(region => {
-            if (region.type === "line") {
-              return updatedLineRegions.find(updatedRegion => updatedRegion.id === region.id) || region;
-            } else if (region.type === "scale") {
-              return updatedScaleRegions.find(updatedRegion => updatedRegion.id === region.id) || region;
-            }
-            return region;
-          });
-
-          return setIn(state, [...pathToActiveImage, "regions"], updatedRegions);
+          )
+          const image_width = getIn(state, ["images", currentImageIndex, "width"])
+          const image_height = getIn(state, ["images", currentImageIndex, "height"])
+          const updatedRegions = updateLineLengths(updatedRegionsWithNewScale, image_width, image_height)
+          return setIn(state, [...pathToActiveImage, "regions"], updatedRegions)
         }
       }
       if (
@@ -1487,27 +1447,10 @@ export default (state: MainLayoutState, action: Action) => {
           if (!region) return setIn(state, ["mode"], null)
 
 
-          // const scales = activeImage.regions.filter(region => region.type === "scale");
-          // let relativeLineLengthFt = 0;
-          // if (scales.length > 0) {
-          //   const scaleValues = [];
-          //   scales.forEach(scale => {
-          //     const scaleVal = parseFloat(scale.cls);
-          //     if (!isNaN(scaleVal) && scaleVal > 0) {
-          //       const pixelDistance = Math.sqrt((scale.x1 - scale.x2) ** 2 + (scale.y1 - scale.y2) ** 2);
-          //       scaleValues.push(pixelDistance / scaleVal);
-          //     }
-          //   });
-          //   const averageTotalScale = scaleValues.reduce((sum, val) => sum + val, 0) / scaleValues.length;
-          //   const distance = Math.sqrt((region.x1 - region.x2) ** 2 + (region.y1 - region.y2) ** 2);
-          //   relativeLineLengthFt = distance / averageTotalScale;
-          // }
-
           return setIn(state, [...pathToActiveImage, "regions", regionIndex], {
             ...region,
             x2: x,
             y2: y,
-            // length_ft: relativeLineLengthFt,
           })
         }
         case "ASSIGN_SCALE": {
@@ -1623,26 +1566,12 @@ export default (state: MainLayoutState, action: Action) => {
               )
             }
             const scales = activeImage.regions.filter(region => region.type === "scale");
-            let relativeLineLengthFt = 0;
+            const image_width = activeImage.pixelSize.w
+            const image_height = activeImage.pixelSize.h
 
-            if (scales.length > 0) {
-              const scaleValues = [];
-              scales.forEach(scale => {
-                const scaleVal = parseFloat(scale.cls);
-                if (!isNaN(scaleVal) && scaleVal > 0) {
-                  const pixelDistance = Math.sqrt((scale.x1 - scale.x2) ** 2 + (scale.y1 - scale.y2) ** 2);
-                  scaleValues.push(pixelDistance / scaleVal);
-                }
-              });
+            let relativeLineLengthFt = calculateLineLengthFt(line, image_width, image_height, scales)
 
 
-              if (scaleValues.length > 0) {
-                const averageTotalScale = scaleValues.reduce((sum, val) => sum + val, 0) / scaleValues.length;
-
-                const relativeLineLength = Math.sqrt((line.x1 - x) ** 2 + (line.y1 - y) ** 2);
-                relativeLineLengthFt = relativeLineLength / averageTotalScale;
-              }
-            }
             state = saveToHistory(state, "Create Line")
             const newState = setIn(state, [...pathToActiveImage, "regions", regionIndex], {
               ...line,
@@ -2199,10 +2128,11 @@ export default (state: MainLayoutState, action: Action) => {
       if (action.region.type === "scale") {
         const image_pixel_size = getIn(state, pathToActiveImage).pixelSize
         const image_width = image_pixel_size ? image_pixel_size.w : 0
-        const image_height = image_pixel_size ? image_pixel_size.h : 0  
-        const newRegions = (activeImage.regions || [])
-          .filter(r => r.id !== action.region.id);
+        const image_height = image_pixel_size ? image_pixel_size.h : 0
+        const newRegions = [...(getIn(state, pathToActiveImage).regions || [])]
+          .filter(r => r.id !== action.region.id)
         const updatedRegions = updateLineLengths(newRegions, image_width, image_height);
+        console.log(updatedRegions)
         return setIn(state, [...pathToActiveImage, "regions"], updatedRegions);
       }
 

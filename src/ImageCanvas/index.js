@@ -597,6 +597,8 @@ export const ImageCanvas = ({
             categories={categories}
             subType={subType}
             categoriesColorMap={categoriesColorMap}
+            imageWidth={imageDimensions.naturalWidth}
+            imageHeight={imageDimensions.naturalHeight}
           />
         </PreventScrollToParents>
       )}
@@ -660,6 +662,8 @@ export const ImageCanvas = ({
               subType={subType}
               categories={categories}
               categoriesColorMap={categoriesColorMap}
+              imageWidth={imageDimensions.naturalWidth}
+              imageHeight={imageDimensions.naturalHeight}
             />
           </div>
         )
