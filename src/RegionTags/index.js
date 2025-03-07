@@ -45,6 +45,8 @@ export const RegionTags = ({
   categories,
   subType,
   categoriesColorMap,
+  imageWidth,
+  imageHeight,
 }) => {
   const RegionLabel = DefaultRegionLabel
   return regions
@@ -160,6 +162,8 @@ export const RegionTags = ({
               }}
               devices={deviceList}
               categories={categories}
+              imageWidth={imageWidth}
+              imageHeight={imageHeight}
             />
           </div>
         </div>

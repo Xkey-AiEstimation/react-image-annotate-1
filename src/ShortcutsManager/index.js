@@ -165,7 +165,7 @@ export const useDispatchHotkeyHandlers = ({ dispatch, state }) => {
       },
       delete_region: () => {
         dispatch({
-          type: "DELETE_SELECTED_REGION",
+          type: "DELETE_REGION",
         })
       },
       undo: () => {
