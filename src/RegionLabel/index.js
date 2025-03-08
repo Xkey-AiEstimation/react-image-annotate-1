@@ -283,29 +283,24 @@ export const RegionLabel = ({
   }, [regions, region])
 
   useEffect(() => {
-    if (region.type === "line") {
-      if (region.length_ft !== undefined) {
-        setRelativeLineLengthFt(region.length_ft)
-      } else {
-        if (scales.length !== 0) {
-          const scales = regions.filter((r) => r.type === "scale") || []
-          console.log(regions, imageSrc)
-          const relativeLineLength = calculateLineLengthFt(region,
-            imageWidth,
-            imageHeight,
-            scales)
-          if (relativeLineLength !== 0) {
-            setRelativeLineLengthFt(relativeLineLength)
-          }
-          else {
-            setRelativeLineLengthFt(0)
-          }
-        } else {
-          setRelativeLineLengthFt(0)
-        }
-      }
+    if (region.type !== "line") return;
+  
+    if (region.length_ft !== undefined) {
+      setRelativeLineLengthFt(region.length_ft);
+      return;
     }
-  }, [scales, region])
+  
+    if (!imageWidth || !imageHeight || scales.length === 0) {
+      setRelativeLineLengthFt(0);
+      return;
+    }
+  
+    const scaleRegions = regions.filter((r) => r.type === "scale");
+    const relativeLineLength = calculateLineLengthFt(region, imageWidth, imageHeight, scaleRegions);
+  
+    setRelativeLineLengthFt(relativeLineLength || 0);
+  }, [scales, region, imageWidth, imageHeight]);
+  
 
 
   const isNumeric = (str) => {
@@ -1912,5 +1907,8 @@ export default memo(
   (prevProps, nextProps) =>
     prevProps.editing === nextProps.editing &&
     prevProps.region === nextProps.region &&
-    prevProps.selectedBreakoutIdAutoAdd === nextProps.selectedBreakoutIdAutoAdd
+    prevProps.selectedBreakoutIdAutoAdd === nextProps.selectedBreakoutIdAutoAdd &&
+    prevProps.imageWidth === nextProps.imageWidth &&
+    prevProps.imageHeight === nextProps.imageHeight &&
+    prevProps.imageSrc === nextProps.imageSrc
 )
