@@ -274,6 +274,7 @@ export const ImageCanvas = ({
   const onVideoOrImageLoaded = useEventCallback(
     ({ naturalWidth, naturalHeight, duration }) => {
       const dims = { naturalWidth, naturalHeight, duration }
+      console.log(dims)
       if (onImageOrVideoLoaded) onImageOrVideoLoaded(dims)
       changeImageDimensions(dims)
       // Redundant update to fix rerendering issues
@@ -597,8 +598,8 @@ export const ImageCanvas = ({
             categories={categories}
             subType={subType}
             categoriesColorMap={categoriesColorMap}
-            imageWidth={imageDimensions.naturalWidth}
-            imageHeight={imageDimensions.naturalHeight}
+            imageWidth={imageDimensions?.naturalWidth}
+            imageHeight={imageDimensions?.naturalHeight}
           />
         </PreventScrollToParents>
       )}
@@ -664,8 +665,8 @@ export const ImageCanvas = ({
                 subType={subType}
                 categories={categories}
                 categoriesColorMap={categoriesColorMap}
-                imageWidth={imageDimensions.naturalWidth}
-                imageHeight={imageDimensions.naturalHeight}
+                imageWidth={imageDimensions?.naturalWidth}
+                imageHeight={imageDimensions?.naturalHeight}
               />
             </div>
           )
