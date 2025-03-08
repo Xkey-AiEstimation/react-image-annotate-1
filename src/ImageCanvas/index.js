@@ -274,7 +274,6 @@ export const ImageCanvas = ({
   const onVideoOrImageLoaded = useEventCallback(
     ({ naturalWidth, naturalHeight, duration }) => {
       const dims = { naturalWidth, naturalHeight, duration }
-      console.log(dims)
       if (onImageOrVideoLoaded) onImageOrVideoLoaded(dims)
       changeImageDimensions(dims)
       // Redundant update to fix rerendering issues

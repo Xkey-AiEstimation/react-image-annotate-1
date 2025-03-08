@@ -139,7 +139,6 @@ export const calculateLineLengthFt = (line, image_width, image_height, scales) =
   const lineLength = Math.sqrt(
     ((line.x1 - line.x2) * image_width) ** 2 + ((line.y1 - line.y2) * image_height) ** 2
   );
-  console.log("lineLength", lineLength)
 
   // Calculate scale values (pixels per foot)
   const scaleValues = scales.map(scale => {
@@ -1124,7 +1123,6 @@ export default (state: MainLayoutState, action: Action) => {
       )
     }
     case "CHANGE_REGION": {
-      console.log("CHANGE_REGION", action.region, action.region.cls)
       // if region.type is a scale then set cls to action.region.cls and all regions with type line need to have their length_ft recaculated
       const regions = getIn(state, ["images", currentImageIndex, "regions"]);
       const regionIndex = getRegionIndex(action.region);
@@ -2132,7 +2130,6 @@ export default (state: MainLayoutState, action: Action) => {
         const newRegions = [...(getIn(state, pathToActiveImage).regions || [])]
           .filter(r => r.id !== action.region.id)
         const updatedRegions = updateLineLengths(newRegions, image_width, image_height);
-        console.log(updatedRegions)
         return setIn(state, [...pathToActiveImage, "regions"], updatedRegions);
       }
 
