@@ -165,12 +165,12 @@ export const useDispatchHotkeyHandlers = ({ dispatch, state }) => {
       },
       delete_region: () => {
         dispatch({
-          type: "DELETE_REGION",
+          type: "DELETE_REGION_KEYPRESS",
         })
       },
       undo: () => {
         if (!state?.history?.length) return
-        
+
         dispatch({
           type: "RESTORE_HISTORY",
           index: 0

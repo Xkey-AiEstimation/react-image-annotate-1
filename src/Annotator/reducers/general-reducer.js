@@ -211,8 +211,9 @@ export default (state: MainLayoutState, action: Action) => {
     const regionId =
       typeof region === "string" || typeof region === "number"
         ? region
-        : region.id
+        : region?.id
     if (!activeImage) return null
+    if (!regionId) return null
     const regionIndex = (activeImage.regions || []).findIndex(
       (r) => r.id === regionId
     )
@@ -1131,17 +1132,20 @@ export default (state: MainLayoutState, action: Action) => {
       if (action.region.type === "scale") {
         if (oldRegion.cls !== action.region.cls) {
           action.region.visible = true;
-          action.region.category = getCategoryBySymbolName(action.region.cls);
-          action.region.color = getColorByCategory(state, action.region.category);
-          state = saveToHistory(state, "Change Scale");
-
-          // GET THE IMAGE WIDTH AND HEIGHT 
+          // GET THE IMAGE WIDTH AND HEIGHT FROM THE STATE
           const updatedRegionsWithNewScale = regions.map((region, index) =>
             index === regionIndex ? action.region : region
           )
-          const image_width = getIn(state, ["images", currentImageIndex, "width"])
-          const image_height = getIn(state, ["images", currentImageIndex, "height"])
+          let image_width = getIn(state, ["images", currentImageIndex, "width"])
+          let image_height = getIn(state, ["images", currentImageIndex, "height"])
+          if (!image_width) {
+            image_width = activeImage?.pixelSize?.w || 0
+          }
+          if (!image_height) {
+            image_height = activeImage?.pixelSize?.h || 0
+          }
           const updatedRegions = updateLineLengths(updatedRegionsWithNewScale, image_width, image_height)
+          state = saveToHistory(state, "Change Scale");
           return setIn(state, [...pathToActiveImage, "regions"], updatedRegions)
         }
       }
@@ -2118,26 +2122,57 @@ export default (state: MainLayoutState, action: Action) => {
         isOCR: false,
       })
     }
-    case "DELETE_REGION": {
-      const regionIndex = getRegionIndex(action.region);
-      if (regionIndex === null) return state;
-
-      // If deleting a scale, update all line lengths
-      if (action.region.type === "scale") {
+    case "DELETE_REGION_KEYPRESS": {
+      // get highlighted region
+      const highlightedRegion = activeImage.regions.find((r) => r.highlighted)
+      if (!highlightedRegion) return state
+      if (highlightedRegion.type === "scale") {
         const image_pixel_size = getIn(state, pathToActiveImage).pixelSize
         const image_width = image_pixel_size ? image_pixel_size.w : 0
         const image_height = image_pixel_size ? image_pixel_size.h : 0
         const newRegions = [...(getIn(state, pathToActiveImage).regions || [])]
-          .filter(r => r.id !== action.region.id)
+          .filter(r => r.id !== highlightedRegion.id)
+        const updatedRegions = updateLineLengths(newRegions, image_width, image_height);
+        return setIn(state, [...pathToActiveImage, "regions"], updatedRegions);
+      } else {
+        return setIn(
+          state,
+          [...pathToActiveImage, "regions"],
+          (activeImage.regions || []).filter((r) => !r.highlighted)
+        )
+      }
+    }
+    case "DELETE_REGION": {
+      const regionIndex = getRegionIndex(action.region); // 
+      const activeImage = getIn(state, pathToActiveImage);
+      const regions = activeImage?.regions || [];
+
+      // If regionIndex is null/undefined, fall back to deleting highlighted regions
+      const shouldDeleteByHighlight = regionIndex == null;
+
+      // If deleting a scale, update all line lengths
+      if (action.region?.type === "scale") {
+        const image_pixel_size = activeImage?.pixelSize;
+        const image_width = image_pixel_size?.w || 0;
+        const image_height = image_pixel_size?.h || 0;
+
+        const newRegions = regions.filter(r =>
+          (shouldDeleteByHighlight ? !r.highlighted : r.id !== action.region.id)
+        );
+
         const updatedRegions = updateLineLengths(newRegions, image_width, image_height);
         return setIn(state, [...pathToActiveImage, "regions"], updatedRegions);
       }
 
+      // Support both new and old deletion methods
       return setIn(
         state,
         [...pathToActiveImage, "regions"],
-        (activeImage.regions || []).filter((r) => r.id !== action.region.id)
+        regions.filter(r =>
+          (shouldDeleteByHighlight ? !r.highlighted : r.id !== action.region.id)
+        )
       );
+
     }
     case "DELETE_SELECTED_REGION": {
       return setIn(
