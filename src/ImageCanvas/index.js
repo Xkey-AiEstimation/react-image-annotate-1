@@ -31,6 +31,7 @@ import useWasdMode from "./use-wasd-mode"
 import { disableBreakoutSubscription } from "../Annotator/constants.js"
 import type { MainLayoutState } from "../MainLayout/MainLayout"
 
+
 const useStyles = makeStyles(styles)
 
 const eraserCursor = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/svg" width="24" height="24" viewBox="0 0 24 24" fill="%23ff69b4"><path d="M16.24 3.56l4.95 4.94c.78.79.78 2.05 0 2.84L12 20.53a4.008 4.008 0 0 1-5.66 0L2.81 17c-.78-.79-.78-2.05 0-2.84l10.6-10.6c.79-.78 2.05-.78 2.83 0zM4.22 15.58l3.54 3.53c.78.79 2.05.79 2.83 0l7.07-7.07-6.37-6.37-7.07 7.07c-.79.78-.79 2.05 0 2.84z"/></svg>`
@@ -605,7 +606,7 @@ export const ImageCanvas = ({
       {!showTags &&
         imageLoaded &&
         highlightedRegion && (() => {
-          // Calculate position for the region label (similar to RegionTags)
+          // Calculate position for the region label
           const pbox = projectRegionBox(highlightedRegion)
 
           // Skip if outside visible area or invalid dimensions
@@ -614,19 +615,80 @@ export const ImageCanvas = ({
           if (pbox.x + pbox.w < 0 || pbox.y + pbox.h < 0) return null
           if (pbox.x > layoutParams.current.canvasWidth || pbox.y > layoutParams.current.canvasHeight) return null
 
-          const labelPosition = {
-            left: pbox.x,
-            top: highlightedRegion?.breakout ? pbox.y - 400 : pbox.y - 250,
-            width: Math.max(100, pbox.w),  // Minimum width for readability
-            position: "absolute",
-            zIndex: 10
+          // Check if we're currently creating a line
+          const isCreatingLine = state.mode &&
+            state.mode.mode === "DRAW_LINE" &&
+            state.mode.regionId === highlightedRegion.id
+
+          // Improved positioning for line creation
+          let labelPosition = {}
+
+          if (isCreatingLine && highlightedRegion.type === "line") {
+            // For lines being created, position the label intelligently
+            // to avoid getting in the way of the drawing
+
+            // Get line endpoints
+            const { x1, y1, x2, y2 } = highlightedRegion
+
+            // Calculate line direction vector
+            const dx = x2 - x1
+            const dy = y2 - y1
+
+            // Determine if line is more horizontal or vertical
+            const isMoreHorizontal = Math.abs(dx) > Math.abs(dy)
+
+            // Position label perpendicular to the line direction
+            // and offset from the midpoint of the line
+            const midX = pbox.x + pbox.w / 2
+            const midY = pbox.y + pbox.h / 2
+
+            if (isMoreHorizontal) {
+              // For horizontal lines, position above or below
+              const positionAbove = y2 < 0.5 // If drawing in bottom half, position above
+
+              labelPosition = {
+                left: midX,
+                top: positionAbove ? midY - 60 : midY + 30,
+                transform: 'translateX(-50%)', // Center horizontally
+                position: "absolute",
+                zIndex: 10
+              }
+            } else {
+              // For vertical lines, position to the left or right
+              const positionLeft = x2 > 0.5 // If drawing in left half, position to the right
+
+              labelPosition = {
+                left: positionLeft ? midX + 30 : midX - 30,
+                top: midY,
+                transform: 'translateY(-50%)', // Center vertically
+                position: "absolute",
+                zIndex: 10
+              }
+            }
+          } else {
+            // Standard positioning for other regions or completed lines
+            labelPosition = {
+              left: pbox.x,
+              top: highlightedRegion?.breakout ? pbox.y - 400 : pbox.y - 250,
+              width: Math.max(100, pbox.w),  // Minimum width for readability
+              position: "absolute",
+              zIndex: 10
+            }
           }
 
-          // Ensure label doesn't go off-screen at the top
-          if (labelPosition.top < 5) labelPosition.top = pbox.y + pbox.h + 5
+          // Ensure label doesn't go off-screen
+          const buffer = 10
+          if (labelPosition.left < buffer) labelPosition.left = buffer
+          if (labelPosition.top < buffer) labelPosition.top = buffer
+          if (labelPosition.left + (labelPosition.width || 200) > layoutParams.current.canvasWidth - buffer) {
+            labelPosition.left = layoutParams.current.canvasWidth - (labelPosition.width || 200) - buffer
+          }
+          if (labelPosition.top + 40 > layoutParams.current.canvasHeight - buffer) {
+            labelPosition.top = layoutParams.current.canvasHeight - 40 - buffer
+          }
 
           return (
-            <div key={`regionLabel-${highlightedRegion.id}`} style={labelPosition}>
+            <div key={`regionLabel-${highlightedRegion?.id || "no-id"}`} style={labelPosition}>
               <RegionLabel
                 disableClose
                 allowedClasses={regionClsList}
@@ -666,6 +728,7 @@ export const ImageCanvas = ({
                 categoriesColorMap={categoriesColorMap}
                 imageWidth={imageDimensions?.naturalWidth}
                 imageHeight={imageDimensions?.naturalHeight}
+                simplifiedView={isCreatingLine}
               />
             </div>
           )
