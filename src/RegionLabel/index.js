@@ -77,6 +77,17 @@ type Props = {
   finishMatchTemplate: (Region, PageProperties, ocr_type) => null,
   onRegionClassAdded: (cls) => any,
   allowComments?: boolean,
+  breakoutList: Array<Region>,
+  selectedBreakoutIdAutoAdd: string,
+  dispatch: any,
+  devices: Array<Region>,
+  categories: Array<string>,
+  categoriesColorMap: any,
+  disableAddingClasses?: boolean,
+  subType: string,
+  imageWidth: number,
+  imageHeight: number,
+  simplifiedView?: boolean,
 }
 
 const all_types = [...new Set(DeviceList.map((pair) => pair.category))]
@@ -140,6 +151,7 @@ export const RegionLabel = ({
   subType,
   imageWidth,
   imageHeight,
+  simplifiedView = false,
 }: Props) => {
   const classes = useStyles()
   const [openBreakout, setOpenBreakout] = React.useState(false)
@@ -284,23 +296,23 @@ export const RegionLabel = ({
 
   useEffect(() => {
     if (region.type !== "line") return;
-  
+
     if (region.length_ft !== undefined) {
       setRelativeLineLengthFt(region.length_ft);
       return;
     }
-  
+
     if (!imageWidth || !imageHeight || scales.length === 0) {
       setRelativeLineLengthFt(0);
       return;
     }
-  
+
     const scaleRegions = regions.filter((r) => r.type === "scale");
     const relativeLineLength = calculateLineLengthFt(region, imageWidth, imageHeight, scaleRegions);
-  
+
     setRelativeLineLengthFt(relativeLineLength || 0);
   }, [scales, region, imageWidth, imageHeight]);
-  
+
 
 
   const isNumeric = (str) => {
@@ -716,10 +728,10 @@ export const RegionLabel = ({
       // do line
       return (
         <>
-          {region?.length_ft === undefined || region?.length_ft === 0 ? (
-            <div>No Scales Found</div>
+          {relativeLineLengthFt === undefined || relativeLineLengthFt === 0 ? (
+            <div>No Scales Found: 0 ft</div>
           ) : (
-            <div>Length: {region.length_ft.toFixed(2)} ft</div>
+            <div>Length: {relativeLineLengthFt.toFixed(2)} ft</div>
           )}
           <div style={{ display: "flex", alignItems: "center" }}>
             <div
@@ -1520,6 +1532,80 @@ export const RegionLabel = ({
     </Box>
   )
 
+  if (simplifiedView && region.type === "line") {
+    // Get the device/conduit name from the region
+    const deviceName = region.cls && region.cls !== ""
+      ? region.cls
+      : "Measurement Line";
+
+    return (
+      <Paper
+        className={classnames(classes.regionInfo, {
+          highlighted: region.highlighted,
+        })}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          padding: "6px 10px",
+          backgroundColor: "rgba(33, 33, 33, 0.85)",
+          color: "#fff",
+          borderRadius: 20,
+          boxShadow: "0 2px 5px rgba(0,0,0,0.2)",
+          position: "relative",
+          border: "1px solid rgba(255,255,255,0.1)",
+          maxWidth: "fit-content"
+        }}
+      >
+        <LinearScaleIcon style={{
+          marginRight: 8,
+          fontSize: 16,
+          color: "#3CD2BC"
+        }} />
+
+        {/* Add the device/conduit name */}
+        <div style={{
+          fontWeight: 500,
+          fontSize: 13,
+          marginRight: 8,
+          maxWidth: 120,
+          overflow: "hidden",
+          textOverflow: "ellipsis",
+          whiteSpace: "nowrap",
+          color: "#fff"
+        }}>
+          {deviceName}
+        </div>
+
+        {/* Add a separator */}
+        <div style={{
+          height: 14,
+          width: 1,
+          backgroundColor: "rgba(255,255,255,0.3)",
+          margin: "0 8px"
+        }} />
+
+        {relativeLineLengthFt !== undefined && relativeLineLengthFt > 0 ? (
+          <div style={{
+            fontWeight: "bold",
+            color: "#3CD2BC",
+            fontSize: 14,
+            marginRight: 8
+          }}>
+            Length: {relativeLineLengthFt.toFixed(2)} ft
+          </div>
+        ) : (
+          <div style={{
+            color: "#ff9800",
+            fontSize: 12,
+            marginRight: 8
+          }}>
+            {relativeLineLengthFt === 0 ? "0 ft" : `No Scales Found`}
+          </div>
+        )}
+      </Paper>
+    )
+  }
+
   return (
     <>
       <Paper
@@ -1584,7 +1670,7 @@ export const RegionLabel = ({
                       }}
                     >
                       {relativeLineLengthFt === 0
-                        ? "No Scales Found"
+                        ? "No Scales Found: O ft"
                         : `Length: ${relativeLineLengthFt.toFixed(2)} ft`}
                     </div>
                   </>
