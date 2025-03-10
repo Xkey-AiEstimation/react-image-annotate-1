@@ -50,9 +50,9 @@ const useStyles = makeStyles((theme) => ({
       backgroundColor: "rgba(0, 0, 0, 0.4)",
     },
     "&.selected": {
-      backgroundColor: theme.palette.primary.main,
+      backgroundColor: "#D2042D",
       "&:hover": {
-        backgroundColor: theme.palette.primary.dark,
+        backgroundColor: "#B10225"
       }
     },
     "& svg": {
@@ -171,12 +171,12 @@ export const LeftSidebar = ({
         )
       })}
       <div className={classes.divider} />
-      <Tooltip 
-        title={isFloating 
-          ? "Dock toolbar to left Sidebar" 
+      <Tooltip
+        title={isFloating
+          ? "Dock toolbar to left Sidebar"
           : "Float Toolbar"
         }
-        placement={isFloating ? "top" : "right"} 
+        placement={isFloating ? "top" : "right"}
         arrow
         PopperProps={{
           style: {
@@ -214,7 +214,7 @@ export const LeftSidebar = ({
         handle=".handle"
       >
         <div className={classes.floatingToolbar}>
-          <div className="handle" style={{ 
+          <div className="handle" style={{
             position: 'absolute',
             top: 0,
             left: 0,

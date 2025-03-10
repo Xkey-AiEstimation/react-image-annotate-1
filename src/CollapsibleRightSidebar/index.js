@@ -45,7 +45,7 @@ const useStyles = makeStyles((theme) => ({
         width: `${SIDEBAR_WIDTH}px`,
         height: "100%",
         overflowY: "auto",
-        backgroundColor: 'black',
+        backgroundColor: '#09090b',
         borderLeft: `1px solid ${theme.palette.divider}`,
         boxShadow: "-2px 0px 5px rgba(0,0,0,0.1)",
         padding: "8px 0",
