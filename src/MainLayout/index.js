@@ -441,15 +441,15 @@ return (
                   },
                   {
                     name: "create-polygon",
-                    helperText: "Add Polygon" + getHotkeyHelpText("create_polygon"),
+                    helperText: "Draw Polygon" + getHotkeyHelpText("create_polygon"),
                   },
                   {
                     name: "create-line",
-                    helperText: "Add Line" + getHotkeyHelpText("create_line"),
+                    helperText: "Draw Line" + getHotkeyHelpText("create_line"),
                   },
                   {
                     name: "create-scale",
-                    helperText: "Add Scale" + getHotkeyHelpText("create_scale"),
+                    helperText: "Set Scale" + getHotkeyHelpText("create_scale"),
                   },
                   {
                     name: "create-expanding-line",
