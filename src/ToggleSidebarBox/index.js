@@ -7,17 +7,12 @@ import {
   Tooltip,
   createTheme
 } from "@material-ui/core"
-import { grey } from "@material-ui/core/colors"
 import Grid from "@material-ui/core/Grid"
 import { makeStyles } from "@material-ui/core/styles"
 import CategoryIcon from "@material-ui/icons/Category"
 import CloseIcon from "@material-ui/icons/Close"
 import DashboardIcon from "@material-ui/icons/Dashboard"
-import TrashIcon from "@material-ui/icons/Delete"
 import EditIcon from "@material-ui/icons/Edit"
-import LockIcon from "@material-ui/icons/Lock"
-import PieChartIcon from "@material-ui/icons/PieChart"
-import ReorderIcon from "@material-ui/icons/SwapVert"
 import isEqual from "lodash/isEqual"
 import React, {
   memo,
@@ -409,29 +404,36 @@ const RowHeader = ({
   }
 
   // Function to update the color of a category
-  const handleColorChangeLocal = (color, category) => {
-    setCategoryColors((prevState) => ({
-      ...prevState,
-      [category]: color.hex, // Store hex color value for the category
-    }))
-    onCategoryColorChange(category, color.hex)
-  }
+  const handleColorChangeLocal = useCallback((color, category) => {
+    // Stop event propagation
+    event?.stopPropagation();
+    event?.preventDefault();
 
-  // Close tooltip when clicking outside (with checks to avoid closing on tooltip content)
+    // Update colors without closing
+    setCategoryColors(prev => ({
+      ...prev,
+      [category]: color.hex
+    }));
+    onCategoryColorChange(category, color.hex);
+  }, [onCategoryColorChange]);
+
+  // Update the outside click handler to be more specific
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Prevent closing if the click is inside the tooltip or color picker container
-      if (tooltipRef.current && tooltipRef.current.contains(event.target)) {
-        return
+      if (tooltipRef.current && !tooltipRef.current.contains(event.target)) {
+        // Check if click is on the color picker
+        const isColorPicker = event.target.closest('.sketch-picker');
+        if (!isColorPicker) {
+          closeAllTooltips();
+        }
       }
-      closeAllTooltips()
-    }
+    };
 
-    document.addEventListener("mousedown", handleClickOutside)
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside)
-    }
-  }, [])
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <FormGroup className={classes.formGroup}>
@@ -452,7 +454,7 @@ const RowHeader = ({
                   className={classes.switchControl}
                   control={
                     <Tooltip
-                      title={`Toggle ${category} visibility`}
+                      title="Toggle Category Visibility"
                       arrow
                       placement="top"
                       PopperProps={{
@@ -463,7 +465,6 @@ const RowHeader = ({
                         arrow: classes.tooltipArrow,
                         popper: classes.popper
                       }}
-
                     >
                       <Switch
                         style={{
@@ -478,9 +479,7 @@ const RowHeader = ({
                   }
                   label={
                     <Tooltip
-                      title={
-                        category
-                      }
+                      title={category}
                       arrow
                       placement="top"
                       PopperProps={{
@@ -499,15 +498,84 @@ const RowHeader = ({
                   }
                 />
               </div>
-
             </div>
 
             <div className={classes.actionButtons}>
+
+
               <Tooltip
-                title="Change Category Color"
-                arrow
-                placement="top"
+                interactive
+                title={
+                  <div
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div style={{
+                        fontSize: 12,
+                        color: 'white',
+                        // add a line break here
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%'
+                      }}>
+                        {category}
+                      </div>
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        marginBottom: 8
+                      }}>
+
+                        <IconButton
+                          size="small"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenToolMap(prev => ({
+                              ...prev,
+                              [category]: false
+                            }));
+                          }}
+                          style={{
+                            backgroundColor: 'white',
+                            width: 24,
+                            height: 24,
+                            padding: 2,
+                            color: 'black'
+                          }}
+                        >
+                          <CloseIcon
+                            fontSize="small"
+                            style={{ fontSize: 16, color: 'black' }}
+                          />
+                        </IconButton>
+                      </div>
+                    </div>
+                    <SketchPicker
+                      color={
+                        categoryColors[category] ||
+                        categoriesColorMap[category] ||
+                        "#C4A484"
+                      }
+                      onChangeComplete={(color, event) => {
+                        event?.stopPropagation();
+                        handleColorChangeLocal(color, category);
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        e.preventDefault();
+                      }}
+                    />
+                  </div>
+                }
                 PopperProps={{
+                  disablePortal: true,
                   style: { zIndex: zIndices.tooltip }
                 }}
                 classes={{
@@ -515,20 +583,28 @@ const RowHeader = ({
                   arrow: classes.tooltipArrow,
                   popper: classes.popper
                 }}
+                open={openToolMap[category] || false}
               >
                 <IconButton
-                  size="small"
                   onClick={() => handleToolTipClick(category)}
                   style={{
-                    backgroundColor: categoryColors[category] || categoriesColorMap[category] || "#C4A484",
+                    backgroundColor:
+                      categoryColors[category] ||
+                      categoriesColorMap[category] ||
+                      "#C4A484", // Display the correct color
                     width: 24,
                     height: 24,
-                    padding: 0
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                 >
                   <EditIcon style={{ color: "white", fontSize: 16 }} />
                 </IconButton>
               </Tooltip>
+
 
               {!isBreakoutDisabled && (
                 <Tooltip
@@ -565,7 +641,7 @@ const RowHeader = ({
           </div>
         )
       })}
-    </FormGroup>
+    </FormGroup >
   )
 }
 
