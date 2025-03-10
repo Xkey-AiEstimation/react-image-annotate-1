@@ -35,6 +35,7 @@ export default {
       backgroundColor: blue[50],
       color: grey[800],
     },
+
   },
   chip: {
     display: "flex",
@@ -53,3 +54,4 @@ export default {
     "& .text": {},
   },
 }
+

@@ -5,6 +5,23 @@ export default {
     fontSize: 11,
     fontWeight: "bold",
     color: "white",
+    maxHeight: "calc(100vh - 200px)", // Limit height and enable scrolling
+    overflowY: "auto",
+    "&::-webkit-scrollbar": {
+      width: "8px",
+      height: "8px",
+    },
+    "&::-webkit-scrollbar-track": {
+      background: "#1e1e1e",
+      borderRadius: "4px",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      background: "#4a4a4a",
+      borderRadius: "4px",
+      "&:hover": {
+        background: "#5a5a5a"
+      }
+    },
     "& .icon": {
       marginTop: 4,
       width: 16,
