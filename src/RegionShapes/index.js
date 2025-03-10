@@ -1,7 +1,7 @@
 // @flow
 
-import React, { memo } from "react"
 import colorAlpha from "color-alpha"
+import React, { memo, useMemo } from "react"
 
 function clamp(num, min, max) {
   return num <= min ? min : num >= max ? max : num
@@ -18,19 +18,44 @@ const RegionComponents = {
       />
     </g>
   )),
-  line: memo(({ region, iw, ih }) => (
-    <g transform={`translate(${region.x1 * iw} ${region.y1 * ih})`}>
-      <line
-        strokeWidth={2}
-        x1={0}
-        y1={0}
-        x2={(region.x2 - region.x1) * iw}
-        y2={(region.y2 - region.y1) * ih}
-        stroke={colorAlpha(region.color, 0.75)}
-        fill={colorAlpha(region.color, 0.25)}
-      />
-    </g>
-  )),
+  line: memo(({ region, iw, ih }) => {
+    const x1 = region.x1 * iw
+    const y1 = region.y1 * ih
+    const x2 = region.x2 * iw
+    const y2 = region.y2 * ih
+    
+    const dx = x2 - x1
+    const dy = y2 - y1
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI)
+    const length = Math.sqrt(dx * dx + dy * dy)
+
+    return (
+      <g transform={`translate(${x1}, ${y1}) rotate(${angle})`}>
+        <line
+          strokeWidth={2}
+          x1={0}
+          y1={0}
+          x2={length}
+          y2={0}
+          stroke={colorAlpha(region.color, 0.75)}
+          fill={colorAlpha(region.color, 0.25)}
+        />
+        
+        {/* Length label */}
+        <text
+          x={length/2}
+          y={-10}
+          textAnchor="middle"
+          fill={region.color || "#4f46e5"}
+          fontSize={12}
+          fontFamily="monospace"
+          fontWeight="bold"
+        >
+          {region.length_ft ? `${region.length_ft.toFixed(2)} ft` : ''}
+        </text>
+      </g>
+    )
+  }),
   scale: memo(({ region, iw, ih }) => (
     <g transform={`translate(${region.x1 * iw} ${region.y1 * ih})`}>
       <line
@@ -47,12 +72,12 @@ const RegionComponents = {
   box: memo(({ region, iw, ih }) => (
     <g transform={`translate(${region.x * iw} ${region.y * ih})`}>
       <rect
-        strokeWidth={region.isOCR?1.5:2}
+        strokeWidth={region.isOCR ? 1.5 : 2}
         x={0}
         y={0}
         width={Math.max(region.w * iw, 0)}
         height={Math.max(region.h * ih, 0)}
-        stroke={colorAlpha(region.isOCR?"#080808":region.color, region.isOCR?0.75:0.75)}
+        stroke={colorAlpha(region.isOCR ? "#080808" : region.color, region.isOCR ? 0.75 : 0.75)}
         fill={colorAlpha(region.color, 0.5)}
       />
     </g>
@@ -157,9 +182,8 @@ const RegionComponents = {
         {points.map(({ x, y, angle }, i) => (
           <g
             key={i}
-            transform={`translate(${x * iw} ${y * ih}) rotate(${
-              (-(angle || 0) * 180) / Math.PI
-            })`}
+            transform={`translate(${x * iw} ${y * ih}) rotate(${(-(angle || 0) * 180) / Math.PI
+              })`}
           >
             <g>
               <rect
@@ -210,6 +234,109 @@ export const WrappedRegionList = memo(
   (n, p) => n.regions === p.regions && n.iw === p.iw && n.ih === p.ih
 )
 
+const ScaleLine = memo(({ region, iw, ih }) => {
+  const scaleColor = region.color || "#4f46e5"
+  
+  // Memoize core calculations
+  const { x1, y1, pixelLength, angle } = useMemo(() => {
+    const x1 = region.x1 * iw
+    const y1 = region.y1 * ih
+    const x2 = region.x2 * iw
+    const y2 = region.y2 * ih
+
+    const dx = x2 - x1
+    const dy = y2 - y1
+    return {
+      x1,
+      y1,
+      pixelLength: Math.sqrt(dx * dx + dy * dy),
+      angle: Math.atan2(dy, dx) * (180 / Math.PI)
+    }
+  }, [region.x1, region.x2, region.y1, region.y2, iw, ih])
+
+  // Pre-calculate tick positions - only 5 fixed positions
+  const tickMarks = useMemo(() => {
+    const lengthInFeet = region.length_ft || parseFloat(region.cls)
+    return [0, 0.25, 0.5, 0.75, 1].map(percent => ({
+      position: percent * pixelLength,
+      label: `${(percent * lengthInFeet).toFixed(1)}`
+    }))
+  }, [pixelLength, region.length_ft, region.cls])
+
+  // Get the display length (prefer length_ft if available)
+  const displayLength = region.length_ft ? 
+    region.length_ft.toFixed(2) : 
+    parseFloat(region.cls).toFixed(2)
+
+  // Render optimized SVG
+  return (
+    <g transform={`translate(${x1}, ${y1}) rotate(${angle})`}>
+      {/* Main line with end caps in single path */}
+      <path
+        d={`
+          M0,0 
+          L${pixelLength},0
+          M0,-7 L0,7
+          M${pixelLength},-7 L${pixelLength},7
+        `}
+        stroke={scaleColor}
+        strokeWidth={2}
+        fill="none"
+      />
+
+      {/* Combine tick marks into single path */}
+      <path
+        d={tickMarks
+          .map(tick => `M${tick.position},-7 L${tick.position},7`)
+          .join(" ")}
+        stroke={scaleColor}
+        strokeWidth={1}
+      />
+
+      {/* Text elements */}
+      {tickMarks.map(({ position, label }, i) => (
+        <text
+          key={i}
+          x={position}
+          y={12}
+          textAnchor="middle"
+          fill={scaleColor}
+          fontSize={10}
+          fontFamily="monospace"
+        >
+          {label}
+        </text>
+      ))}
+
+      {/* Main label */}
+      <text
+        x={pixelLength / 2}
+        y={-15}
+        textAnchor="middle"
+        fill={scaleColor}
+        fontSize={12}
+        fontFamily="monospace"
+        fontWeight="bold"
+      >
+        {displayLength} ft
+      </text>
+    </g>
+  )
+}, (prev, next) => {
+  // Custom memoization check
+  return (
+    prev.region.x1 === next.region.x1 &&
+    prev.region.y1 === next.region.y1 &&
+    prev.region.x2 === next.region.x2 &&
+    prev.region.y2 === next.region.y2 &&
+    prev.region.cls === next.region.cls &&
+    prev.region.length_ft === next.region.length_ft &&
+    prev.region.color === next.region.color &&
+    prev.iw === next.iw &&
+    prev.ih === next.ih
+  )
+})
+
 export const RegionShapes = ({
   mat,
   imagePosition,
@@ -242,6 +369,21 @@ export const RegionShapes = ({
         keypointDefinitions={keypointDefinitions}
         fullSegmentationMode={fullSegmentationMode}
       />
+      {regions.map((region, i) => {
+        switch (region.type) {
+          case "scale":
+            return (
+              <ScaleLine
+                key={i}
+                region={region}
+                iw={iw}
+                ih={ih}
+              />
+            )
+          default:
+            return null
+        }
+      })}
     </svg>
   )
 }

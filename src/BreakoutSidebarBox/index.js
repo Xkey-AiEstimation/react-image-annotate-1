@@ -230,17 +230,21 @@ export const BreakoutSidebarBox = ({
   selectedBreakoutIdAutoAdd,
   selectedBreakoutToggle,
 }) => {
+  
   const breakoutList = useMemo(() => {
-    const breakoutRegions = [
-      ...new Set(
-        breakouts
-          .filter((obj) => obj.is_breakout === true)
-          .map((obj) => JSON.stringify(obj))
-      ),
-    ].map((str) => JSON.parse(str))
-    if (breakoutRegions.length === 0) return null
-    return breakoutRegions
+    const seen = new Set()
+    const breakoutRegions = breakouts
+      .filter((obj) => obj.is_breakout === true)
+      .filter((obj) => {
+        const key = `${obj.name}-${obj.location}` // Customize with relevant keys
+        if (seen.has(key)) return false
+        seen.add(key)
+        return true
+      })
+
+    return breakoutRegions.length === 0 ? null : breakoutRegions
   }, [breakouts])
+
 
   const classes = useStyles()
   return (
