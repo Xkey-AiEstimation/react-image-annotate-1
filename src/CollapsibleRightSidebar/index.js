@@ -1,6 +1,6 @@
 // @flow
 
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { makeStyles } from "@material-ui/core/styles"
 import { IconButton, Paper } from "@material-ui/core"
 import ChevronRightIcon from "@material-ui/icons/ChevronRight"
@@ -8,7 +8,9 @@ import ChevronLeftIcon from "@material-ui/icons/ChevronLeft"
 import classnames from "classnames"
 import { zIndices } from "../Annotator/constants"
 
+const SIDEBAR_MIN_WIDTH = 300;
 const SIDEBAR_WIDTH = 400;
+const SIDEBAR_MAX_WIDTH = 800;
 
 const useStyles = makeStyles((theme) => ({
     sidebarContainer: props => ({
@@ -25,9 +27,37 @@ const useStyles = makeStyles((theme) => ({
             transform: "translateX(calc(100% - 16px))",
         }
     }),
+    
+    dragHandle: {
+        position: "absolute",
+        left: -8,
+        top: 0,
+        bottom: 0,
+        width: 16,
+        cursor: "ew-resize",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        "&::after": {
+            content: '""',
+            position: "absolute",
+            width: 4,
+            height: "100%",
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 2,
+            transition: "background-color 0.2s ease",
+        },
+        "&:hover::after": {
+            backgroundColor: "rgba(255,255,255,0.2)",
+        },
+        "&:active::after": {
+            backgroundColor: "rgba(255,255,255,0.3)",
+        }
+    },
+
     toggleButton: {
         position: "absolute",
-        left: -28,
+        left: -36,
         top: "50%",
         transform: "translateY(-50%)",
         zIndex: zIndices.sidebar,
@@ -41,8 +71,9 @@ const useStyles = makeStyles((theme) => ({
             color: 'white',
         }
     },
-    sidebarContent: {
-        width: `${SIDEBAR_WIDTH}px`,
+
+    sidebarContent: props => ({
+        width: `${props.width}px`,
         height: "100%",
         overflowY: "auto",
         backgroundColor: '#09090b',
@@ -66,16 +97,45 @@ const useStyles = makeStyles((theme) => ({
         "&::-webkit-scrollbar-thumb:hover": {
             background: "#888",
         },
-    }
+    })
 }))
 
 export const CollapsibleRightSidebar = ({ children, topOffset }) => {
     const [collapsed, setCollapsed] = useState(false);
-    const classes = useStyles({ topOffset });
+    const [width, setWidth] = useState(SIDEBAR_WIDTH);
+    const [isDragging, setIsDragging] = useState(false);
+    const classes = useStyles({ topOffset, width });
+
+    const handleDragStart = useCallback((e) => {
+        e.preventDefault();
+        setIsDragging(true);
+        
+        const startX = e.clientX;
+        const startWidth = width;
+        
+        const handleDrag = (moveEvent) => {
+            const deltaX = moveEvent.clientX - startX;
+            const newWidth = Math.max(
+                SIDEBAR_MIN_WIDTH,
+                Math.min(SIDEBAR_MAX_WIDTH, startWidth - deltaX)
+            );
+            setWidth(newWidth);
+        };
+        
+        const handleDragEnd = () => {
+            setIsDragging(false);
+            document.removeEventListener('mousemove', handleDrag);
+            document.removeEventListener('mouseup', handleDragEnd);
+        };
+        
+        document.addEventListener('mousemove', handleDrag);
+        document.addEventListener('mouseup', handleDragEnd);
+    }, [width]);
 
     return (
         <div
             className={classnames(classes.sidebarContainer, collapsed && "collapsed")}
+            style={{ cursor: isDragging ? 'ew-resize' : 'auto' }}
         >
             <IconButton
                 className={classes.toggleButton}
@@ -85,6 +145,11 @@ export const CollapsibleRightSidebar = ({ children, topOffset }) => {
             >
                 {collapsed ? <ChevronLeftIcon /> : <ChevronRightIcon />}
             </IconButton>
+
+            <div 
+                className={classes.dragHandle}
+                onMouseDown={handleDragStart}
+            />
 
             <Paper className={classes.sidebarContent} elevation={3}>
                 {children}

@@ -595,6 +595,8 @@ return (
     </FullScreen>
   </FullScreenContainer>
 )
+
 }
+
 
 export default MainLayout
