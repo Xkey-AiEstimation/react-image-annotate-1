@@ -34,9 +34,10 @@ import favicon from "../../public/images/favicon.png"
 import { action } from "@storybook/addon-actions"
 import BreakoutSidebarBox from "../BreakoutSidebarBox"
 import { AnnotationCountSidebarBox } from "../AnnotationCountSidebarBox"
-import { disableBreakoutSubscription, subTypes } from "../Annotator/constants"
+import { disableBreakoutSubscription, subTypes, zIndices } from "../Annotator/constants"
 // import Fullscreen from "../Fullscreen"
 import CollapsibleRightSidebar from "../CollapsibleRightSidebar"
+import LeftSidebar from "../LeftSidebar"
 
 const emptyArr = []
 const useStyles = makeStyles(styles)
@@ -285,7 +286,7 @@ const onPanToRegion = useEventCallback((region) => {
 
 const annotationCountSidebarBoxRegions = useMemo(() => {
   const regions = activeImage ? activeImage.regions : emptyArr
-  return regions.filter(r =>  r.type !== "scale")
+  return regions.filter(r => r.type !== "scale")
 }, [activeImage])
 
 const linearMeasurementsSidebarBoxRegions = useMemo(() => {
@@ -379,96 +380,102 @@ return (
               !hideExit && { name: "Exit" },
             ].filter(Boolean)}
             onClickHeaderItem={onClickHeaderItem}
-            onClickIconSidebarItem={onClickIconSidebarItem}
-            selectedTools={[
-              state.selectedTool,
-              state.showTags && "show-tags",
-              state.showMask && "show-mask",
-            ].filter(Boolean)}
-            iconSidebarItems={[
-              {
-                name: "select",
-                helperText: "Select" + getHotkeyHelpText("select_tool"),
-                alwaysShowing: true,
-              },
-              {
-                name: "pan",
-                helperText:
-                  "Drag/Pan (right or middle click)" +
-                  getHotkeyHelpText("pan_tool"),
-                alwaysShowing: true,
-              },
-              {
-                name: "zoom",
-                helperText:
-                  "Zoom In/Out (scroll)" + getHotkeyHelpText("zoom_tool"),
-                alwaysShowing: true,
-              },
-              {
-                name: "show-tags",
-                helperText: "Show / Hide Tags",
-                alwaysShowing: true,
-              },
-              {
-                name: "create-point",
-                helperText:
-                  "Add New Device (Point)" + getHotkeyHelpText("create_point"),
-              },
-              {
-                name: "create-box",
-                helperText:
-                  "Add New Device (Box)" +
-                  getHotkeyHelpText("create_bounding_box"),
-              },
-              {
-                name: "multi-delete-select",
-                helperText: (
-                  <Tooltip
-                    PopperProps={{
-                      style: { zIndex: 9999999 },
-                    }}
-                    title="Click and drag to create a selection box. All regions within the box will be deleted.">
-                    <span>Eraser Tool</span>
-                  </Tooltip>
-                ),
-                alwaysShowing: true,
-              },
-              {
-                name: "create-polygon",
-                helperText: "Add Polygon" + getHotkeyHelpText("create_polygon"),
-              },
-              {
-                name: "create-line",
-                helperText: "Add Line" + getHotkeyHelpText("create_line"),
-              },
-              {
-                name: "create-scale",
-                helperText: "Add Scale" + getHotkeyHelpText("create_scale"),
-              },
-              {
-                name: "create-expanding-line",
-                helperText: "Add Expanding Line",
-              },
-              {
-                name: "create-keypoints",
-                helperText: "Add Keypoints (Pose)",
-              },
-              state.fullImageSegmentationMode && {
-                name: "show-mask",
-                alwaysShowing: true,
-                helperText: "Show / Hide Mask",
-              },
-              {
-                name: "modify-allowed-area",
-                helperText: "Modify Allowed Area",
-              },
-            ]
-              .filter(Boolean)
-              .filter(
-                (a) => a.alwaysShowing || state.enabledTools.includes(a.name)
-              )}
           >
-            {canvas}
+            <div style={{ display: "flex", height: "100%" }}>
+              <LeftSidebar
+                selectedTools={[
+                  state.selectedTool,
+                  state.showTags && "show-tags",
+                  state.showMask && "show-mask",
+                ].filter(Boolean)}
+                iconSidebarItems={[
+                  {
+                    name: "select",
+                    helperText: "Select" + getHotkeyHelpText("select_tool"),
+                    alwaysShowing: true,
+                  },
+                  {
+                    name: "pan",
+                    helperText:
+                      "Drag/Pan (right or middle click)" +
+                      getHotkeyHelpText("pan_tool"),
+                    alwaysShowing: true,
+                  },
+                  {
+                    name: "zoom",
+                    helperText:
+                      "Zoom In/Out (scroll)" + getHotkeyHelpText("zoom_tool"),
+                    alwaysShowing: true,
+                  },
+                  {
+                    name: "show-tags",
+                    helperText: "Show / Hide Tags",
+                    alwaysShowing: true,
+                  },
+                  {
+                    name: "create-point",
+                    helperText:
+                      "Add New Device (Point)" + getHotkeyHelpText("create_point"),
+                  },
+                  {
+                    name: "create-box",
+                    helperText:
+                      "Add New Device (Box)" +
+                      getHotkeyHelpText("create_bounding_box"),
+                  },
+                  {
+                    name: "multi-delete-select",
+                    helperText: (
+                      <Tooltip
+                        PopperProps={{
+                          style: { zIndex: zIndices.tooltip },
+                        }}
+                        classes={{
+                          tooltip: classes.tooltip,
+                        }}
+                        title="Click and drag to create a selection box. All regions within the box will be deleted.">
+                        <span>Eraser Tool</span>
+                      </Tooltip>
+                    ),
+                    alwaysShowing: true,
+                  },
+                  {
+                    name: "create-polygon",
+                    helperText: "Add Polygon" + getHotkeyHelpText("create_polygon"),
+                  },
+                  {
+                    name: "create-line",
+                    helperText: "Add Line" + getHotkeyHelpText("create_line"),
+                  },
+                  {
+                    name: "create-scale",
+                    helperText: "Add Scale" + getHotkeyHelpText("create_scale"),
+                  },
+                  {
+                    name: "create-expanding-line",
+                    helperText: "Add Expanding Line",
+                  },
+                  {
+                    name: "create-keypoints",
+                    helperText: "Add Keypoints (Pose)",
+                  },
+                  state.fullImageSegmentationMode && {
+                    name: "show-mask",
+                    alwaysShowing: true,
+                    helperText: "Show / Hide Mask",
+                  },
+                  {
+                    name: "modify-allowed-area",
+                    helperText: "Modify Allowed Area",
+                  },
+                ].filter(Boolean)
+                  .filter((a) => a.alwaysShowing || state.enabledTools.includes(a.name))}
+                onClickIconSidebarItem={onClickIconSidebarItem}
+              />
+              <div style={{ flex: 1 }}>
+                {canvas}
+              </div>
+            </div>
           </Workspace>
 
           <CollapsibleRightSidebar topOffset={44}>
