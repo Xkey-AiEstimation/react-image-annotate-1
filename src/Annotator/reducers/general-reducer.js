@@ -429,6 +429,7 @@ export default (state: MainLayoutState, action: Action) => {
     }
 
     case "TOGGLE_VISIBILITY": {
+      console.log("TOGGLE_VISIBILITY", action)
       let newState = { ...state }
       let newImage = getIn(newState, ["images", currentImageIndex])
       let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
@@ -443,8 +444,8 @@ export default (state: MainLayoutState, action: Action) => {
       newRegions = newRegions.map((region) => {
         const isCategoryMatch = region.category === action.category
         const isBreakoutMatch =
-          !selectedBreakoutToggle ||
-          region.breakout.id === selectedBreakoutToggle
+          !selectedBreakoutToggle || (region.breakout || {}).id === selectedBreakoutToggle;
+
         const isVisible =
           isCategoryMatch && isBreakoutMatch
             ? !newExcludedCategories.includes(action.category)
@@ -453,17 +454,6 @@ export default (state: MainLayoutState, action: Action) => {
         return { ...region, visible: isVisible }
       })
 
-      // newRegions = newRegions.map((region) => {
-      //   if (region.category === action.category) {
-      //     // Toggle visibility if the region's category matches the action's category
-      //     return {
-      //       ...region,
-      //       visible: visibility,
-      //     }
-      //   } else {
-      //     return region
-      //   }
-      // })
       newState = setIn(newState, ["excludedCategories"], newExcludedCategories)
       newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
@@ -1860,7 +1850,7 @@ export default (state: MainLayoutState, action: Action) => {
             length: 1,
             highlighted: true,
             editingLabels: false,
-            color: "#C4A484",
+            color: "#4f46e5",
             cls: "1", // Make sure this is set
             id: getRandomId(),
             visible: true,
