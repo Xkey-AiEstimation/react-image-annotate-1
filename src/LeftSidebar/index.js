@@ -112,7 +112,7 @@ export const LeftSidebar = ({
         left: 0,
         top: 0,
         right: window.innerWidth - 400,
-        bottom: window.innerHeight - 60
+        bottom: window.innerHeight - 100
       })
     }
 
