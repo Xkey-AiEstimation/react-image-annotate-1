@@ -1174,6 +1174,31 @@ export default (state: MainLayoutState, action: Action) => {
       }
       return state
     }
+    case "CHANGE_IMAGE_AND_SELECT_REGION": {
+      const { region, imageIndex } = action
+      console.log("CHANGE_IMAGE_AND_SELECT_REGION", region, imageIndex)
+      let newState = { ...state }
+      let regions = getIn(newState, ["images", imageIndex, "regions"])
+      // switch image 
+      state = getIn(state, ["selectedImage"], imageIndex)
+      console.log("state", state)
+      state = getIn(state, ["images", imageIndex], activeImage)
+     
+      const regionIndex = getRegionIndex(region)
+      if (regionIndex === null) return state
+     
+      const newRegions = regions.map((r) => ({
+        ...r,
+        highlighted: r.id === region.id,
+        editingLabels: r.id === region.id,
+        visible: true,
+      }))
+      newState = merge(newState, [{ breakouts: newBreakouts }])
+      newState = merge(newState, [{ selectedBreakoutIdAutoAdd: null }])
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", imageIndex], newImage)
+      return newState
+    }
     case "CHANGE_IMAGE_NAME": {
       if (!activeImage) return state
       const { name } = action
