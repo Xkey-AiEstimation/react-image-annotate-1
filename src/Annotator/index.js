@@ -7,7 +7,7 @@ import type {
   Mode,
   ToolEnum,
 } from "../MainLayout/types"
-import React, { useEffect, useMemo, useReducer } from "react"
+import React, { useEffect, useMemo, useReducer, useCallback, useImperativeHandle, forwardRef, useState } from "react"
 import makeImmutable, { without, setIn, getIn } from "seamless-immutable"
 
 import type { KeypointsDefinition } from "../ImageCanvas/region-tools"
@@ -26,6 +26,7 @@ import { defaultKeyMap } from "../ShortcutsManager"
 import getActiveImage from "../Annotator/reducers/get-active-image"
 import DeviceList from "../RegionLabel/DeviceList.js"
 import { AIE_CATEGORIES } from "./constants.js"
+import UncategorizedRegionsModal from "../UncategorizedRegionsModal"
 
 const getRandomId = () => Math.random().toString().split(".")[1]
 
@@ -53,19 +54,19 @@ type Props = {
   keypointDefinitions: KeypointsDefinition,
   fullImageSegmentationMode?: boolean,
   autoSegmentationOptions?:
-    | {| type: "simple" |}
-    | {| type: "autoseg", maxClusters?: number, slicWeightFactor?: number |},
-  hideHeader?: boolean,
-  hideHeaderText?: boolean,
-  hideNext?: boolean,
-  hidePrev?: boolean,
-  hideClone?: boolean,
-  hideSettings?: boolean,
-  hideFullScreen?: boolean,
-  hideSave?: boolean,
+  | {| type: "simple" |}
+    | {| type: "autoseg", maxClusters ?: number, slicWeightFactor ?: number |},
+hideHeader ?: boolean,
+  hideHeaderText ?: boolean,
+  hideNext ?: boolean,
+  hidePrev ?: boolean,
+  hideClone ?: boolean,
+  hideSettings ?: boolean,
+  hideFullScreen ?: boolean,
+  hideSave ?: boolean,
 }
 
-export const Annotator = ({
+export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Props> (({
   images,
   allowedArea,
   selectedImage = images && images.length > 0 ? 0 : undefined,
@@ -114,7 +115,7 @@ export const Annotator = ({
   hideSave,
   allowComments,
   subType,
-}: Props) => {
+}, ref) => {
   if (typeof selectedImage === "string") {
     selectedImage = (images || []).findIndex((img) => img.src === selectedImage)
     if (selectedImage === -1) selectedImage = undefined
@@ -134,8 +135,6 @@ export const Annotator = ({
     })
   }
 
-  
-
   // Converting Set back to an array before returning
   const breakouts = Array.from(uniqueBreakouts)
 
@@ -143,7 +142,6 @@ export const Annotator = ({
     categories: [...new Set(DeviceList.map((item) => item.category))],
     breakoutNames: new Set(),
   }
-
 
   const [state, dispatchToReducer] = useReducer(
     historyHandler(
@@ -192,22 +190,54 @@ export const Annotator = ({
       subType,
       ...(annotationType === "image"
         ? {
-            selectedImage,
-            images,
-            selectedImageFrameTime:
-              images && images.length > 0 ? images[0].frameTime : undefined,
-          }
+          selectedImage,
+          images,
+          selectedImageFrameTime:
+            images && images.length > 0 ? images[0].frameTime : undefined,
+        }
         : {
-            videoSrc,
-            keyframes,
-          }),
+          videoSrc,
+          keyframes,
+        }),
     })
   )
 
+  const [showUncategorizedModal, setShowUncategorizedModal] = useState(false)
+  const [uncategorizedRegions, setUncategorizedRegions] = useState([])
+  const [selectedDeviceToggle, setSelectedDeviceToggle] = useState(null)
+
+  const findUncategorizedRegions = useCallback((state) => {
+    const regions = []
+    state.images.forEach((image, imageIndex) => {
+      image.regions.forEach((region, regionIndex) => {
+        if (
+          ['box', 'point', 'line'].includes(region.type) &&
+          (!region.category || region.category === undefined)
+        ) {
+          regions.push({
+            ...region,
+            imageIndex,
+            regionIndex
+          })
+        }
+      })
+    })
+    return regions
+  }, [])
+
+  const onToggleDevice = useCallback((device) => {
+    setSelectedDeviceToggle(device)
+  }, [])
+
   const dispatch = useEventCallback((action: Action) => {
     if (action.type === "HEADER_BUTTON_CLICKED") {
-      //if (["Exit", "Done", "Save", "Complete"].includes(action.buttonName)) {
       if (["Exit", "Done", "Complete"].includes(action.buttonName)) {
+        const uncategorized = findUncategorizedRegions(state)
+        if (uncategorized.length > 0) {
+          setUncategorizedRegions(uncategorized)
+          setShowUncategorizedModal(true)
+          return
+        }
         return onExit(without(state, "history"))
       } else if (action.buttonName === "Save") {
         onSave(without(state, "history"))
@@ -250,6 +280,49 @@ export const Annotator = ({
   if (!images && !videoSrc)
     return 'Missing required prop "images" or "videoSrc"'
 
+  // Add method to focus on a region
+  const focusRegion = useCallback((region) => {
+    // First select the correct image
+    if (typeof region.imageIndex === 'number') {
+      // Switch to the correct image first
+      dispatch({
+        type: "CHANGE_IMAGE_AND_SELECT_REGION",
+        region: region,
+        imageIndex: region.imageIndex
+      })
+
+      // Wait a bit for the image to load before selecting the region
+      // setTimeout(() => {
+      //   if (region) {
+      //     dispatch({
+      //       type: "SELECT_REGION",
+      //       region
+      //     })
+      //   }
+      // }, 100)
+    }
+  }, [state, dispatch]);
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    focusRegion
+  }));
+
+  const handleForceExit = useCallback(() => {
+    // Filter out uncategorized regions before exiting
+    const filteredState = {
+      ...state,
+      images: state.images.map(image => ({
+        ...image,
+        regions: image.regions.filter(region => {
+          return !['box', 'point', 'line'].includes(region.type) ||
+            (region.category && region.category !== undefined)
+        })
+      }))
+    }
+    onExit(without(filteredState, "history"))
+  }, [state, onExit])
+
   return (
     <HotKeys keyMap={defaultKeyMap}>
       <SettingsProvider>
@@ -269,9 +342,18 @@ export const Annotator = ({
           hideFullScreen={hideFullScreen}
           hideSave={hideSave}
         />
+        <UncategorizedRegionsModal
+          open={showUncategorizedModal}
+          onClose={() => setShowUncategorizedModal(false)}
+          uncategorizedRegions={uncategorizedRegions}
+          onPanToRegion={focusRegion}
+          onToggleDevice={onToggleDevice}
+          selectedDeviceToggle={selectedDeviceToggle}
+          onForceExit={handleForceExit}
+        />
       </SettingsProvider>
     </HotKeys>
   )
-}
+})
 
 export default Annotator
