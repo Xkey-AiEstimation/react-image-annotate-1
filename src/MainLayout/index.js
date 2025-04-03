@@ -450,7 +450,16 @@ return (
                         gap: "8px",
                       }}
                     >
-                      <Typography variant="body2">OCR Threshold:</Typography>
+                      <Tooltip title="Adjust AiE Accuracy, the higher the value the more accurate but may miss some devices."
+                        PopperProps={{
+                          style: { zIndex: zIndices.tooltip },
+                        }}
+                        classes={{
+                          tooltip: classes.tooltip,
+                        }}
+                      >
+                        <Typography variant="body2">AiE Threshold:</Typography>
+                      </Tooltip>
                       <Slider
                         className={classes.slider}
                         value={ocrThreshold}
