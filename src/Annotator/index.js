@@ -205,7 +205,7 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   const [showUncategorizedModal, setShowUncategorizedModal] = useState(false)
   const [uncategorizedRegions, setUncategorizedRegions] = useState([])
   const [selectedDeviceToggle, setSelectedDeviceToggle] = useState(null)
-  const [ocrThreshold, setOcrThreshold] = useState(0.7)
+  const [ocrThreshold, setOcrThreshold] = useState(0.8)
 
   const findUncategorizedRegions = useCallback((state) => {
     const regions = []
