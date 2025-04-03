@@ -205,6 +205,7 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   const [showUncategorizedModal, setShowUncategorizedModal] = useState(false)
   const [uncategorizedRegions, setUncategorizedRegions] = useState([])
   const [selectedDeviceToggle, setSelectedDeviceToggle] = useState(null)
+  const [ocrThreshold, setOcrThreshold] = useState(0.8)
 
   const findUncategorizedRegions = useCallback((state) => {
     const regions = []
@@ -323,6 +324,14 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
     onExit(without(filteredState, "history"))
   }, [state, onExit])
 
+  const handleOcrThresholdChange = useCallback((newThreshold) => {
+    setOcrThreshold(newThreshold)
+    dispatch({
+      type: "SET_OCR_THRESHOLD",
+      threshold: newThreshold
+    })
+  }, [dispatch])
+
   return (
     <HotKeys keyMap={defaultKeyMap}>
       <SettingsProvider>
@@ -341,6 +350,7 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
           hideSettings={hideSettings}
           hideFullScreen={hideFullScreen}
           hideSave={hideSave}
+          onOcrThresholdChange={handleOcrThresholdChange}
         />
         <UncategorizedRegionsModal
           open={showUncategorizedModal}

@@ -429,7 +429,6 @@ export default (state: MainLayoutState, action: Action) => {
     }
 
     case "TOGGLE_VISIBILITY": {
-      console.log("TOGGLE_VISIBILITY", action)
       let newState = { ...state }
       let newImage = getIn(newState, ["images", currentImageIndex])
       let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
@@ -1176,12 +1175,10 @@ export default (state: MainLayoutState, action: Action) => {
     }
     case "CHANGE_IMAGE_AND_SELECT_REGION": {
       const { region, imageIndex } = action
-      console.log("CHANGE_IMAGE_AND_SELECT_REGION", region, imageIndex)
       let newState = { ...state }
       let regions = getIn(newState, ["images", imageIndex, "regions"])
       // switch image 
       state = getIn(state, ["selectedImage"], imageIndex)
-      console.log("state", state)
       state = getIn(state, ["images", imageIndex], activeImage)
      
       const regionIndex = getRegionIndex(region)
@@ -2555,6 +2552,9 @@ export default (state: MainLayoutState, action: Action) => {
 
       // Save to history
       return saveToHistory(newState, `Renamed device "${oldName}" to "${newName}"`)
+    }
+    case "SET_OCR_THRESHOLD": {
+      return setIn(state, ["ocrThreshold"], action.threshold)
     }
     default:
       break

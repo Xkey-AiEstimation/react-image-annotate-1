@@ -96,6 +96,7 @@ type Props = {
     w: number,
     h: number,
   },
+  ocrThreshold: number,
 }
 
 const getDefaultMat = (allowedArea = null, { iw, ih } = {}) => {
@@ -167,6 +168,7 @@ export const ImageCanvas = ({
   subType,
   categoriesColorMap,
   state,
+  ocrThreshold,
 }: Props) => {
   const classes = useStyles()
 
@@ -600,6 +602,7 @@ export const ImageCanvas = ({
             categoriesColorMap={categoriesColorMap}
             imageWidth={imageDimensions?.naturalWidth}
             imageHeight={imageDimensions?.naturalHeight}
+            ocrThreshold={ocrThreshold}
           />
         </PreventScrollToParents>
       )}
@@ -729,6 +732,7 @@ export const ImageCanvas = ({
                 imageWidth={imageDimensions?.naturalWidth}
                 imageHeight={imageDimensions?.naturalHeight}
                 simplifiedView={isCreatingLine}
+                ocrThreshold={ocrThreshold}
               />
             </div>
           )

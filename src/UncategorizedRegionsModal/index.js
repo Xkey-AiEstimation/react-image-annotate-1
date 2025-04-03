@@ -172,7 +172,6 @@ export default function UncategorizedRegionsModal({
     }
 
     const handlePanAndClose = (region, e) => {
-        console.log("handlePanAndClose", region)
         handlePanToRegion(region, e)
         onClose()
     }

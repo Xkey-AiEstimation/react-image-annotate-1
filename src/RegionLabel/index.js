@@ -88,6 +88,7 @@ type Props = {
   imageWidth: number,
   imageHeight: number,
   simplifiedView?: boolean,
+  ocrThreshold?: number,
 }
 
 const all_types = [...new Set(DeviceList.map((pair) => pair.category))]
@@ -152,6 +153,7 @@ export const RegionLabel = ({
   imageWidth,
   imageHeight,
   simplifiedView = false,
+  ocrThreshold,
 }: Props) => {
   const classes = useStyles()
   const [openBreakout, setOpenBreakout] = React.useState(false)
@@ -1252,6 +1254,7 @@ export const RegionLabel = ({
     page: "page",
     project: "project",
   }
+
   const [isOCRProjectChecked, setIsOCRProjectChecked] = useState(false)
 
   const handleProjectOCR = (region) => {
@@ -1261,12 +1264,11 @@ export const RegionLabel = ({
     }
 
     setIsTemplateMatchingLoading(true)
-    // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
     let page_properties = {
       user_id: 80808080,
       doc_id: 80808080,
       page_id: 80808080,
-      threshold: 0.8,
+      threshold: ocrThreshold || 0.8,
       page_index: pageIndex,
     }
     const region_coords = {
@@ -1355,12 +1357,11 @@ export const RegionLabel = ({
 
   const handlePageOCR = (region) => {
     setIsTemplateMatchingLoading(true)
-    // TODO: get user_id, doc_id, page_id, threshold from the parent component above annotator
     let page_properties = {
       user_id: 80808080,
       doc_id: 80808080,
       page_id: 80808080,
-      threshold: 0.8,
+      threshold: ocrThreshold || 0.8,
       page_index: pageIndex,
     }
     const region_coords = {
@@ -1996,5 +1997,6 @@ export default memo(
     prevProps.selectedBreakoutIdAutoAdd === nextProps.selectedBreakoutIdAutoAdd &&
     prevProps.imageWidth === nextProps.imageWidth &&
     prevProps.imageHeight === nextProps.imageHeight &&
+    prevProps.ocrThreshold === nextProps.ocrThreshold &&
     prevProps.imageSrc === nextProps.imageSrc
 )
