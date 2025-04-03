@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FullScreen, useFullScreenHandle } from "react-full-screen"
 import type { MainLayoutState } from "./types"
 
-import { Input, Tooltip } from "@material-ui/core"
+import { Input, Tooltip, Slider, Typography } from "@material-ui/core"
 import Workspace from "@xkey-aiestimation/react-material-workspace-layout/Workspace"
 import classnames from "classnames"
 import type { Node } from "react"
@@ -40,7 +40,38 @@ import CollapsibleRightSidebar from "../CollapsibleRightSidebar"
 import LeftSidebar from "../LeftSidebar"
 
 const emptyArr = []
-const useStyles = makeStyles(styles)
+const useStyles = makeStyles(theme => ({
+  ...styles,
+  sliderContainer: {
+    display: "flex",
+    alignItems: "center",
+    marginRight: 16,
+    minWidth: 200,
+    color: "white"
+  },
+  slider: {
+    width: 120,
+    marginLeft: 16,
+    "& .MuiSlider-rail": {
+      backgroundColor: "rgba(255, 0, 0, 0.3)",
+    },
+    "& .MuiSlider-track": {
+      backgroundColor: "rgba(255, 0, 0, 0.7)",
+    },
+    "& .MuiSlider-thumb": {
+      backgroundColor: "#ff0000",
+      "&:hover, &.Mui-focusVisible": {
+        boxShadow: "0px 0px 0px 8px rgba(255, 0, 0, 0.16)",
+      },
+      "&.Mui-active": {
+        boxShadow: "0px 0px 0px 14px rgba(255, 0, 0, 0.16)",
+      },
+    },
+    "& .MuiSlider-valueLabel": {
+      backgroundColor: "#ff0000",
+    }
+  }
+}))
 
 const HotkeyDiv = withHotKeys(({ hotKeys, children, divRef, ...props }) => (
   <div {...{ ...hotKeys, ...props }} ref={divRef}>
@@ -66,6 +97,7 @@ type Props = {
   onRegionClassAdded: (cls) => any,
   hideHeader?: boolean,
   hideHeaderText?: boolean,
+  onOcrThresholdChange: (threshold: number) => void,
 }
 
 export const MainLayout = ({
@@ -84,6 +116,7 @@ export const MainLayout = ({
   hideFullScreen = false,
   hideSave = false,
   hideExit = false,
+  onOcrThresholdChange,
 }: Props) => {
   const classes = useStyles()
   const settings = useSettings()
@@ -136,6 +169,33 @@ const refocusOnMouseEvent = useCallback((e) => {
     e.target.focus()
   }
 }, [])
+
+const [ocrThreshold, setOcrThreshold] = useState(0.8)
+
+
+
+const handleThresholdChange = (event, newValue) => {
+  setOcrThreshold(newValue)
+  if (onOcrThresholdChange) {
+    onOcrThresholdChange(newValue)
+  }
+}
+
+const handleInputChange = (event) => {
+  let value = event.target.value === "" ? "" : Number(event.target.value);
+  if (value >= 0.65 && value <= 0.95) {
+    setOcrThreshold(value);
+  }
+};
+
+const handleBlur = () => {
+  if (ocrThreshold < 0.65) {
+    setOcrThreshold(0.65);
+  } else if (ocrThreshold > 0.95) {
+    setOcrThreshold(0.95);
+  }
+};
+
 
 const canvas = (
   <ImageCanvas
@@ -231,6 +291,7 @@ const canvas = (
     subType={state?.subType}
     categoriesColorMap={state.categoriesColorMap}
     state={state}
+    ocrThreshold={ocrThreshold}
   />
 )
 
@@ -294,6 +355,32 @@ const linearMeasurementsSidebarBoxRegions = useMemo(() => {
   return regions.filter(r => r.type === "line" || r.type === "scale")
 }, [activeImage])
 
+const marks = [
+  {
+    value: 0.65,
+    label: '0.65',
+  },
+  {
+    value: 0.75,
+    label: '0.75',
+  },
+  {
+    value: 0.8,
+    label: '0.8',
+  },
+  {
+    value: 0.85,
+    label: '0.85',
+  },
+  {
+    value: 0.9,
+    label: '0.9',
+  },
+  {
+    value: 0.95,
+    label: '0.95',
+  },
+];
 return (
   <FullScreenContainer>
     <FullScreen
@@ -331,34 +418,74 @@ return (
                     style={{
                       display: "flex",
                       alignItems: "center",
-                      flexDirection: "row",
+                      justifyContent: "space-between", // Ensures left, center, and right alignment
+                      width: "100%",
+                      padding: "8px 16px",
                     }}
                   >
-                    <img src={favicon} title={activeImage.name} />
-                    <div>{title}</div>
+                    {/* Left Section: Image and Title */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <img src={favicon} title={activeImage.name} style={{ height: "24px" }} />
+                      <div style={{ fontWeight: "bold" }}>{title}</div>
+                    </div>
+
+                    {/* Center Section: Input (Active Image Name) */}
+                    <Input
+                      style={{
+                        width: "150px",
+                        color: "white",
+                        textAlign: "center",
+                      }}
+                      placeholder={`Page ${currentImageIndex + 1}`}
+                      value={activeImage.name}
+                      onChange={onChangeImageName}
+                    />
+
+                    {/* Right Section: Slider & Threshold Input */}
                     <div
-                      class="center"
+                      className={classes.sliderContainer}
                       style={{
                         display: "flex",
-                        margin: "auto",
-                        textAlign: "center",
                         alignItems: "center",
+                        gap: "8px",
                       }}
                     >
+                      <Typography variant="body2">OCR Threshold:</Typography>
+                      <Slider
+                        className={classes.slider}
+                        value={ocrThreshold}
+                        onChange={handleThresholdChange}
+                        step={0.01}
+                        min={0.65}
+                        max={0.95}
+                        valueLabelDisplay="off"
+                        valueLabelFormat={(value) => value.toFixed(2)}
+                        style={{ width: "120px" }}
+                      />
                       <Input
                         style={{
-                          marginLeft: "16px",
+                          width: "50px",
                           color: "white",
+                          textAlign: "center",
                         }}
-                        placeholder={`Page ${currentImageIndex + 1}`}
-                        value={activeImage.name}
-                        defaultValue={activeImage.name}
-                        onChange={onChangeImageName}
-                      ></Input>
+                        value={ocrThreshold}
+                        margin="dense"
+                        onChange={handleInputChange}
+                        onBlur={handleBlur}
+                        inputProps={{
+                          step: 0.01,
+                          min: 0.65,
+                          max: 0.95,
+                          type: "number",
+                        }}
+                      />
                     </div>
                   </div>
+
+
                 </>
               ) : null,
+
             ].filter(Boolean)}
             headerItems={[
               !hidePrev && { name: "Prev" },
@@ -478,7 +605,7 @@ return (
             </div>
           </Workspace>
 
-          <CollapsibleRightSidebar topOffset={44}>
+          <CollapsibleRightSidebar topOffset={60}>
             {debugModeOn && (
               <DebugBox state={debugModeOn} lastAction={state.lastAction} />
             )}

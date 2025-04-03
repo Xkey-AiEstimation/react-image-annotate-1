@@ -47,6 +47,7 @@ export const RegionTags = ({
   categoriesColorMap,
   imageWidth,
   imageHeight,
+  ocrThreshold,
 }) => {
   const RegionLabel = DefaultRegionLabel
   return regions
@@ -164,6 +165,7 @@ export const RegionTags = ({
               categories={categories}
               imageWidth={imageWidth}
               imageHeight={imageHeight}
+              ocrThreshold={ocrThreshold}
             />
           </div>
         </div>
