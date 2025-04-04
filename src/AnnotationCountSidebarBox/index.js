@@ -19,6 +19,8 @@ import ExpandMoreIcon from "@material-ui/icons/ExpandMore"
 import FormatListNumbered from "@material-ui/icons/FormatListNumbered"
 import InfoIcon from "@material-ui/icons/Info"
 import Visibility from "@material-ui/icons/Visibility"
+import UnfoldMoreIcon from "@material-ui/icons/UnfoldMore"
+import UnfoldLessIcon from "@material-ui/icons/UnfoldLess"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
 import React, { memo, useEffect, useMemo, useState } from "react"
@@ -269,9 +271,43 @@ const useStyles = makeStyles({
   select: {
     // Add your styles here
   },
+  expandAllButton: {
+    padding: 4,
+    color: 'white',
+    position: 'absolute',
+    right: 8,
+    top: 8,
+    zIndex: 1,
+  },
+  expandAllIcon: {
+    fontSize: 20,
+  },
 })
 
 const ALL_DEVICES_TOGGLE_KEY = "ALL"
+
+// Add this helper function before the component
+const groupDevicesByCategory = (regions) => {
+  return regions.reduce((acc, region) => {
+    // Skip if no category or device name
+    if (!region.category || !region.cls) return acc
+
+    // Initialize category if it doesn't exist
+    if (!acc[region.category]) {
+      acc[region.category] = {}
+    }
+
+    // Initialize device if it doesn't exist
+    if (!acc[region.category][region.cls]) {
+      acc[region.category][region.cls] = []
+    }
+
+    // Add region to device array
+    acc[region.category][region.cls].push(region)
+
+    return acc
+  }, {})
+}
 
 export const AnnotationCountSidebarBox = ({
   regions,
@@ -292,14 +328,20 @@ export const AnnotationCountSidebarBox = ({
   const classes = useStyles()
   const [clsStatus, setClsStatus] = React.useState({})
   const [expandedDevices, setExpandedDevices] = useState({})
-  const [expandedCategories, setExpandedCategories] = useState({})
+  const [expandedCategories, setExpandedCategories] = useState(() => {
+    const devicesByCategory = groupDevicesByCategory(regions)
+    return Object.keys(devicesByCategory).reduce((acc, category) => {
+      acc[category] = true
+      return acc
+    }, {})
+  })
   const [bulkEditDialogOpen, setBulkEditDialogOpen] = useState(false)
   const [deviceToEdit, setDeviceToEdit] = useState("")
   const [newDeviceName, setNewDeviceName] = useState("")
   const [expandedTypes, setExpandedTypes] = useState({})
   const [expandedDeviceGroups, setExpandedDeviceGroups] = useState({})
   const [nameError, setNameError] = useState("")
-  const [allDevicesExpanded, setAllDevicesExpanded] = useState(false)
+  const [allDevicesExpanded, setAllDevicesExpanded] = useState(true)
   const [selectedDevice, setSelectedDevice] = useState(null)
   const [selectedRegionId, setSelectedRegionId] = useState(null)
   const [editMode, setEditMode] = useState('rename')
@@ -323,7 +365,7 @@ export const AnnotationCountSidebarBox = ({
       label: (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <span>{device.symbol_name}</span>
-          <span style={{ 
+          <span style={{
             marginLeft: 8,
             fontSize: '0.8em',
             opacity: 0.7,
@@ -569,6 +611,21 @@ export const AnnotationCountSidebarBox = ({
     setClsStatus(newClsStatus)
   }, [newClsStatus])
 
+  // Update expandedCategories when regions change
+  useEffect(() => {
+    const devicesByCategory = groupDevicesByCategory(regions)
+    setExpandedCategories(prev => {
+      const newExpanded = { ...prev }
+      // Add any new categories as expanded
+      Object.keys(devicesByCategory).forEach(category => {
+        if (!(category in newExpanded)) {
+          newExpanded[category] = true
+        }
+      })
+      return newExpanded
+    })
+  }, [regions])
+
   const onToggle = (cls) => {
     onToggleDevice(cls)
   }
@@ -680,12 +737,49 @@ export const AnnotationCountSidebarBox = ({
     }
   }, [regions]);
 
+  // Function to toggle all expansions
+  const toggleAllExpansions = () => {
+    const newExpandedState = !allDevicesExpanded
+    setAllDevicesExpanded(newExpandedState)
+
+    // Get all categories and devices
+    const devicesByCategory = groupDevicesByCategory(regions)
+
+    // Update category expansions
+    const newExpandedCategories = Object.keys(devicesByCategory).reduce((acc, category) => {
+      acc[category] = newExpandedState
+      return acc
+    }, {})
+    setExpandedCategories(newExpandedCategories)
+
+    // Update device group expansions
+    const newExpandedDeviceGroups = {}
+    Object.entries(devicesByCategory).forEach(([category, devices]) => {
+      Object.keys(devices).forEach(deviceName => {
+        newExpandedDeviceGroups[`${category}-${deviceName}`] = newExpandedState
+      })
+    })
+    setExpandedDeviceGroups(newExpandedDeviceGroups)
+  }
+
   return (
     <SidebarBoxContainer
       title="Device Counts"
       icon={<FormatListNumbered style={{ color: "white" }} />}
       expandedByDefault={true}
     >
+      <IconButton
+        className={classes.expandAllButton}
+        onClick={toggleAllExpansions}
+        size="small"
+      >
+        {allDevicesExpanded ? (
+          <UnfoldLessIcon className={classes.expandAllIcon} />
+        ) : (
+          <UnfoldMoreIcon className={classes.expandAllIcon} />
+        )}
+      </IconButton>
+
       <List className={classes.listRoot}>
         <ListItem
           className={classes.deviceItem}
@@ -910,9 +1004,7 @@ export const AnnotationCountSidebarBox = ({
                             }
                           </IconButton>
                           <Tooltip
-                            title={isUserDefinedDevice(deviceName)
-                              ? "Edit Device Name (Applies to all instances of this device)"
-                              : "Only user-defined devices can be edited"}
+                            title={"Edit Device Name (Applies to all instances of this device)"}
                             PopperProps={{ style: { zIndex: zIndices.tooltip } }}
                             classes={{ tooltip: classes.tooltipRoot }}
                             arrow
@@ -929,7 +1021,7 @@ export const AnnotationCountSidebarBox = ({
                                   zIndex: zIndices.tooltip,
                                   // color: isUserDefinedDevice(deviceName) ? "#64b5f6" : "rgba(255,255,255,0.3)"
                                 }}
-                                // disabled={!isUserDefinedDevice(deviceName)}
+                              // disabled={!isUserDefinedDevice(deviceName)}
                               >
                                 <EditIcon fontSize="small" />
                               </IconButton>

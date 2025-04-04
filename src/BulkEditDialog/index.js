@@ -67,7 +67,7 @@ export const BulkEditDialog = ({
     state,
 }) => {
     const classes = useStyles()
-    const [editMode, setEditMode] = useState('rename')
+    const [editMode, setEditMode] = useState('select')
     const [newDeviceName, setNewDeviceName] = useState("")
     const [selectedDevice, setSelectedDevice] = useState(null)
     const [selectedCategory, setSelectedCategory] = useState(null)
@@ -158,7 +158,7 @@ export const BulkEditDialog = ({
                 setNewDeviceName(currentDevice.symbol_name)
 
                 // Set initial edit mode based on whether device is user-defined
-                setEditMode(currentDevice.user_defined ? 'rename' : 'select')
+                // setEditMode(currentDevice.user_defined ? 'rename' : 'select')
 
                 // Reset error state
                 setNameError("")
@@ -171,7 +171,7 @@ export const BulkEditDialog = ({
         setNewDeviceName("")
         setSelectedDevice(null)
         setSelectedCategory(null)
-        setEditMode('rename')
+        setEditMode('select')
         setNameError("")
     }
 
@@ -250,10 +250,11 @@ export const BulkEditDialog = ({
 
             // Handle new category if created
             if (selectedCategory && !categoryOptions.find(c => c.value === selectedCategory.value)) {
+                const newColor = "#" + Math.floor(Math.random() * 16777215).toString(16)
                 dispatch({
                     type: "ADD_NEW_CATEGORY",
                     category: selectedCategory.value,
-                    color: "#" + Math.floor(Math.random()*16777215).toString(16) // Random color
+                    color: newColor
                 })
             }
 
@@ -272,7 +273,7 @@ export const BulkEditDialog = ({
                 })
             }
 
-            // Apply bulk edit to all instances
+            // Apply bulk edit to all instances with the correct color
             dispatch({
                 type: "BULK_EDIT_DEVICE_NAME_AND_CATEGORY",
                 oldName: deviceToEdit,
@@ -334,7 +335,7 @@ export const BulkEditDialog = ({
                                     color="primary"
                                 />
                             }
-                            label="Rename Device"
+                            label={`Rename ${deviceToEdit} Instead of Changing Device`}
                             style={{ color: 'white' }}
                         />
                     </div>

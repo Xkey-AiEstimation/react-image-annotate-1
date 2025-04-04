@@ -2532,8 +2532,9 @@ export default (state: MainLayoutState, action: Action) => {
         "regions",
       ])
 
-      const color = getColor(newState, newName)
-      console.log("color", color)
+      // Get the color for this category
+      const color = getColorByCategory(newState, category)
+
       newRegions = newRegions.map(region => {
         if (region.cls === oldName) {
           return {
