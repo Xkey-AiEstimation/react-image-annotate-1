@@ -21,10 +21,10 @@ const useStyles = makeStyles({
     "&:not(.highlighted):hover": {
       opacity: 0.6,
     },
-    "&:not(.isOCR)":{
+    "&:not(.isOCR)": {
       stroke: "#696969",
     },
-    "&.isOCR" :{
+    "&.isOCR": {
       stroke: "#c700cb",
     },
     "& path": {
@@ -42,7 +42,7 @@ const useStyles = makeStyles({
       stroke: "#ff69b4",
       strokeDasharray: "5,5",
       strokeWidth: 2,
-      fill: "rgba(255, 105, 180, 0.1)"
+      fill: "rgba(255, 105, 180, 0.3)", // Pink background
     },
   },
 })
@@ -90,21 +90,17 @@ export const HighlightBox = ({
 
   let pathD
   if (r.type === "point") {
-    pathD = `M5,5 L${styleCoords.width - 5} 5L${styleCoords.width - 5} ${
-      styleCoords.height - 5
-    }L5 ${styleCoords.height - 5}Z`
+    pathD = `M5,5 L${styleCoords.width - 5} 5L${styleCoords.width - 5} ${styleCoords.height - 5
+      }L5 ${styleCoords.height - 5}Z`
   } else if (r.type === "line") {
-    pathD = `M5,5 L${styleCoords.width - 5} 5L${styleCoords.width - 5} ${
-      styleCoords.height - 5
-    }L5 ${styleCoords.height - 5}Z`
+    pathD = `M5,5 L${styleCoords.width - 5} 5L${styleCoords.width - 5} ${styleCoords.height - 5
+      }L5 ${styleCoords.height - 5}Z`
   } else if (r.type === "scale") {
-    pathD = `M5,5 L${styleCoords.width - 5} 5L${styleCoords.width - 5} ${
-      styleCoords.height - 5
-    }L5 ${styleCoords.height - 5}Z`
+    pathD = `M5,5 L${styleCoords.width - 5} 5L${styleCoords.width - 5} ${styleCoords.height - 5
+      }L5 ${styleCoords.height - 5}Z`
   } else {
-    pathD = `M5,5 L${pbox.w + 5},5 L${pbox.w + 5},${pbox.h + 5} L5,${
-      pbox.h + 5
-    } Z`
+    pathD = `M5,5 L${pbox.w + 5},5 L${pbox.w + 5},${pbox.h + 5} L5,${pbox.h + 5
+      } Z`
   }
   return (
     <svg
@@ -116,38 +112,39 @@ export const HighlightBox = ({
       {...mouseEvents}
       {...(!zoomWithPrimary && !dragWithPrimary
         ? {
-            onMouseDown: (e) => {
-              if (
-                !r.locked &&
-                r.type === "point" &&
-                r.highlighted &&
-                e.button === 0
-              ) {
-                return onBeginMovePoint(r)
-              }
-              if (e.button === 0 && !createWithPrimary) return onSelectRegion(r)
-              mouseEvents.onMouseDown(e)
-            },
-          }
+          onMouseDown: (e) => {
+            if (
+              !r.locked &&
+              r.type === "point" &&
+              r.highlighted &&
+              e.button === 0
+            ) {
+              return onBeginMovePoint(r)
+            }
+            if (e.button === 0 && !createWithPrimary) return onSelectRegion(r)
+            mouseEvents.onMouseDown(e)
+          },
+        }
         : {})}
       style={{
         ...(r.highlighted
           ? {
-              pointerEvents: r.type !== "point" ? "none" : undefined,
-              cursor: "grab",
-            }
+            pointerEvents: r.type !== "point" ? "none" : undefined,
+            cursor: "grab",
+          }
           : {
-              cursor: !(zoomWithPrimary || dragWithPrimary || createWithPrimary)
-                ? "pointer"
-                : undefined,
-              pointerEvents:
-                zoomWithPrimary ||
+            cursor: !(zoomWithPrimary || dragWithPrimary || createWithPrimary)
+              ? "pointer"
+              : undefined,
+            pointerEvents:
+              zoomWithPrimary ||
                 dragWithPrimary ||
                 (createWithPrimary && !r.highlighted)
-                  ? "none"
-                  : undefined,
-            }),
+                ? "none"
+                : undefined,
+          }),
         position: "absolute",
+        backgroundColor: r?.cls === "eraser-selection" ? "rgba(255, 105, 180, 0.3)" : "transparent",
         ...styleCoords,
       }}
     >

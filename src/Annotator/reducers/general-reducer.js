@@ -1948,6 +1948,8 @@ export default (state: MainLayoutState, action: Action) => {
 
         // Filter out regions that intersect with the selection box
         const newRegions = regionsBeforeDelete.filter((region) => {
+          // only delete visible regions
+          if (!region.visible) return true
           switch (region.type) {
             case "point":
               return !isPointInBox(region, selectionBox)
