@@ -17,10 +17,9 @@ import { AIE_CATEGORIES } from "../Annotator/constants"
 import { zIndices } from "../Annotator/constants"
 import { getColorByCategory } from "../Annotator/reducers/general-reducer"
 import { asMutable } from "seamless-immutable"
-
 const useStyles = makeStyles({
     dialogContent: {
-        minWidth: 400,
+        minWidth: 600,
     },
     dialogTextField: {
         width: "100%",
@@ -54,7 +53,29 @@ const useStyles = makeStyles({
     popper: {
         zIndex: zIndices.modal + 4
     },
-})
+    // 🔥 Add this new class
+    selectMenu: {
+        backgroundColor: "#2f2f2f !important", // force override if needed
+        maxHeight: "200px !important",
+        overflowY: "auto !important",
+        color: "white",
+        zIndex: `${zIndices.modal + 1} !important`,
+        "&::-webkit-scrollbar": {
+            width: 8,
+        },
+        "&::-webkit-scrollbar-track": {
+            background: "#2f2f2f",
+        },
+        "&::-webkit-scrollbar-thumb": {
+            backgroundColor: "#555",
+            borderRadius: 6,
+            border: "2px solid #2f2f2f",
+        },
+        scrollbarColor: "#555 #2f2f2f",
+        scrollbarWidth: "thin",
+    }
+});
+
 
 export const BulkEditDialog = ({
     open,
@@ -313,7 +334,7 @@ export const BulkEditDialog = ({
             style={{ zIndex: zIndices.modal }}
         >
             <DialogTitle style={{ color: 'white' }}>
-                Edit Device
+                Edit all regions of {deviceToEdit}
             </DialogTitle>
             <DialogContent className={classes.dialogContent}>
                 <Typography variant="body2" style={{ marginBottom: 16, color: 'white' }}>
@@ -395,6 +416,7 @@ export const BulkEditDialog = ({
                                 className={classes.select}
                                 placeholder="Select or create a device..."
                                 isClearable
+                                menuClassName={classes.selectMenu} // 👈 Apply the scrollbar style here
                                 styles={{
                                     control: (provided) => ({
                                         ...provided,
@@ -403,37 +425,43 @@ export const BulkEditDialog = ({
                                         "&:hover": {
                                             borderColor: "#1DA1F2",
                                         },
+                                        fontWeight: 500,
+                                        fontSize: '14px',
                                     }),
                                     placeholder: (provided) => ({
                                         ...provided,
-                                        color: "#888",
-                                    }),
-                                    menu: (base) => ({
-                                        ...base,
-                                        backgroundColor: '#424242',
-                                        zIndex: zIndices.modal + 1
-                                    }),
-                                    menuPortal: (base) => ({
-                                        ...base,
-                                        zIndex: zIndices.modal + 1
+                                        color: "#aaa",
+                                        fontWeight: 400,
+                                        fontSize: '14px'
                                     }),
                                     option: (base, state) => ({
                                         ...base,
-                                        backgroundColor: state.isFocused ? '#666' : '#424242',
-                                        color: 'white'
+                                        backgroundColor: state.isFocused ? '#555' : '#2f2f2f',
+                                        color: 'white',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
                                     }),
                                     singleValue: (base) => ({
                                         ...base,
-                                        color: 'white'
+                                        color: 'white',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
                                     }),
                                     input: (base) => ({
                                         ...base,
-                                        color: 'white'
+                                        color: 'white',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
+                                    }),
+                                    menuPortal: (base) => ({
+                                        ...base,
+                                        zIndex: zIndices.modal + 5.
                                     })
                                 }}
                                 menuPortalTarget={document.body}
+                                style={{ marginTop: 16 }}
                             />
-
 
                             <Typography variant="caption" style={{ color: 'rgba(255,255,255,0.7)', marginTop: 8, fontWeight: 'bold' }}>
                                 Device Category:
@@ -454,41 +482,48 @@ export const BulkEditDialog = ({
                                         : "Select a category..."
                                 }
                                 isClearable={selectedDevice?.isUserDefined}
+                                menuClassName={classes.selectMenu} // 👈 Apply the scrollbar style here
                                 styles={{
-                                    control: (provided, state) => ({
+                                    control: (provided) => ({
                                         ...provided,
-                                        borderColor: state.isDisabled ? "#555" : "#1DA1F2",
-                                        backgroundColor: state.isDisabled ? "#333" : "#424242",
+                                        borderColor: "#1DA1F2",
+                                        backgroundColor: '#424242',
                                         "&:hover": {
-                                            borderColor: state.isDisabled ? "#505050" : "#1DA1F2",
+                                            borderColor: "#1DA1F2",
                                         },
+                                        fontWeight: 500,
+                                        fontSize: '14px',
                                     }),
                                     placeholder: (provided) => ({
                                         ...provided,
-                                        color: selectedDevice && !selectedDevice.isUserDefined ? "#777" : "#888",
-                                    }),
-                                    menu: (base) => ({
-                                        ...base,
-                                        backgroundColor: "#424242",
-                                        zIndex: zIndices.modal + 1,
-                                    }),
-                                    menuPortal: (base) => ({
-                                        ...base,
-                                        zIndex: zIndices.modal + 1,
+                                        color: "#aaa",
+                                        fontWeight: 400,
+                                        fontSize: '14px'
                                     }),
                                     option: (base, state) => ({
                                         ...base,
-                                        backgroundColor: state.isFocused ? "#666" : "#424242",
-                                        color: "white",
+                                        backgroundColor: state.isFocused ? '#555' : '#2f2f2f',
+                                        color: 'white',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
+                                        cursor: 'pointer',
                                     }),
                                     singleValue: (base) => ({
                                         ...base,
-                                        color: "white",
+                                        color: 'white',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
                                     }),
                                     input: (base) => ({
                                         ...base,
-                                        color: "white",
+                                        color: 'white',
+                                        fontWeight: 500,
+                                        fontSize: '14px',
                                     }),
+                                    menuPortal: (base) => ({
+                                        ...base,
+                                        zIndex: zIndices.modal + 5.
+                                    })
                                 }}
                                 menuPortalTarget={document.body}
                                 style={{ marginTop: 16 }}

@@ -276,12 +276,17 @@ const useStyles = makeStyles({
     color: 'white',
     position: 'absolute',
     right: 8,
-    top: 8,
-    zIndex: 1,
+    top: 4,
+    zIndex: 10,
   },
   expandAllIcon: {
     fontSize: 20,
+    color: '#64b5f6',
   },
+  listContainer: {
+    position: 'relative',
+    marginTop: 32,
+  }
 })
 
 const ALL_DEVICES_TOGGLE_KEY = "ALL"
@@ -768,320 +773,177 @@ export const AnnotationCountSidebarBox = ({
       icon={<FormatListNumbered style={{ color: "white" }} />}
       expandedByDefault={true}
     >
-      <IconButton
-        className={classes.expandAllButton}
-        onClick={toggleAllExpansions}
-        size="small"
-      >
-        {allDevicesExpanded ? (
-          <UnfoldLessIcon className={classes.expandAllIcon} />
-        ) : (
-          <UnfoldMoreIcon className={classes.expandAllIcon} />
-        )}
-      </IconButton>
-
-      <List className={classes.listRoot}>
-        <ListItem
-          className={classes.deviceItem}
-          button
-          onClick={() => onToggle(ALL_DEVICES_TOGGLE_KEY)}
-        >
+      <div className={classes.listContainer}>
+        <List className={classes.listRoot}>
           <Tooltip
-            title="Toggle all devices"
+            title={allDevicesExpanded ? "Collapse All. Click the 'eye' icon to show all devices." : "Expand All. Click the 'eye' icon to show all devices."}
             placement="top"
             PopperProps={{ style: { zIndex: zIndices.tooltip } }}
-            classes={{
-              tooltip: classes.tooltipRoot
-            }}
+            classes={{ tooltip: classes.tooltipRoot }}
             arrow
           >
-            <IconButton
-              edge="start"
-              size="small"
-              style={{
-                marginLeft: 8,
+            <ListItem
+              className={classes.deviceItem}
+              button
+              onClick={(e) => {
+                e.stopPropagation()
+                toggleAllExpansions()
               }}
-              className={classes.actionIcon}
             >
-              <Visibility
-                style={{
-                  color: selectedDeviceToggle === ALL_DEVICES_TOGGLE_KEY ? "green" : "white",
+              <Tooltip
+                title="Toggle all devices"
+                placement="top"
+                PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                classes={{
+                  tooltip: classes.tooltipRoot
                 }}
-              />
-            </IconButton>
+                arrow
+              >
+                <IconButton
+                  edge="start"
+                  size="small"
+                  style={{
+                    marginLeft: 8,
+                  }}
+                  className={classes.actionIcon}
+                  onClick={(e) => { e.stopPropagation(); onToggle(ALL_DEVICES_TOGGLE_KEY); }}
+                >
+                  <Visibility
+                    style={{
+                      color: selectedDeviceToggle === ALL_DEVICES_TOGGLE_KEY ? "green" : "white",
+                    }}
+                  />
+                </IconButton>
+              </Tooltip>
+
+              <div className={classes.deviceHeader}>
+                <Typography className={classes.deviceName}>
+                  Show All Devices
+                </Typography>
+                <Typography className={classes.deviceCount}>
+                  Total: <span style={{ fontWeight: "bold" }}>{
+                    regions.filter(
+                      (region) =>
+                        region.cls &&
+                        (region.type === "box" || region.type === "point" || region.type === "polygon" || region.type === "line")
+                    ).length
+                  }</span> counted
+                </Typography>
+              </div>
+
+              <ListItemSecondaryAction>
+                <Tooltip
+                  title="Delete all devices"
+                  placement="top"
+                  PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                  classes={{ tooltip: classes.tooltipRoot }}
+                  arrow
+                >
+
+                  <IconButton
+                    edge="end"
+                    size="small"
+                    onClick={() => onDeleteAll()}
+                    className={classes.actionIcon}
+                  >
+                    <TrashIcon
+                      style={{
+                        color: "rgb(245, 0, 87)",
+                      }}
+                    />
+                  </IconButton>
+                </Tooltip>
+              </ListItemSecondaryAction>
+            </ListItem>
           </Tooltip>
 
-          <div className={classes.deviceHeader}>
-            <Typography className={classes.deviceName}>
-              Show All Devices
-            </Typography>
-            <Typography className={classes.deviceCount}>
-              Total: <span style={{ fontWeight: "bold" }}>{
-                regions.filter(
-                  (region) =>
-                    region.cls &&
-                    (region.type === "box" || region.type === "point" || region.type === "polygon" || region.type === "line")
-                ).length
-              }</span> counted
-            </Typography>
-          </div>
+          {/* Category grouping */}
+          <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", margin: "8px 0" }} />
 
-          <ListItemSecondaryAction>
-            <Tooltip
-              title="Delete all devices"
-              placement="top"
-              PopperProps={{ style: { zIndex: zIndices.tooltip } }}
-              classes={{ tooltip: classes.tooltipRoot }}
-              arrow
-            >
-
-              <IconButton
-                edge="end"
-                size="small"
-                onClick={() => onDeleteAll()}
-                className={classes.actionIcon}
-              >
-                <TrashIcon
-                  style={{
-                    color: "rgb(245, 0, 87)",
-                  }}
-                />
-              </IconButton>
-            </Tooltip>
-          </ListItemSecondaryAction>
-        </ListItem>
-
-        {/* Category grouping */}
-        <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", margin: "8px 0" }} />
-
-        {categories.map((category, categoryIndex) => (
-          <React.Fragment key={`category-${categoryIndex}`}>
-            <ListItem
-              button
-              className={classes.categoryHeader}
-              onClick={(e) => toggleCategoryExpand(category, e)}
-            >
-              <CategoryIcon className={classes.categoryIcon} />
-              <Typography className={classes.deviceName}>
-                {category}
-              </Typography>
-              <Typography className={classes.deviceCount} style={{ marginLeft: 8 }}>
-                ({Object.keys(devicesByCategory[category] || {}).length} device types)
-              </Typography>
-
-              <div style={{ flexGrow: 1 }} />
-
-
-              <IconButton
-                size="small"
-                className={classes.expandIcon}
+          {categories.map((category, categoryIndex) => (
+            <React.Fragment key={`category-${categoryIndex}`}>
+              <ListItem
+                button
+                className={classes.categoryHeader}
                 onClick={(e) => toggleCategoryExpand(category, e)}
               >
-                {expandedCategories[category] ?
-                  <ExpandLessIcon fontSize="small" /> :
-                  <ExpandMoreIcon fontSize="small" />
-                }
-              </IconButton>
-            </ListItem>
+                <CategoryIcon className={classes.categoryIcon} />
+                <Typography className={classes.deviceName}>
+                  {category}
+                </Typography>
+                <Typography className={classes.deviceCount} style={{ marginLeft: 8 }}>
+                  ({Object.keys(devicesByCategory[category] || {}).length} device types)
+                </Typography>
 
-            <Collapse in={expandedCategories[category]} timeout="auto" unmountOnExit>
-              <List disablePadding>
-                {/* List device types in this category */}
-                {Object.keys(devicesByCategory[category] || {}).map((deviceName, deviceIndex) => {
-                  const deviceInstances = devicesByCategory[category][deviceName];
-                  const deviceGroupKey = `${category}-${deviceName}`;
-                  const isHighlighted = selectedDeviceToggle === deviceName;
+                <div style={{ flexGrow: 1 }} />
 
-                  return (
-                    <React.Fragment key={`${category}-device-${deviceIndex}`}>
-                      {/* Device Type Header */}
-                      <ListItem
-                        button
-                        className={classnames(classes.deviceItem, {
-                          [classes.highlighted]: isHighlighted || selectedDevice === deviceName
-                        })}
-                        style={{
-                          paddingLeft: 16,
-                          backgroundColor: isHighlighted || selectedDevice === deviceName ? "#1e1e1e" : "transparent"
-                        }}
-                        onClick={(e) => {
-                          toggleDeviceGroupExpand(category, deviceName, e);
-                        }}
-                      >
-                        <Tooltip
-                          title="Toggle device visibility. Click to show only this device. Unclick to show all devices."
-                          placement="top"
-                          PopperProps={{ style: { zIndex: zIndices.tooltip } }}
-                          classes={{
-                            tooltip: classes.tooltipRoot
+
+                <IconButton
+                  size="small"
+                  className={classes.expandIcon}
+                  onClick={(e) => toggleCategoryExpand(category, e)}
+                >
+                  {expandedCategories[category] ?
+                    <ExpandLessIcon fontSize="small" /> :
+                    <ExpandMoreIcon fontSize="small" />
+                  }
+                </IconButton>
+              </ListItem>
+
+              <Collapse in={expandedCategories[category]} timeout="auto" unmountOnExit>
+                <List disablePadding>
+                  {/* List device types in this category */}
+                  {Object.keys(devicesByCategory[category] || {}).map((deviceName, deviceIndex) => {
+                    const deviceInstances = devicesByCategory[category][deviceName];
+                    const deviceGroupKey = `${category}-${deviceName}`;
+                    const isHighlighted = selectedDeviceToggle === deviceName;
+
+                    return (
+                      <React.Fragment key={`${category}-device-${deviceIndex}`}>
+                        {/* Device Type Header */}
+                        <ListItem
+                          button
+                          className={classnames(classes.deviceItem, {
+                            [classes.highlighted]: isHighlighted || selectedDevice === deviceName
+                          })}
+                          style={{
+                            paddingLeft: 16,
+                            backgroundColor: isHighlighted || selectedDevice === deviceName ? "#1e1e1e" : "transparent"
+                          }}
+                          onClick={(e) => {
+                            toggleDeviceGroupExpand(category, deviceName, e);
                           }}
                         >
-                          <IconButton
-                            edge="start"
-                            size="small"
-                            className={classnames(classes.actionIcon, classes.deviceVisibilityIcon)}
-                            style={{ left: 16 }} // Adjust position for indentation
-                            onClick={(e) => { e.stopPropagation(); onToggle(deviceName); }}
-                          >
-                            <Visibility
-                              style={{
-                                color: selectedDeviceToggle === deviceName ? "green" : "white",
-                              }}
-                            />
-                          </IconButton>
-                        </Tooltip>
-
-                        <div className={classes.deviceContent}>
-                          <div className={classes.deviceNameRow}>
-                            <Tooltip
-                              title={
-                                <div>
-                                  <div><strong>Device Name:</strong> {deviceName}</div>
-                                  <div><strong>Category:</strong> {category}</div>
-                                </div>
-                              }
-                              placement="top"
-                              PopperProps={{
-                                style: { zIndex: zIndices.tooltip }
-                              }}
-                              classes={{
-                                tooltip: classes.tooltipRoot
-                              }}
-                              arrow
-                              enterDelay={100}
-                            >
-                              <div style={{ display: 'inline-block' }}>
-                                <Typography
-                                  className={classes.deviceName}
-                                  style={{
-                                    color: clsStatus[deviceName] ? "red" : "#FFFFFF",
-                                  }}
-                                >
-                                  {deviceName}
-
-                                  {clsStatus[deviceName] && (
-                                    <Tooltip
-                                      title="This device is not in the device list. Click to add."
-                                      placement="top"
-                                      PopperProps={{
-                                        style: { zIndex: zIndices.tooltip }
-                                      }}
-                                      classes={{
-                                        tooltip: classes.tooltipRoot
-                                      }}
-                                      arrow
-                                    >
-                                      <IconButton
-                                        onClick={(e) => { e.stopPropagation(); onAddDeviceToList(deviceName, e); }}
-                                        size="small"
-                                        className={classes.warningIcon}
-                                      >
-                                        <InfoIcon />
-                                      </IconButton>
-                                    </Tooltip>
-                                  )}
-                                </Typography>
-                              </div>
-                            </Tooltip>
-                          </div>
-
-                          <div className={classes.deviceCountRow}>
-                            <Typography className={classes.deviceCount}>
-                              Total: <span style={{ fontWeight: "bold" }}>{deviceInstances.length}</span> counted
-                            </Typography>
-                          </div>
-                        </div>
-
-                        <div className={classes.deviceActions}>
-                          <IconButton
-                            size="small"
-                            className={classes.expandIcon}
-                            onClick={(e) => toggleDeviceGroupExpand(category, deviceName, e)}
-                          >
-                            {expandedDeviceGroups[deviceGroupKey] ?
-                              <ExpandLessIcon fontSize="small" /> :
-                              <ExpandMoreIcon fontSize="small" />
-                            }
-                          </IconButton>
                           <Tooltip
-                            title={"Edit Device Name (Applies to all instances of this device)"}
-                            PopperProps={{ style: { zIndex: zIndices.tooltip } }}
-                            classes={{ tooltip: classes.tooltipRoot }}
-                            arrow
-                          >
-                            <span> {/* Wrap in span to ensure tooltip shows when button is disabled */}
-                              <IconButton
-                                size="small"
-                                className={classnames(classes.actionIcon, classes.bulkEditIcon)}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openBulkEditDialog(deviceName, e);
-                                }}
-                                style={{
-                                  zIndex: zIndices.tooltip,
-                                  // color: isUserDefinedDevice(deviceName) ? "#64b5f6" : "rgba(255,255,255,0.3)"
-                                }}
-                              // disabled={!isUserDefinedDevice(deviceName)}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                          <Tooltip
-                            title="Delete all instances of this device"
+                            title="Toggle device visibility. Click to show only this device. Unclick to show all devices."
                             placement="top"
                             PopperProps={{ style: { zIndex: zIndices.tooltip } }}
-                            classes={{ tooltip: classes.tooltipRoot }}
-                            arrow
+                            classes={{
+                              tooltip: classes.tooltipRoot
+                            }}
                           >
                             <IconButton
+                              edge="start"
                               size="small"
-                              onClick={(e) => { e.stopPropagation(); onDelete(deviceName); }}
-                              className={classes.actionIcon}
+                              className={classnames(classes.actionIcon, classes.deviceVisibilityIcon)}
+                              style={{ left: 16 }} // Adjust position for indentation
+                              onClick={(e) => { e.stopPropagation(); onToggle(deviceName); }}
                             >
-                              <TrashIcon
+                              <Visibility
                                 style={{
-                                  color: "rgb(245, 0, 87)",
+                                  color: selectedDeviceToggle === deviceName ? "green" : "white",
                                 }}
                               />
                             </IconButton>
                           </Tooltip>
-                        </div>
-                      </ListItem>
 
-                      {/* Individual Device Instances */}
-                      <Collapse in={expandedDeviceGroups[deviceGroupKey]} timeout="auto" unmountOnExit>
-                        <List className={classes.nestedList} disablePadding>
-                          {deviceInstances.map((region, regionIndex) => (
-                            <ListItem
-                              key={regionIndex}
-                              className={classnames(classes.regionItem, {
-                                [classes.highlighted]: region.highlighted || region.id === selectedRegionId
-                              })}
-                              style={{
-                                paddingLeft: 32,
-                                backgroundColor: region.highlighted || region.id === selectedRegionId ? "#1e1e1e" : "transparent"
-                              }}
-                              button
-                              onClick={(e) => handleSelectRegion(region, e)}
-                            >
-                              <div
-                                className={classes.regionIcon}
-                                style={{
-                                  backgroundColor: region.color || "#ddd",
-                                  borderRadius: region.type === 'box' ? '2px' : '50%'
-                                }}
-                              />
-
+                          <div className={classes.deviceContent}>
+                            <div className={classes.deviceNameRow}>
                               <Tooltip
                                 title={
                                   <div>
-                                    <div><strong>Device:</strong> {region.cls}</div>
-                                    <div><strong>Type:</strong> {region.type}</div>
+                                    <div><strong>Device Name:</strong> {deviceName}</div>
                                     <div><strong>Category:</strong> {category}</div>
-                                    {region.tags && region.tags.length > 0 && (
-                                      <div><strong>Tags:</strong> {region.tags.join(', ')}</div>
-                                    )}
                                   </div>
                                 }
                                 placement="top"
@@ -1092,15 +954,143 @@ export const AnnotationCountSidebarBox = ({
                                   tooltip: classes.tooltipRoot
                                 }}
                                 arrow
+                                enterDelay={100}
                               >
-                                <Typography className={classes.regionName}>
-                                  {region.cls} #{regionIndex + 1}
-                                </Typography>
-                              </Tooltip>
+                                <div style={{ display: 'inline-block' }}>
+                                  <Typography
+                                    className={classes.deviceName}
+                                    style={{
+                                      color: clsStatus[deviceName] ? "red" : "#FFFFFF",
+                                    }}
+                                  >
+                                    {deviceName}
 
-                              <div className={classes.actionContainer}>
+                                    {clsStatus[deviceName] && (
+                                      <Tooltip
+                                        title="This device is not in the device list. Click to add."
+                                        placement="top"
+                                        PopperProps={{
+                                          style: { zIndex: zIndices.tooltip }
+                                        }}
+                                        classes={{
+                                          tooltip: classes.tooltipRoot
+                                        }}
+                                        arrow
+                                      >
+                                        <IconButton
+                                          onClick={(e) => { e.stopPropagation(); onAddDeviceToList(deviceName, e); }}
+                                          size="small"
+                                          className={classes.warningIcon}
+                                        >
+                                          <InfoIcon />
+                                        </IconButton>
+                                      </Tooltip>
+                                    )}
+                                  </Typography>
+                                </div>
+                              </Tooltip>
+                            </div>
+
+                            <div className={classes.deviceCountRow}>
+                              <Typography className={classes.deviceCount}>
+                                Total: <span style={{ fontWeight: "bold" }}>{deviceInstances.length}</span> counted
+                              </Typography>
+                            </div>
+                          </div>
+
+                          <div className={classes.deviceActions}>
+                            <IconButton
+                              size="small"
+                              className={classes.expandIcon}
+                              onClick={(e) => toggleDeviceGroupExpand(category, deviceName, e)}
+                            >
+                              {expandedDeviceGroups[deviceGroupKey] ?
+                                <ExpandLessIcon fontSize="small" /> :
+                                <ExpandMoreIcon fontSize="small" />
+                              }
+                            </IconButton>
+                            <Tooltip
+                              title={"Edit Device Name (Applies to all instances of this device)"}
+                              PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                              classes={{ tooltip: classes.tooltipRoot }}
+                              arrow
+                            >
+                              <span> {/* Wrap in span to ensure tooltip shows when button is disabled */}
+                                <IconButton
+                                  size="small"
+                                  className={classnames(classes.actionIcon, classes.bulkEditIcon)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openBulkEditDialog(deviceName, e);
+                                  }}
+                                  style={{
+                                    zIndex: zIndices.tooltip,
+                                    // color: isUserDefinedDevice(deviceName) ? "#64b5f6" : "rgba(255,255,255,0.3)"
+                                  }}
+                                // disabled={!isUserDefinedDevice(deviceName)}
+                                >
+                                  <EditIcon fontSize="small" />
+                                </IconButton>
+                              </span>
+                            </Tooltip>
+                            <Tooltip
+                              title="Delete all instances of this device"
+                              placement="top"
+                              PopperProps={{ style: { zIndex: zIndices.tooltip } }}
+                              classes={{ tooltip: classes.tooltipRoot }}
+                              arrow
+                            >
+                              <IconButton
+                                size="small"
+                                onClick={(e) => { e.stopPropagation(); onDelete(deviceName); }}
+                                className={classes.actionIcon}
+                              >
+                                <TrashIcon
+                                  style={{
+                                    color: "rgb(245, 0, 87)",
+                                  }}
+                                />
+                              </IconButton>
+                            </Tooltip>
+                          </div>
+                        </ListItem>
+
+                        {/* Individual Device Instances */}
+                        <Collapse in={expandedDeviceGroups[deviceGroupKey]} timeout="auto" unmountOnExit>
+                          <List className={classes.nestedList} disablePadding>
+                            {deviceInstances.map((region, regionIndex) => (
+                              <ListItem
+                                key={regionIndex}
+                                className={classnames(classes.regionItem, {
+                                  [classes.highlighted]: region.highlighted || region.id === selectedRegionId
+                                })}
+                                style={{
+                                  paddingLeft: 32,
+                                  backgroundColor: region.highlighted || region.id === selectedRegionId ? "#1e1e1e" : "transparent"
+                                }}
+                                button
+                                onClick={(e) => handleSelectRegion(region, e)}
+                              >
+                                <div
+                                  className={classes.regionIcon}
+                                  style={{
+                                    backgroundColor: region.color || "#ddd",
+                                    borderRadius: region.type === 'box' ? '2px' : '50%'
+                                  }}
+                                />
+
                                 <Tooltip
-                                  title="Locate"
+                                  title={
+                                    <div>
+                                      <div><strong>Device:</strong> {region.cls}</div>
+                                      <div><strong>Type:</strong> {region.type}</div>
+                                      <div><strong>Category:</strong> {category}</div>
+                                      {region.tags && region.tags.length > 0 && (
+                                        <div><strong>Tags:</strong> {region.tags.join(', ')}</div>
+                                      )}
+                                    </div>
+                                  }
+                                  placement="top"
                                   PopperProps={{
                                     style: { zIndex: zIndices.tooltip }
                                   }}
@@ -1109,51 +1099,68 @@ export const AnnotationCountSidebarBox = ({
                                   }}
                                   arrow
                                 >
-                                  <span>
+                                  <Typography className={classes.regionName}>
+                                    {region.cls} #{regionIndex + 1}
+                                  </Typography>
+                                </Tooltip>
+
+                                <div className={classes.actionContainer}>
+                                  <Tooltip
+                                    title="Locate"
+                                    PopperProps={{
+                                      style: { zIndex: zIndices.tooltip }
+                                    }}
+                                    classes={{
+                                      tooltip: classes.tooltipRoot
+                                    }}
+                                    arrow
+                                  >
+                                    <span>
+                                      <IconButton
+                                        className={classes.locationIcon}
+                                        onClick={(e) => { e.stopPropagation(); handlePanToRegion(region, e); }}
+                                        size="small"
+                                      >
+                                        <CenterFocusStrongIcon fontSize="small" />
+                                      </IconButton>
+                                    </span>
+                                  </Tooltip>
+
+                                  <Tooltip
+                                    title="Delete"
+                                    PopperProps={{
+                                      style: { zIndex: zIndices.tooltip }
+                                    }}
+                                    classes={{
+                                      tooltip: classes.tooltipRoot
+                                    }}
+                                    arrow
+                                  >
                                     <IconButton
-                                      className={classes.locationIcon}
-                                      onClick={(e) => { e.stopPropagation(); handlePanToRegion(region, e); }}
+                                      className={classes.actionIcon}
+                                      onClick={(e) => handleDeleteRegion(region, e)}
                                       size="small"
                                     >
-                                      <CenterFocusStrongIcon fontSize="small" />
+                                      <TrashIcon fontSize="small" style={{ color: "rgb(245, 0, 87)" }} />
                                     </IconButton>
-                                  </span>
-                                </Tooltip>
+                                  </Tooltip>
+                                </div>
+                              </ListItem>
+                            ))}
+                          </List>
+                        </Collapse>
+                      </React.Fragment>
+                    );
+                  })}
+                </List>
+              </Collapse>
+            </React.Fragment>
+          ))}
 
-                                <Tooltip
-                                  title="Delete"
-                                  PopperProps={{
-                                    style: { zIndex: zIndices.tooltip }
-                                  }}
-                                  classes={{
-                                    tooltip: classes.tooltipRoot
-                                  }}
-                                  arrow
-                                >
-                                  <IconButton
-                                    className={classes.actionIcon}
-                                    onClick={(e) => handleDeleteRegion(region, e)}
-                                    size="small"
-                                  >
-                                    <TrashIcon fontSize="small" style={{ color: "rgb(245, 0, 87)" }} />
-                                  </IconButton>
-                                </Tooltip>
-                              </div>
-                            </ListItem>
-                          ))}
-                        </List>
-                      </Collapse>
-                    </React.Fragment>
-                  );
-                })}
-              </List>
-            </Collapse>
-          </React.Fragment>
-        ))}
-
-        {/* Original device listing - keep for backward compatibility */}
-        {/* <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", margin: "8px 0" }} /> */}
-      </List>
+          {/* Original device listing - keep for backward compatibility */}
+          {/* <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", margin: "8px 0" }} /> */}
+        </List>
+      </div>
 
       <BulkEditDialog
         open={bulkEditDialogOpen}
