@@ -699,6 +699,8 @@ return (
               onChangeDeviceName={action("CHANGE_DEVICE_NAME", "oldName", "newName")}
               onMatchRegionTemplate={action("MATCH_REGION_LOADING", "region")}
               onPanToRegion={onPanToRegion}
+              dispatch={dispatch}
+
             />
             <LinearMeasurementsSelector
               regions={linearMeasurementsSidebarBoxRegions}
