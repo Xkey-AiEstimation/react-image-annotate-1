@@ -1,17 +1,11 @@
 // @flow
 import {
-  Button,
   Collapse,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Divider,
   IconButton,
   List,
   ListItem,
   ListItemSecondaryAction,
-  TextField,
   Tooltip,
   Typography
 } from "@material-ui/core"
@@ -27,8 +21,10 @@ import InfoIcon from "@material-ui/icons/Info"
 import Visibility from "@material-ui/icons/Visibility"
 import classnames from "classnames"
 import isEqual from "lodash/isEqual"
-import React, { memo, useMemo, useState, useEffect } from "react"
-import { zIndices } from "../Annotator/constants"
+import React, { memo, useEffect, useMemo, useState } from "react"
+import { asMutable } from "seamless-immutable"
+import { AIE_CATEGORIES, zIndices } from "../Annotator/constants"
+import { BulkEditDialog } from "../BulkEditDialog"
 import SidebarBoxContainer from "../SidebarBoxContainer"
 
 const useStyles = makeStyles({
@@ -270,6 +266,9 @@ const useStyles = makeStyles({
       fontWeight: "bold",
     }
   },
+  select: {
+    // Add your styles here
+  },
 })
 
 const ALL_DEVICES_TOGGLE_KEY = "ALL"
@@ -287,6 +286,8 @@ export const AnnotationCountSidebarBox = ({
   onChangeRegion,
   onChangeDeviceName,
   onPanToRegion,
+  dispatch,
+  state,
 }) => {
   const classes = useStyles()
   const [clsStatus, setClsStatus] = React.useState({})
@@ -301,6 +302,70 @@ export const AnnotationCountSidebarBox = ({
   const [allDevicesExpanded, setAllDevicesExpanded] = useState(false)
   const [selectedDevice, setSelectedDevice] = useState(null)
   const [selectedRegionId, setSelectedRegionId] = useState(null)
+  const [editMode, setEditMode] = useState('rename')
+  const [selectedCategory, setSelectedCategory] = useState(null)
+
+  // Create mutable copy of deviceList
+  const mutableDeviceList = useMemo(() => {
+    return asMutable(deviceList, { deep: true }) || []
+  }, [deviceList])
+
+  // Get the current device's category using mutable list
+  const currentDeviceCategory = useMemo(() => {
+    const device = mutableDeviceList.find(d => d.symbol_name === deviceToEdit)
+    return device?.category || null
+  }, [deviceToEdit, mutableDeviceList])
+
+  // Modified device options to include category using mutable list
+  const deviceOptions = useMemo(() => {
+    return mutableDeviceList.map(device => ({
+      value: device.symbol_name,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <span>{device.symbol_name}</span>
+          <span style={{ 
+            marginLeft: 8,
+            fontSize: '0.8em',
+            opacity: 0.7,
+            backgroundColor: 'rgba(255,255,255,0.1)',
+            padding: '2px 6px',
+            borderRadius: 4
+          }}>
+            {device.category}
+          </span>
+        </div>
+      ),
+      category: device.category,
+      isUserDefined: device.user_defined
+    }))
+  }, [mutableDeviceList])
+
+  // Validation using mutable list
+  const validateDeviceName = (newName) => {
+    if (!newName.trim()) {
+      setNameError("Device name cannot be empty")
+      return false
+    }
+
+    // Find the original device to get its category
+    const originalDevice = mutableDeviceList.find(d => d.symbol_name === deviceToEdit)
+    const category = originalDevice ? originalDevice.category : "User Defined"
+
+    // Check if there's already a device with this name in the same category
+    const existingDevice = mutableDeviceList.find(d =>
+      d.symbol_name === newName &&
+      d.category === category &&
+      d.symbol_name !== deviceToEdit
+    )
+
+    if (existingDevice) {
+      setNameError(`A device named "${newName}" already exists in the "${category}" category`)
+      return false
+    }
+
+    setNameError("")
+    return true
+  }
 
   // Toggle expansion state for a device
   const toggleDeviceExpand = (deviceName, event) => {
@@ -348,77 +413,82 @@ export const AnnotationCountSidebarBox = ({
     setBulkEditDialogOpen(true);
   }
 
-  // Add validation function to check for duplicate names in the same category
-  const validateDeviceName = (newName) => {
-    if (!newName.trim()) {
-      setNameError("Device name cannot be empty");
-      return false;
-    }
+  // Create category options
+  const categoryOptions = useMemo(() => {
+    return AIE_CATEGORIES.map(category => ({
+      value: category,
+      label: category
+    }))
+  }, [])
 
-    // Find the original device to get its category
-    const originalDevice = deviceList.find(d => d.symbol_name === deviceToEdit);
-    const category = originalDevice ? originalDevice.category : "User Defined";
-
-    // Check if there's already a device with this name in the same category
-    const existingDevice = deviceList.find(d =>
-      d.symbol_name === newName &&
-      d.category === category &&
-      d.symbol_name !== deviceToEdit // Exclude the current device being edited
-    );
-
-    if (existingDevice) {
-      setNameError(`A device named "${newName}" already exists in the "${category}" category`);
-      return false;
-    }
-
-    // Clear any previous errors
-    setNameError("");
-    return true;
-  };
-
-  // Handle bulk edit submission
-  const handleBulkEdit = () => {
-    if (!validateDeviceName(newDeviceName)) {
-      return; // Don't proceed if validation fails
-    }
-
-    if (!deviceToEdit || !newDeviceName.trim()) {
-      setBulkEditDialogOpen(false);
-      return;
-    }
-
-    // Use the CHANGE_DEVICE_NAME action to update all instances
-    if (onChangeDeviceName) {
-      onChangeDeviceName(deviceToEdit, newDeviceName);
-    }
-
-    // Add the new device to the device list if it's not already there
-    if (onAddDeviceOldDeviceToList) {
-      // Find the original device to get its category
-      const originalDevice = deviceList.find(d => d.symbol_name === deviceToEdit);
-
-      // Create a new device entry, preserving the category if it exists
-      const newDevice = {
-        symbol_name: newDeviceName,
-        category: originalDevice ? originalDevice.category : "User Defined", // Preserve the category
-        user_defined: true, // Set the user_defined flag
-        // Copy any other properties from the original device
-        ...(originalDevice && {
-          // Spread other properties except symbol_name which we're changing
-          ...Object.fromEntries(
-            Object.entries(originalDevice)
-              .filter(([key]) => key !== 'symbol_name')
-          )
+  // Modified handleDeviceSelectChange
+  const handleDeviceSelectChange = (newValue, actionMeta) => {
+    if (actionMeta.action === "create-option") {
+      setSelectedDevice({
+        value: newValue.value,
+        label: newValue.value,
+        isUserDefined: true
+      })
+      // Clear category when creating new device
+      setSelectedCategory(null)
+    } else {
+      setSelectedDevice(newValue)
+      // Set category if selecting existing device
+      if (newValue?.category) {
+        setSelectedCategory({
+          value: newValue.category,
+          label: newValue.category
         })
-      };
+      }
+    }
+    setNameError("")
+  }
 
-      onAddDeviceOldDeviceToList(newDevice);
+  // Modified handleBulkEdit
+  const handleBulkEdit = () => {
+    if (editMode === 'rename') {
+      if (!validateDeviceName(newDeviceName)) {
+        return
+      }
+      if (onChangeDeviceName) {
+        onChangeDeviceName(deviceToEdit, newDeviceName)
+      }
+    } else {
+      if (!selectedDevice) {
+        setNameError("Please select or create a device")
+        return
+      }
+      if (!selectedCategory) {
+        setNameError("Please select a category")
+        return
+      }
+
+      // If creating new device or changing to existing one
+      if (selectedDevice.isUserDefined) {
+        // Add new device with category
+        dispatch({
+          type: "ADD_NEW_DEVICE",
+          device: {
+            symbol_name: selectedDevice.value,
+            category: selectedCategory.value,
+            user_defined: true
+          }
+        })
+      }
+
+      // Change the device name
+      if (onChangeDeviceName) {
+        onChangeDeviceName(deviceToEdit, selectedDevice.value)
+      }
     }
 
-    // Close the dialog and reset form
-    setBulkEditDialogOpen(false);
-    setNewDeviceName("");
-  };
+    // Reset and close
+    setBulkEditDialogOpen(false)
+    setNewDeviceName("")
+    setSelectedDevice(null)
+    setSelectedCategory(null)
+    setEditMode('rename')
+  }
 
   const counts = useMemo(() => {
     return regions.reduce(
@@ -852,16 +922,14 @@ export const AnnotationCountSidebarBox = ({
                                 size="small"
                                 className={classnames(classes.actionIcon, classes.bulkEditIcon)}
                                 onClick={(e) => {
-                                  if (isUserDefinedDevice(deviceName)) {
-                                    e.stopPropagation();
-                                    openBulkEditDialog(deviceName, e);
-                                  }
+                                  e.stopPropagation();
+                                  openBulkEditDialog(deviceName, e);
                                 }}
                                 style={{
                                   zIndex: zIndices.tooltip,
-                                  color: isUserDefinedDevice(deviceName) ? "#64b5f6" : "rgba(255,255,255,0.3)"
+                                  // color: isUserDefinedDevice(deviceName) ? "#64b5f6" : "rgba(255,255,255,0.3)"
                                 }}
-                                disabled={!isUserDefinedDevice(deviceName)}
+                                // disabled={!isUserDefinedDevice(deviceName)}
                               >
                                 <EditIcon fontSize="small" />
                               </IconButton>
@@ -995,77 +1063,16 @@ export const AnnotationCountSidebarBox = ({
         {/* <Divider style={{ backgroundColor: "rgba(255, 255, 255, 0.1)", margin: "8px 0" }} /> */}
       </List>
 
-      {/* Bulk Edit Dialog */}
-      <Dialog
+      <BulkEditDialog
         open={bulkEditDialogOpen}
         onClose={() => setBulkEditDialogOpen(false)}
-        aria-labelledby="bulk-edit-dialog-title"
-        BackdropProps={{
-          style: {
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            zIndex: zIndices.backdrop // Maximum z-index - 1
-          }
-        }}
-        PaperProps={{
-          style: {
-            zIndex: zIndices.modal, // Maximum possible z-index
-            backgroundColor: '#333',
-            color: 'white'
-          }
-        }}
-        style={{ zIndex: zIndices.modal }} // Maximum possible z-index
-      >
-        <DialogTitle id="bulk-edit-dialog-title" style={{ color: 'white' }}>
-          Edit Device Name
-        </DialogTitle>
-        <DialogContent className={classes.dialogContent}>
-          <Typography variant="body2" style={{ marginBottom: 16, color: 'white' }}>
-            This will rename all instances of "{deviceToEdit}" to the new name.
-            {isUserDefinedDevice(deviceToEdit) && (
-              <div style={{ marginTop: 8, color: '#64b5f6' }}>
-                {deviceList.find(d => d.symbol_name === deviceToEdit)?.user_defined
-                  ? "This is a user-defined device."
-                  : "This device will be added to your device list as a user-defined device."}
-              </div>
-            )}
-          </Typography>
-          <TextField
-            label="New Device Name"
-            variant="outlined"
-            className={classes.dialogTextField}
-            value={newDeviceName}
-            onChange={(e) => {
-              setNewDeviceName(e.target.value);
-              // Optional: validate on each change to provide immediate feedback
-              validateDeviceName(e.target.value);
-            }}
-            error={!!nameError}
-            helperText={nameError}
-            autoFocus
-            InputProps={{
-              style: { color: 'white' }
-            }}
-            InputLabelProps={{
-              style: { color: 'rgba(255, 255, 255, 0.7)' }
-            }}
-            FormHelperTextProps={{
-              style: { color: 'rgb(245, 0, 87)' }
-            }}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setBulkEditDialogOpen(false)} style={{ color: '#64b5f6' }}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleBulkEdit}
-            style={{ color: '#64b5f6' }}
-            disabled={!newDeviceName.trim() || !!nameError}
-          >
-            Apply
-          </Button>
-        </DialogActions>
-      </Dialog>
+        deviceToEdit={deviceToEdit}
+        deviceList={deviceList}
+        isUserDefinedDevice={isUserDefinedDevice}
+        onChangeDeviceName={onChangeDeviceName}
+        dispatch={dispatch}
+        state={state}
+      />
     </SidebarBoxContainer>
   )
 }

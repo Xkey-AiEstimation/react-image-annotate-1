@@ -1180,10 +1180,10 @@ export default (state: MainLayoutState, action: Action) => {
       // switch image 
       state = getIn(state, ["selectedImage"], imageIndex)
       state = getIn(state, ["images", imageIndex], activeImage)
-     
+
       const regionIndex = getRegionIndex(region)
       if (regionIndex === null) return state
-     
+
       const newRegions = regions.map((r) => ({
         ...r,
         highlighted: r.id === region.id,
@@ -2522,6 +2522,34 @@ export default (state: MainLayoutState, action: Action) => {
         }))
       )
     }
+    case "BULK_EDIT_DEVICE_NAME_AND_CATEGORY": {
+      const { oldName, newName, category } = action
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, [
+        "images",
+        currentImageIndex,
+        "regions",
+      ])
+
+      const color = getColor(newState, newName)
+      console.log("color", color)
+      newRegions = newRegions.map(region => {
+        if (region.cls === oldName) {
+          return {
+            ...region,
+            cls: newName,
+            category: category,
+            color: color
+          }
+        }
+        return region
+      })
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      return newState
+    }
+
     case "CHANGE_DEVICE_NAME": {
       const { oldName, newName } = action
 
