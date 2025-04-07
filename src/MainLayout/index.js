@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FullScreen, useFullScreenHandle } from "react-full-screen"
 import type { MainLayoutState } from "./types"
 
-import { Input, Tooltip, Slider, Typography, MenuItem } from "@material-ui/core"
+import { Input, Tooltip, Slider, Typography, MenuItem, IconButton } from "@material-ui/core"
 import Workspace from "@xkey-aiestimation/react-material-workspace-layout/Workspace"
 import classnames from "classnames"
 import type { Node } from "react"
@@ -39,6 +39,12 @@ import { disableBreakoutSubscription, subTypes, zIndices } from "../Annotator/co
 import CollapsibleRightSidebar from "../CollapsibleRightSidebar"
 import LeftSidebar from "../LeftSidebar"
 import Select from 'react-select'
+import NavigateNextIcon from '@material-ui/icons/NavigateNext'
+import NavigateBeforeIcon from '@material-ui/icons/NavigateBefore'
+import FullscreenIcon from '@material-ui/icons/Fullscreen'
+import FullscreenExitIcon from '@material-ui/icons/FullscreenExit'
+import SaveIcon from '@material-ui/icons/Save'
+import ExitToAppIcon from '@material-ui/icons/ExitToApp'
 
 const emptyArr = []
 const useStyles = makeStyles(theme => ({
@@ -126,6 +132,82 @@ const useStyles = makeStyles(theme => ({
   },
   pageSelectContainer: {
     minWidth: 250,
+  },
+  headerSection: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    width: "100%",
+    padding: "8px 16px",
+  },
+  leftSection: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    minWidth: "200px",
+  },
+  centerSection: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flex: 1,
+  },
+  rightSection: {
+    display: "flex",
+    alignItems: "center",
+    gap: "16px",
+    minWidth: "800px",
+    justifyContent: "flex-end",
+  },
+  centerWrapper: {
+    position: "absolute",
+    left: "50%",
+    transform: "translateX(-50%)",
+    display: "flex",
+    alignItems: "center",
+  },
+  centerInput: {
+    width: "250px",
+    textAlign: "center",
+  },
+  headerButton: {
+    color: "white",
+    backgroundColor: "#191414",
+    border: "1px solid rgba(255,255,255,0.2)",
+    padding: "6px 12px",
+    borderRadius: 4,
+    cursor: "pointer",
+    fontSize: 14,
+    display: "flex",
+    alignItems: "center",
+    gap: "4px",
+    "&:hover": {
+      backgroundColor: "#2c2c2c",
+      borderColor: "rgba(255,255,255,0.3)",
+    },
+  },
+  iconButton: {
+    color: "white",
+    backgroundColor: "#191414",
+    border: "1px solid rgba(255,255,255,0.2)",
+    padding: "8px",
+    margin: "0 4px",
+    "&:hover": {
+      backgroundColor: "#2c2c2c",
+      borderColor: "rgba(255,255,255,0.3)",
+    },
+    "&.Mui-disabled": {
+      opacity: 0.5,
+      color: "rgba(255,255,255,0.3)",
+    },
+  },
+  tooltipRoot: {
+    backgroundColor: "rgba(0, 0, 0, 0.85)",
+    color: "white",
+    fontSize: 12,
+    padding: "8px 12px",
+    maxWidth: 300,
+    border: "1px solid rgba(255, 255, 255, 0.2)",
   },
 }))
 
@@ -527,34 +609,83 @@ return (
             headerLeftSide={[
               activeImage ? (
                 <>
-                  <div
-                    className={classes.headerTitle}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between", // Ensures left, center, and right alignment
-                      width: "100%",
-                      padding: "8px 16px",
-                    }}
-                  >
-                    {/* Left Section: Image and Title */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                  <div className={classes.headerSection}>
+                    {/* Left Section: Logo and Title */}
+                    <div className={classes.leftSection}>
                       <img src={favicon} title={activeImage.name} style={{ height: "24px" }} />
-                      <div style={{ fontWeight: "bold" }}>{title}</div>
+                      <div style={{
+                        fontWeight: "bold",
+                        color: 'white'
+                      }}>{title}</div>
                     </div>
 
-                    {/* Center Section: Page Selector and Input */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    {/* Center Section: Page Name Input */}
+                    <div className={classes.centerWrapper}>
                       <Input
+                        className={classes.centerInput}
                         style={{
-                          width: "150px",
-                          color: "white",
-                          textAlign: "center",
+                          width: "250px",
                         }}
                         placeholder={`Page ${currentImageIndex + 1}`}
                         value={activeImage.name}
                         onChange={onChangeImageName}
+                        inputProps={{
+                          style: {
+                            color: "white",
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            borderBottom: "2px solid #e4e4e7",
+                          }
+                        }}
                       />
+
+                    </div>
+
+
+
+                    {/* Right Section: Controls */}
+                    <div className={classes.rightSection}>
+                      {/* Page Selector */}
+
+                      {/* Threshold Controls */}
+                      <div className={classes.sliderContainer}>
+                        <Tooltip
+                          title="Adjust AiE Accuracy, the higher the value the more accurate but may miss some devices."
+                          PopperProps={{
+                            style: { zIndex: zIndices.tooltip },
+                          }}
+                        >
+                          <Typography variant="body2">AiE Threshold:</Typography>
+                        </Tooltip>
+                        <Slider
+                          className={classes.slider}
+                          value={ocrThreshold}
+                          onChange={handleThresholdChange}
+                          step={0.01}
+                          min={0.65}
+                          max={0.95}
+                          valueLabelDisplay="off"
+                          valueLabelFormat={(value) => value.toFixed(2)}
+                          style={{ width: "120px" }}
+                        />
+                        <Input
+                          style={{
+                            width: "50px",
+                            color: "white",
+                            textAlign: "center",
+                          }}
+                          value={ocrThreshold}
+                          margin="dense"
+                          onChange={handleInputChange}
+                          onBlur={handleBlur}
+                          inputProps={{
+                            step: 0.01,
+                            min: 0.65,
+                            max: 0.95,
+                            type: "number",
+                          }}
+                        />
+                      </div>
                       <div className={classes.pageSelectContainer}>
                         <Select
                           value={{
@@ -573,83 +704,115 @@ return (
                         />
                       </div>
 
-                    </div>
 
-                    {/* Right Section: Slider & Threshold Input */}
-                    <div
-                      className={classes.sliderContainer}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <Tooltip title="Adjust AiE Accuracy, the higher the value the more accurate but may miss some devices."
-                        PopperProps={{
-                          style: { zIndex: zIndices.tooltip },
-                        }}
-                        classes={{
-                          tooltip: classes.tooltip,
-                        }}
-                      >
-                        <Typography variant="body2">AiE Threshold:</Typography>
-                      </Tooltip>
-                      <Slider
-                        className={classes.slider}
-                        value={ocrThreshold}
-                        onChange={handleThresholdChange}
-                        step={0.01}
-                        min={0.65}
-                        max={0.95}
-                        valueLabelDisplay="off"
-                        valueLabelFormat={(value) => value.toFixed(2)}
-                        style={{ width: "120px" }}
-                      />
-                      <Input
-                        style={{
-                          width: "50px",
-                          color: "white",
-                          textAlign: "center",
-                        }}
-                        value={ocrThreshold}
-                        margin="dense"
-                        onChange={handleInputChange}
-                        onBlur={handleBlur}
-                        inputProps={{
-                          step: 0.01,
-                          min: 0.65,
-                          max: 0.95,
-                          type: "number",
-                        }}
-                      />
+
+                      {/* Navigation and Action Buttons */}
+                      <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
+                        {!hidePrev && (
+                          <Tooltip title="Previous Page"
+                            PopperProps={{
+                              style: { zIndex: zIndices.tooltip }
+                            }}
+                            classes={{
+                              tooltip: classes.tooltipRoot
+                            }}
+                          >
+                            <span>
+                              <IconButton
+                                className={classes.iconButton}
+                                onClick={() => onClickHeaderItem({ name: "Prev" })}
+                                disabled={currentImageIndex === 0}
+                                size="small"
+                              >
+                                <NavigateBeforeIcon />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
+                        {!hideNext && (
+                          <Tooltip title="Next Page"
+                            PopperProps={{
+                              style: { zIndex: zIndices.tooltip }
+                            }}
+                            classes={{
+                              tooltip: classes.tooltipRoot
+                            }}
+                          >
+                            <span>
+                              <IconButton
+                                className={classes.iconButton}
+                                onClick={() => onClickHeaderItem({ name: "Next" })}
+                                disabled={currentImageIndex === state.images.length - 1}
+                                size="small"
+                              >
+                                <NavigateNextIcon />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
+                        {!hideFullScreen && (
+                          <Tooltip title={state.fullScreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                            PopperProps={{
+                              style: { zIndex: zIndices.tooltip }
+                            }}
+                            classes={{
+                              tooltip: classes.tooltipRoot
+                            }}
+                            arrow
+                          >
+                            <IconButton
+                              className={classes.iconButton}
+                              onClick={() => onClickHeaderItem({ name: state.fullScreen ? "Window" : "Fullscreen" })}
+                              size="small"
+                            >
+                              {state.fullScreen ? <FullscreenExitIcon /> : <FullscreenIcon />}
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {!hideSave && (
+                          <Tooltip title="Save"
+                            PopperProps={{
+                              style: { zIndex: zIndices.tooltip }
+                            }}
+                            classes={{
+                              tooltip: classes.tooltipRoot
+                            }}
+                            arrow
+                          >
+                            <IconButton
+                              className={classes.iconButton}
+                              onClick={() => onClickHeaderItem({ name: "Save" })}
+                              size="small"
+                            >
+                              <SaveIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        {!hideExit && (
+                          <Tooltip title="Exit"
+                            PopperProps={{
+                              style: { zIndex: zIndices.tooltip }
+                            }}
+                            classes={{
+                              tooltip: classes.tooltipRoot
+                            }}
+                            arrow
+                          >
+                            <IconButton
+                              className={classes.iconButton}
+                              onClick={() => onClickHeaderItem({ name: "Exit" })}
+                              size="small"
+                            >
+                              <ExitToAppIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                      </div>
                     </div>
                   </div>
-
-
                 </>
               ) : null,
-
             ].filter(Boolean)}
-            headerItems={[
-              !hidePrev && { name: "Prev" },
-              !hideNext && { name: "Next" },
-              state.annotationType !== "video"
-                ? null
-                : !state.videoPlaying
-                  ? { name: "Play" }
-                  : { name: "Pause" },
-              !hideClone &&
-              !nextImageHasRegions &&
-              activeImage.regions && { name: "Clone" },
-              !hideSettings && { name: "Settings" },
-              !hideFullScreen &&
-              (state.fullScreen
-                ? { name: "Window" }
-                : { name: "Fullscreen" }),
-              !hideSave && { name: "Save" },
-              !hideExit && { name: "Exit" },
-            ].filter(Boolean)}
-            onClickHeaderItem={onClickHeaderItem}
           >
             <div style={{ display: "flex", height: "100%" }}>
               <LeftSidebar
