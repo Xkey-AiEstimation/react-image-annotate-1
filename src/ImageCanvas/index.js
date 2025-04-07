@@ -31,6 +31,7 @@ import useWasdMode from "./use-wasd-mode"
 import { disableBreakoutSubscription } from "../Annotator/constants.js"
 import type { MainLayoutState } from "../MainLayout/MainLayout"
 import FloatingHideButton from "./FloatingHideButton"
+import FloatingZoomControls from "./FloatingZoomControls"
 import classnames from "classnames"
 
 
@@ -819,17 +820,10 @@ export const ImageCanvas = ({
           />
         </>
       </PreventScrollToParents>
-      <div className={classes.zoomIndicator}>
-        {((1 / mat.a) * 100).toFixed(0)}%
-      </div>
-      <div
-        className={classes.resetButton}
-        onClick={() => {
-          resetMat()
-        }}
-      >
-        Reset Zoom
-      </div>
+      <FloatingZoomControls 
+        zoomLevel={(1 / mat.a) * 100}
+        onReset={resetMat}
+      />
       <FloatingHideButton
         hideRegions={hideRegions}
         onToggle={toggleRegionsVisibility}
