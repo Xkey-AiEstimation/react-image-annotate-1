@@ -45,11 +45,13 @@ const useStyles = makeStyles(theme => ({
   ...styles,
   pageSelect: {
     color: "white",
-    minWidth: 200,
+
     "& .MuiSelect-root": {
       backgroundColor: "#191414",
       border: "1px solid rgba(255,255,255,0.2)",
       borderRadius: 4,
+      minWidth: 100,
+      maxWidth: 150,
       padding: "8px 32px 8px 12px",
       "&:focus": {
         borderRadius: 4,
@@ -134,27 +136,36 @@ const useStyles = makeStyles(theme => ({
     justifyContent: "space-between",
     width: "100%",
     padding: "8px 16px",
+    position: "relative",
   },
+
   leftSection: {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    minWidth: "200px",
+    minWidth: "150px", // or however wide your logo/title usually is
   },
+
   centerSection: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    flex: 1,
+    flexShrink: 0,
+    margin: "0 auto", // centers it
   },
+
+  centerInput: {
+    width: "250px",
+    textAlign: "center",
+  },
+
   rightSection: {
     display: "flex",
     alignItems: "center",
     gap: "16px",
-    minWidth: "800px",
     justifyContent: "flex-end",
+    minWidth: "150px", // don't let it stretch endlessly
   },
-
 
   centerWrapper: {
     position: "absolute",
@@ -164,10 +175,6 @@ const useStyles = makeStyles(theme => ({
     alignItems: "center",
   },
 
-  centerInput: {
-    width: "250px",
-    textAlign: "center",
-  },
 
 }))
 
@@ -571,13 +578,6 @@ return (
                 <>
                   <div
                     className={classes.headerSection}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between", // Ensures left, center, and right alignment
-                      width: "100%",
-                      padding: "8px 16px",
-                    }}
                   >
                     {/* Left Section: Image and Title */}
                     <div className={classes.leftSection}>
@@ -586,13 +586,14 @@ return (
                     </div>
 
                     {/* Center Section: Page Selector and Input */}
-                    <div className={classes.centerWrapper}>
+                    <div className={classes.centerSection}>
                       <Input
                         className={classes.centerInput}
                         style={{
                           width: "150px",
                           color: "white",
                           textAlign: "center",
+                          borderBottom: "1px solid rgba(255,255,255,0.2)",
                         }}
                         placeholder={`Page ${currentImageIndex + 1}`}
                         value={activeImage.name}

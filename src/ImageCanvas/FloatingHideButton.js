@@ -37,7 +37,7 @@ export const FloatingHideButton = ({ hideRegions, onToggle }) => {
 
   return (
     <Tooltip
-      title={hideRegions ? "Show Background Regions" : "Hide Background Regions"}
+      title={hideRegions ? "Show Annotations" : "Hide Annotations"}
       placement="right"
       arrow
       PopperProps={{
