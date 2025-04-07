@@ -71,28 +71,20 @@ const RegionComponents = {
   )),
   box: memo(({ region, iw, ih, hideRegions }) => (
     <g transform={`translate(${region.x * iw} ${region.y * ih})`}>
-      {hideRegions ? (
-        // Fully blocking version
-        <rect
-          x={0}
-          y={0}
-          width={Math.max(region.w * iw, 0)}
-          height={Math.max(region.h * ih, 0)}
-          fill="white"
-          fillOpacity={0.9}
-        />
-      ) : (
-        // Normal version
-        <rect
-          strokeWidth={region.isOCR ? 1.5 : 2}
-          x={0}
-          y={0}
-          width={Math.max(region.w * iw, 0)}
-          height={Math.max(region.h * ih, 0)}
-          stroke={colorAlpha(region.isOCR ? "#080808" : region.color, 0.75)}
-          fill={colorAlpha(region.color, 0.5)}
-        />
-      )}
+      <rect
+        strokeWidth={region.isOCR ? 1.5 : 2}
+        x={0}
+        y={0}
+        width={Math.max(region.w * iw, 0)}
+        height={Math.max(region.h * ih, 0)}
+        stroke={region.dimmed ? "transparent" : colorAlpha(region.isOCR ? "#080808" : region.color, 0.75)}
+        fill={
+          region.dimmed 
+            ? "white"  // Show white when dimmed
+            : colorAlpha(region.color, 0.25)
+        }
+        fillOpacity={region.dimmed ? 0.9 : 1}
+      />
     </g>
   )),
   polygon: memo(({ region, iw, ih, fullSegmentationMode, hideRegions }) => {

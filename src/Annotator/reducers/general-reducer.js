@@ -2600,12 +2600,21 @@ export default (state: MainLayoutState, action: Action) => {
         return newState
       }
 
-      // Update all regions with new visibility state
-      newRegions = newRegions.map(region => ({
-        ...region,
-        // Keep the region visible but change its appearance via CSS
-        dimmed: !hideRegions
-      }))
+      // When toggling ON (hiding regions), mark existing regions as dimmed
+      if (!hideRegions) {
+        const timestamp = Date.now() // Use timestamp to mark existing regions
+        newRegions = newRegions.map(region => ({
+          ...region,
+          createdAt: region.createdAt || timestamp,
+          dimmed: true
+        }))
+      } else {
+        // When toggling OFF, remove dimmed flag from all regions
+        newRegions = newRegions.map(region => ({
+          ...region,
+          dimmed: false
+        }))
+      }
 
       newImage = setIn(newImage, ["regions"], newRegions)
       newState = setIn(newState, ["images", currentImageIndex], newImage)
