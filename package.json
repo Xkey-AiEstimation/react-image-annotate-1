@@ -9,6 +9,7 @@
     "@xkey-aiestimation/react-material-workspace-layout": "^1.0.9",
     "autoseg": "^0.0.12",
     "clamp": "^1.0.1",
+    "classnames": "^2.2.6",
     "color-alpha": "^1.0.4",
     "get-image-data": "^3.0.1",
     "material-survey": "^1.0.34",

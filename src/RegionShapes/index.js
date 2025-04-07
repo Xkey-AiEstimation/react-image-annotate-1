@@ -8,7 +8,7 @@ function clamp(num, min, max) {
 }
 
 const RegionComponents = {
-  point: memo(({ region, iw, ih }) => (
+  point: memo(({ region, iw, ih, hideRegions }) => (
     <g transform={`translate(${region.x * iw} ${region.y * ih})`}>
       <path
         d={"M0 8L8 0L0 -8L-8 0Z"}
@@ -18,12 +18,12 @@ const RegionComponents = {
       />
     </g>
   )),
-  line: memo(({ region, iw, ih }) => {
+  line: memo(({ region, iw, ih, hideRegions }) => {
     const x1 = region.x1 * iw
     const y1 = region.y1 * ih
     const x2 = region.x2 * iw
     const y2 = region.y2 * ih
-    
+
     const dx = x2 - x1
     const dy = y2 - y1
     const angle = Math.atan2(dy, dx) * (180 / Math.PI)
@@ -40,10 +40,10 @@ const RegionComponents = {
           stroke={colorAlpha(region.color, 0.75)}
           fill={colorAlpha(region.color, 0.25)}
         />
-        
+
         {/* Length label */}
         <text
-          x={length/2}
+          x={length / 2}
           y={-10}
           textAnchor="middle"
           fill={region.color || "#4f46e5"}
@@ -69,20 +69,33 @@ const RegionComponents = {
       />
     </g>
   )),
-  box: memo(({ region, iw, ih }) => (
+  box: memo(({ region, iw, ih, hideRegions }) => (
     <g transform={`translate(${region.x * iw} ${region.y * ih})`}>
-      <rect
-        strokeWidth={region.isOCR ? 1.5 : 2}
-        x={0}
-        y={0}
-        width={Math.max(region.w * iw, 0)}
-        height={Math.max(region.h * ih, 0)}
-        stroke={colorAlpha(region.isOCR ? "#080808" : region.color, region.isOCR ? 0.75 : 0.75)}
-        fill={colorAlpha(region.color, 0.5)}
-      />
+      {hideRegions ? (
+        // Fully blocking version
+        <rect
+          x={0}
+          y={0}
+          width={Math.max(region.w * iw, 0)}
+          height={Math.max(region.h * ih, 0)}
+          fill="white"
+          fillOpacity={0.9}
+        />
+      ) : (
+        // Normal version
+        <rect
+          strokeWidth={region.isOCR ? 1.5 : 2}
+          x={0}
+          y={0}
+          width={Math.max(region.w * iw, 0)}
+          height={Math.max(region.h * ih, 0)}
+          stroke={colorAlpha(region.isOCR ? "#080808" : region.color, 0.75)}
+          fill={colorAlpha(region.color, 0.5)}
+        />
+      )}
     </g>
   )),
-  polygon: memo(({ region, iw, ih, fullSegmentationMode }) => {
+  polygon: memo(({ region, iw, ih, fullSegmentationMode, hideRegions }) => {
     const Component = region.open ? "polyline" : "polygon"
     const alphaBase = fullSegmentationMode ? 0.5 : 1
     return (
@@ -94,10 +107,11 @@ const RegionComponents = {
         strokeWidth={2}
         stroke={colorAlpha(region.color, 0.75)}
         fill={colorAlpha(region.color, 0.25)}
+        fillOpacity={hideRegions ? 0.3 : 1}
       />
     )
   }),
-  keypoints: ({ region, iw, ih, keypointDefinitions }) => {
+  keypoints: ({ region, iw, ih, keypointDefinitions, hideRegions }) => {
     const { points, keypointsDefinitionId } = region
     if (!keypointDefinitions[keypointsDefinitionId]) {
       throw new Error(
@@ -147,7 +161,7 @@ const RegionComponents = {
       </g>
     )
   },
-  "expanding-line": memo(({ region, iw, ih }) => {
+  "expanding-line": memo(({ region, iw, ih, hideRegions }) => {
     let { expandingWidth = 0.005, points } = region
     expandingWidth = points.slice(-1)[0].width || expandingWidth
     const pointPairs = points.map(({ x, y, angle, width }, i) => {
@@ -214,7 +228,7 @@ const RegionComponents = {
 }
 
 export const WrappedRegionList = memo(
-  ({ regions, keypointDefinitions, iw, ih, fullSegmentationMode }) => {
+  ({ regions, keypointDefinitions, iw, ih, fullSegmentationMode, hideRegions }) => {
     return regions
       .filter((r) => r.visible !== false)
       .map((r) => {
@@ -227,6 +241,7 @@ export const WrappedRegionList = memo(
             ih={ih}
             keypointDefinitions={keypointDefinitions}
             fullSegmentationMode={fullSegmentationMode}
+            hideRegions={hideRegions}
           />
         )
       })
@@ -236,7 +251,7 @@ export const WrappedRegionList = memo(
 
 const ScaleLine = memo(({ region, iw, ih }) => {
   const scaleColor = region.color || "#4f46e5"
-  
+
   // Memoize core calculations
   const { x1, y1, pixelLength, angle } = useMemo(() => {
     const x1 = region.x1 * iw
@@ -264,8 +279,8 @@ const ScaleLine = memo(({ region, iw, ih }) => {
   }, [pixelLength, region.length_ft, region.cls])
 
   // Get the display length (prefer length_ft if available)
-  const displayLength = region.length_ft ? 
-    region.length_ft.toFixed(2) : 
+  const displayLength = region.length_ft ?
+    region.length_ft.toFixed(2) :
     parseFloat(region.cls).toFixed(2)
 
   // Render optimized SVG
@@ -343,10 +358,12 @@ export const RegionShapes = ({
   regions = [],
   keypointDefinitions,
   fullSegmentationMode,
+  hideRegions
 }) => {
   const iw = imagePosition.bottomRight.x - imagePosition.topLeft.x
   const ih = imagePosition.bottomRight.y - imagePosition.topLeft.y
   if (isNaN(iw) || isNaN(ih)) return null
+
   return (
     <svg
       width={iw}
@@ -368,6 +385,7 @@ export const RegionShapes = ({
         ih={ih}
         keypointDefinitions={keypointDefinitions}
         fullSegmentationMode={fullSegmentationMode}
+        hideRegions={hideRegions}
       />
       {regions.map((region, i) => {
         switch (region.type) {
