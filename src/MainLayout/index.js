@@ -545,6 +545,16 @@ return (
 
                     {/* Center Section: Page Selector and Input */}
                     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                      <Input
+                        style={{
+                          width: "150px",
+                          color: "white",
+                          textAlign: "center",
+                        }}
+                        placeholder={`Page ${currentImageIndex + 1}`}
+                        value={activeImage.name}
+                        onChange={onChangeImageName}
+                      />
                       <div className={classes.pageSelectContainer}>
                         <Select
                           value={{
@@ -562,16 +572,7 @@ return (
                           classNamePrefix="page-select"
                         />
                       </div>
-                      <Input
-                        style={{
-                          width: "150px",
-                          color: "white",
-                          textAlign: "center",
-                        }}
-                        placeholder={`Page ${currentImageIndex + 1}`}
-                        value={activeImage.name}
-                        onChange={onChangeImageName}
-                      />
+
                     </div>
 
                     {/* Right Section: Slider & Threshold Input */}
