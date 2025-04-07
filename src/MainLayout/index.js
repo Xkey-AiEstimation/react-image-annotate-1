@@ -5,7 +5,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { FullScreen, useFullScreenHandle } from "react-full-screen"
 import type { MainLayoutState } from "./types"
 
-import { Input, Tooltip, Slider, Typography } from "@material-ui/core"
+import { Input, Tooltip, Slider, Typography, MenuItem } from "@material-ui/core"
 import Workspace from "@xkey-aiestimation/react-material-workspace-layout/Workspace"
 import classnames from "classnames"
 import type { Node } from "react"
@@ -38,10 +38,63 @@ import { disableBreakoutSubscription, subTypes, zIndices } from "../Annotator/co
 // import Fullscreen from "../Fullscreen"
 import CollapsibleRightSidebar from "../CollapsibleRightSidebar"
 import LeftSidebar from "../LeftSidebar"
+import Select from 'react-select'
 
 const emptyArr = []
 const useStyles = makeStyles(theme => ({
   ...styles,
+  pageSelect: {
+    color: "white",
+    minWidth: 200,
+    "& .MuiSelect-root": {
+      backgroundColor: "#191414",
+      border: "1px solid rgba(255,255,255,0.2)",
+      borderRadius: 4,
+      padding: "8px 32px 8px 12px",
+      "&:focus": {
+        borderRadius: 4,
+        backgroundColor: "#191414",
+      }
+    },
+    "& .MuiSelect-icon": {
+      color: "white",
+      right: 8
+    },
+    "&:before, &:after": {
+      display: "none"
+    }
+  },
+  menuPaper: {
+    backgroundColor: "#191414",
+    color: "white",
+    border: "1px solid rgba(255,255,255,0.2)",
+    maxHeight: 300,
+    "& .MuiMenuItem-root": {
+      fontSize: 14,
+      padding: "8px 12px",
+      "&:hover": {
+        backgroundColor: "rgba(255,255,255,0.1)"
+      },
+      "&.Mui-selected": {
+        backgroundColor: "#2c2c2c",
+        "&:hover": {
+          backgroundColor: "#3c3c3c"
+        }
+      }
+    }
+  },
+  menuItem: {
+    fontSize: 14,
+    "&:hover": {
+      backgroundColor: "rgba(255,255,255,0.1)"
+    },
+    "&.Mui-selected": {
+      backgroundColor: "#191414",
+      "&:hover": {
+        backgroundColor: "#2c2c2c"
+      }
+    }
+  },
   sliderContainer: {
     display: "flex",
     alignItems: "center",
@@ -70,7 +123,10 @@ const useStyles = makeStyles(theme => ({
     "& .MuiSlider-valueLabel": {
       backgroundColor: "#ff0000",
     }
-  }
+  },
+  pageSelectContainer: {
+    minWidth: 250,
+  },
 }))
 
 const HotkeyDiv = withHotKeys(({ hotKeys, children, divRef, ...props }) => (
@@ -98,6 +154,7 @@ type Props = {
   hideHeader?: boolean,
   hideHeaderText?: boolean,
   onOcrThresholdChange: (threshold: number) => void,
+  onImageChange: (imageIndex: number) => void,
 }
 
 export const MainLayout = ({
@@ -117,6 +174,7 @@ export const MainLayout = ({
   hideSave = false,
   hideExit = false,
   onOcrThresholdChange,
+  onImageChange,
 }: Props) => {
   const classes = useStyles()
   const settings = useSettings()
@@ -381,6 +439,62 @@ const marks = [
     label: '0.95',
   },
 ];
+
+// Custom styles for React Select
+const customSelectStyles = {
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: '#191414',
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 4,
+    boxShadow: 'none',
+    '&:hover': {
+      borderColor: 'rgba(255,255,255,0.3)',
+    },
+    padding: '2px',
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: '#191414',
+    border: '1px solid rgba(255,255,255,0.2)',
+    zIndex: zIndices.tooltip + 100,
+  }),
+  option: (base, { isFocused, isSelected }) => ({
+    ...base,
+    backgroundColor: isSelected ? '#2c2c2c' : isFocused ? 'rgba(255,255,255,0.1)' : 'transparent',
+    color: 'white',
+    cursor: 'pointer',
+    '&:hover': {
+      backgroundColor: 'rgba(255,255,255,0.1)',
+    },
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: 'white',
+  }),
+  input: (base) => ({
+    ...base,
+    color: 'white',
+  }),
+  dropdownIndicator: (base) => ({
+    ...base,
+    color: 'rgba(255,255,255,0.5)',
+    '&:hover': {
+      color: 'rgba(255,255,255,0.8)',
+    },
+  }),
+}
+
+const pageOptions = useMemo(() => {
+  const images = [state.images[0], ...state.images.slice(1)]
+  console.log(images)
+  return images.map((img, i) => ({
+    value: i,
+    label: `Page ${i + 1}${img.name ? `: ${img.name}` : ''}`
+  }))
+}, [state.images])
+
+
 return (
   <FullScreenContainer>
     <FullScreen
@@ -429,17 +543,36 @@ return (
                       <div style={{ fontWeight: "bold" }}>{title}</div>
                     </div>
 
-                    {/* Center Section: Input (Active Image Name) */}
-                    <Input
-                      style={{
-                        width: "150px",
-                        color: "white",
-                        textAlign: "center",
-                      }}
-                      placeholder={`Page ${currentImageIndex + 1}`}
-                      value={activeImage.name}
-                      onChange={onChangeImageName}
-                    />
+                    {/* Center Section: Page Selector and Input */}
+                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                      <div className={classes.pageSelectContainer}>
+                        <Select
+                          value={{
+                            value: currentImageIndex,
+                            label: `Page ${currentImageIndex + 1}${state.images[currentImageIndex]?.name ? `: ${state.images[currentImageIndex].name}` : ''}`
+                          }}
+                          onChange={(option) => {
+                            const targetIndex = option.value
+                            onImageChange(targetIndex)
+                          }}
+                          options={pageOptions}
+                          styles={customSelectStyles}
+                          isSearchable={false}
+                          menuPlacement="auto"
+                          classNamePrefix="page-select"
+                        />
+                      </div>
+                      <Input
+                        style={{
+                          width: "150px",
+                          color: "white",
+                          textAlign: "center",
+                        }}
+                        placeholder={`Page ${currentImageIndex + 1}`}
+                        value={activeImage.name}
+                        onChange={onChangeImageName}
+                      />
+                    </div>
 
                     {/* Right Section: Slider & Threshold Input */}
                     <div

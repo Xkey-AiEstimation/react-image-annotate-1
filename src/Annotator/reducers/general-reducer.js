@@ -1166,6 +1166,41 @@ export default (state: MainLayoutState, action: Action) => {
     case "CHANGE_IMAGE": {
       if (!activeImage) return state
       const { delta } = action
+
+      // Handle direct page selection
+      if (typeof delta === 'number') {
+        // If delta is a direct index difference
+        const targetIndex = currentImageIndex + delta
+        console.log(targetIndex)
+        if (targetIndex < 0 || targetIndex >= state.images.length) return state
+
+        // Reset any active modes or selections
+        state = setIn(state, ["mode"], null)
+        state = setIn(state, ["selectedTool"], "select")
+
+        // Clear any existing region highlights
+        if (activeImage.regions) {
+          state = setIn(
+            state,
+            [...pathToActiveImage, "regions"],
+            activeImage.regions.map(r => ({
+              ...r,
+              highlighted: false,
+              editingLabels: false
+            }))
+          )
+        }
+
+        // chekc if currentImage is different from targetIndex
+        console.log(currentImageIndex, targetIndex) 
+        console.log(state.images[currentImageIndex], state.images[targetIndex])
+        return setNewImage(
+          state.images[targetIndex],
+          targetIndex
+        )
+      }
+
+      // Handle existing image property changes
       for (const key of Object.keys(delta)) {
         if (key === "cls") saveToHistory(state, "Change Image Class")
         if (key === "tags") saveToHistory(state, "Change Image Tags")
@@ -1949,7 +1984,8 @@ export default (state: MainLayoutState, action: Action) => {
         // Filter out regions that intersect with the selection box
         const newRegions = regionsBeforeDelete.filter((region) => {
           // only delete visible regions
-          if (!region.visible) return true
+          if (!region.visible || region.type === "scale" || region.dimmed
+          ) return true
           switch (region.type) {
             case "point":
               return !isPointInBox(region, selectionBox)
@@ -2274,6 +2310,24 @@ export default (state: MainLayoutState, action: Action) => {
         case "prev": {
           if (currentImageIndex === null) return state
           if (currentImageIndex === 0) return state
+
+          // Reset any active modes or selections before navigation
+          state = setIn(state, ["mode"], null)
+          state = setIn(state, ["selectedTool"], "select")
+
+          // Clear highlights from current image regions
+          if (activeImage.regions) {
+            state = setIn(
+              state,
+              [...pathToActiveImage, "regions"],
+              activeImage.regions.map(r => ({
+                ...r,
+                highlighted: false,
+                editingLabels: false
+              }))
+            )
+          }
+
           return setNewImage(
             state.images[currentImageIndex - 1],
             currentImageIndex - 1
@@ -2282,6 +2336,24 @@ export default (state: MainLayoutState, action: Action) => {
         case "next": {
           if (currentImageIndex === null) return state
           if (currentImageIndex === state.images.length - 1) return state
+
+          // Reset any active modes or selections before navigation
+          state = setIn(state, ["mode"], null)
+          state = setIn(state, ["selectedTool"], "select")
+
+          // Clear highlights from current image regions
+          if (activeImage.regions) {
+            state = setIn(
+              state,
+              [...pathToActiveImage, "regions"],
+              activeImage.regions.map(r => ({
+                ...r,
+                highlighted: false,
+                editingLabels: false
+              }))
+            )
+          }
+
           return setNewImage(
             state.images[currentImageIndex + 1],
             currentImageIndex + 1
@@ -2592,10 +2664,10 @@ export default (state: MainLayoutState, action: Action) => {
       let newImage = getIn(newState, ["images", currentImageIndex])
       let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
       let hideRegions = getIn(newState, ["hideRegions"]) || false
-      
+
       // Toggle the hideRegions state
       newState = setIn(newState, ["hideRegions"], !hideRegions)
-      
+
       if (!newRegions) {
         return newState
       }

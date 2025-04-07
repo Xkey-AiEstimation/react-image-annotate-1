@@ -64,6 +64,7 @@ hideHeader ?: boolean,
   hideSettings ?: boolean,
   hideFullScreen ?: boolean,
   hideSave ?: boolean,
+  onImageChange ?: (imageIndex: number) => void,
 }
 
 export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Props> (({
@@ -115,6 +116,7 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   hideSave,
   allowComments,
   subType,
+  onImageChange,
 }, ref) => {
   if (typeof selectedImage === "string") {
     selectedImage = (images || []).findIndex((img) => img.src === selectedImage)
@@ -332,6 +334,10 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
     })
   }, [dispatch])
 
+  const handleImageChange = useCallback((imageIndex) => {
+    onImageChange(imageIndex)
+  }, [onImageChange])
+
   return (
     <HotKeys keyMap={defaultKeyMap}>
       <SettingsProvider>
@@ -351,6 +357,7 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
           hideFullScreen={hideFullScreen}
           hideSave={hideSave}
           onOcrThresholdChange={handleOcrThresholdChange}
+          onImageChange={handleImageChange}
         />
         <UncategorizedRegionsModal
           open={showUncategorizedModal}
