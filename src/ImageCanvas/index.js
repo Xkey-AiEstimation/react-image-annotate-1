@@ -30,6 +30,8 @@ import useProjectRegionBox from "./use-project-box"
 import useWasdMode from "./use-wasd-mode"
 import { disableBreakoutSubscription } from "../Annotator/constants.js"
 import type { MainLayoutState } from "../MainLayout/MainLayout"
+import FloatingHideButton from "./FloatingHideButton"
+import classnames from "classnames"
 
 
 const useStyles = makeStyles(styles)
@@ -482,6 +484,14 @@ export const ImageCanvas = ({
     }
   }, [state.panToRegion, imageLoaded]);
 
+  const hideRegions = state.hideRegions || false
+
+  const toggleRegionsVisibility = () => {
+    dispatch({
+      type: "TOGGLE_REGIONS_VISIBILITY"
+    })
+  }
+
   return (
     <div
       style={{
@@ -504,6 +514,9 @@ export const ImageCanvas = ({
                   ? `crosshair`
                   : undefined,
       }}
+      className={classnames(classes.container, {
+        [classes.regionsDimmed]: hideRegions
+      })}
     >
       {showCrosshairs && (
         <Crosshairs key="crossHairs" mousePosition={mousePosition} />
@@ -531,22 +544,23 @@ export const ImageCanvas = ({
         <RegionSelectAndTransformBoxes
           key="regionSelectAndTransformBoxes"
           regions={
-            !modifyingAllowedArea || !allowedArea
-              ? regions
-              : [
-                {
-                  type: "box",
-                  id: "$$allowed_area",
-                  cls: "allowed_area",
-                  highlighted: true,
-                  x: allowedArea.x,
-                  y: allowedArea.y,
-                  w: allowedArea.w,
-                  h: allowedArea.h,
-                  visible: true,
-                  color: "#ff0",
-                },
-              ]
+            hideRegions ? [] :
+              !modifyingAllowedArea || !allowedArea
+                ? regions
+                : [
+                  {
+                    type: "box",
+                    id: "$$allowed_area",
+                    cls: "allowed_area",
+                    highlighted: true,
+                    x: allowedArea.x,
+                    y: allowedArea.y,
+                    w: allowedArea.w,
+                    h: allowedArea.h,
+                    visible: true,
+                    color: "#ff0",
+                  },
+                ]
           }
           mouseEvents={mouseEvents}
           projectRegionBox={projectRegionBox}
@@ -789,6 +803,7 @@ export const ImageCanvas = ({
             imagePosition={imagePosition}
             regions={regions}
             fullSegmentationMode={fullImageSegmentationMode}
+            hideRegions={hideRegions}
           />
           <VideoOrImageCanvasBackground
             videoPlaying={videoPlaying}
@@ -815,6 +830,10 @@ export const ImageCanvas = ({
       >
         Reset Zoom
       </div>
+      <FloatingHideButton
+        hideRegions={hideRegions}
+        onToggle={toggleRegionsVisibility}
+      />
     </div>
   )
 }

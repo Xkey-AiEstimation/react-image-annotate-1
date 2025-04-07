@@ -2587,6 +2587,30 @@ export default (state: MainLayoutState, action: Action) => {
     case "SET_OCR_THRESHOLD": {
       return setIn(state, ["ocrThreshold"], action.threshold)
     }
+    case "TOGGLE_REGIONS_VISIBILITY": {
+      let newState = { ...state }
+      let newImage = getIn(newState, ["images", currentImageIndex])
+      let newRegions = getIn(newState, ["images", currentImageIndex, "regions"])
+      let hideRegions = getIn(newState, ["hideRegions"]) || false
+      
+      // Toggle the hideRegions state
+      newState = setIn(newState, ["hideRegions"], !hideRegions)
+      
+      if (!newRegions) {
+        return newState
+      }
+
+      // Update all regions with new visibility state
+      newRegions = newRegions.map(region => ({
+        ...region,
+        // Keep the region visible but change its appearance via CSS
+        dimmed: !hideRegions
+      }))
+
+      newImage = setIn(newImage, ["regions"], newRegions)
+      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      return newState
+    }
     default:
       break
   }
