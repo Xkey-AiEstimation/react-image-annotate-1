@@ -208,6 +208,9 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   const [uncategorizedRegions, setUncategorizedRegions] = useState([])
   const [selectedDeviceToggle, setSelectedDeviceToggle] = useState(null)
   const [ocrThreshold, setOcrThreshold] = useState(0.8)
+  const [lastAutoSave, setLastAutoSave] = useState(Date.now())
+  const [autoSaveIndicator, setAutoSaveIndicator] = useState({ show: false, message: "" })
+  const AUTOSAVE_INTERVAL = 5 * 60 * 1000 // 5 minutes in milliseconds
 
   const findUncategorizedRegions = useCallback((state) => {
     const regions = []
@@ -247,6 +250,7 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
         dispatchToReducer({
           type: "CLEAR_NEW_DEVICES_TO_SAVE",
         })
+        setLastAutoSave(Date.now())
         return
       } else if (action.buttonName === "Next" && onNextImage) {
         dispatchToReducer({
@@ -279,6 +283,36 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
       image: state.images[selectedImage],
     })
   }, [selectedImage, state.images])
+
+  // Add autosave effect
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      console.log("Auto-saving annotations...")
+      setAutoSaveIndicator({ show: true, message: "Auto-saving..." })
+
+      try {
+        await onSave(without(state, "history"))
+        setLastAutoSave(Date.now())
+        setAutoSaveIndicator({ show: true, message: "Auto-save successful" })
+
+        dispatchToReducer({ type: "CLEAR_NEW_DEVICES_TO_SAVE" })
+
+        setTimeout(() => {
+          setAutoSaveIndicator({ show: false, message: "" })
+        }, 3000)
+      } catch (error) {
+        console.error("Auto-save failed:", error)
+        setAutoSaveIndicator({ show: true, message: "Auto-save failed" })
+
+        setTimeout(() => {
+          setAutoSaveIndicator({ show: false, message: "" })
+        }, 5000)
+      }
+    }, AUTOSAVE_INTERVAL) // Every 5 minutes = 300,000 ms
+
+    return () => clearInterval(interval)
+  }, [state, onSave])
+
 
   if (!images && !videoSrc)
     return 'Missing required prop "images" or "videoSrc"'
@@ -341,6 +375,46 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   return (
     <HotKeys keyMap={defaultKeyMap}>
       <SettingsProvider>
+        {/* {autoSaveIndicator.show && (
+          <Slide direction="down" in={autoSaveIndicator.show} mountOnEnter unmountOnExit>
+            <Alert
+              severity={autoSaveIndicator.message.includes("failed") ? "error" : 
+                       autoSaveIndicator.message.includes("Auto-saving") ? "info" : "success"}
+              sx={{
+                position: "fixed",
+                top: 0,
+                left: "50%",
+                transform: "translateX(-50%)",
+                zIndex: 999999,
+                minWidth: "300px",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                padding: "10px 20px",
+                display: "flex",
+                alignItems: "center",
+                "& .MuiAlert-icon": {
+                  fontSize: "24px"
+                },
+                "& .MuiAlert-message": {
+                  fontSize: "16px",
+                  fontWeight: 500
+                }
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <span>{autoSaveIndicator.message}</span>
+                <span style={{ 
+                  fontSize: "12px", 
+                  opacity: 0.8,
+                  backgroundColor: "rgba(0,0,0,0.08)",
+                  padding: "2px 6px",
+                  borderRadius: "4px"
+                }}>
+                  {new Date().toLocaleTimeString()}
+                </span>
+              </div>
+            </Alert>
+          </Slide>
+        )} */}
         <MainLayout
           RegionEditLabel={RegionEditLabel}
           alwaysShowNextButton={Boolean(onNextImage)}
