@@ -375,46 +375,6 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   return (
     <HotKeys keyMap={defaultKeyMap}>
       <SettingsProvider>
-        {/* {autoSaveIndicator.show && (
-          <Slide direction="down" in={autoSaveIndicator.show} mountOnEnter unmountOnExit>
-            <Alert
-              severity={autoSaveIndicator.message.includes("failed") ? "error" : 
-                       autoSaveIndicator.message.includes("Auto-saving") ? "info" : "success"}
-              sx={{
-                position: "fixed",
-                top: 0,
-                left: "50%",
-                transform: "translateX(-50%)",
-                zIndex: 999999,
-                minWidth: "300px",
-                boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                padding: "10px 20px",
-                display: "flex",
-                alignItems: "center",
-                "& .MuiAlert-icon": {
-                  fontSize: "24px"
-                },
-                "& .MuiAlert-message": {
-                  fontSize: "16px",
-                  fontWeight: 500
-                }
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <span>{autoSaveIndicator.message}</span>
-                <span style={{ 
-                  fontSize: "12px", 
-                  opacity: 0.8,
-                  backgroundColor: "rgba(0,0,0,0.08)",
-                  padding: "2px 6px",
-                  borderRadius: "4px"
-                }}>
-                  {new Date().toLocaleTimeString()}
-                </span>
-              </div>
-            </Alert>
-          </Slide>
-        )} */}
         <MainLayout
           RegionEditLabel={RegionEditLabel}
           alwaysShowNextButton={Boolean(onNextImage)}
