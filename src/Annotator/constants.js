@@ -6,6 +6,8 @@ export const subTypeTitles = {
   yearly_xkey_se: "STANDARD EDITION",
   monthly_xkey_se: "STANDARD EDITION",
   yearly_xkey_see: "STANDARD EDITION ELECTRICAL",
+  monthly_lite: "AiE ELECTRICAL LITE",
+  yearly_lite: "AiE ELECTRICAL LITE",
 }
 
 export const subTypes = {
@@ -16,6 +18,7 @@ export const subTypes = {
   standardEditionYearly: "yearly_xkey_se",
   standardEditionMonthly: "monthly_xkey_se",
   electricalAieLite: "yearly_lite",
+  electricalAieLiteMonthly: "monthly_lite",
   standardEditionElectricalYearly: "yearly_xkey_see",
 }
 
@@ -23,6 +26,7 @@ export const disableBreakoutSubscription = [
   subTypes.standardEditionYearly,
   subTypes.standardEditionElectricalYearly,
   subTypes.electricalAieLite,
+  subTypes.electricalAieLiteMonthly,
   subTypes.standardEditionMonthly
 ]
 
@@ -30,6 +34,7 @@ export const disableMultiPageOCR = [
   subTypes.standardEditionYearly,
   subTypes.standardEditionElectricalYearly,
   subTypes.electricalAieLite,
+  subTypes.electricalAieLiteMonthly,
   subTypes.standardEditionMonthly
 ]
 
