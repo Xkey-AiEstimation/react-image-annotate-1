@@ -634,24 +634,104 @@ export const ImageCanvas = ({
           if (pbox.x + pbox.w < 0 || pbox.y + pbox.h < 0) return null
           if (pbox.x > layoutParams.current.canvasWidth || pbox.y > layoutParams.current.canvasHeight) return null
 
-          // Standard positioning for completed regions
-          const labelPosition = {
-            left: pbox.x,
-            top: highlightedRegion?.breakout ? pbox.y - 400 : pbox.y - 250,
-            width: Math.max(100, pbox.w),  // Minimum width for readability
-            position: "absolute",
-            zIndex: 10
-          }
+          // Smart positioning for completed regions to avoid blocking the region itself
+          let labelPosition = {}
 
-          // Ensure label doesn't go off-screen
-          const buffer = 10
-          if (labelPosition.left < buffer) labelPosition.left = buffer
-          if (labelPosition.top < buffer) labelPosition.top = buffer
-          if (labelPosition.left + (labelPosition.width || 200) > layoutParams.current.canvasWidth - buffer) {
-            labelPosition.left = layoutParams.current.canvasWidth - (labelPosition.width || 200) - buffer
-          }
-          if (labelPosition.top + 40 > layoutParams.current.canvasHeight - buffer) {
-            labelPosition.top = layoutParams.current.canvasHeight - 40 - buffer
+          // For points, use more intelligent positioning to avoid blocking the point
+          if (highlightedRegion.type === "point" ||
+            highlightedRegion.type === "line"
+          ) {
+            const pointX = pbox.x + pbox.w / 2
+            const pointY = pbox.y + pbox.h / 2
+            const labelWidth = 200 // Approximate label width
+            const labelHeight = 40 // Approximate label height
+
+            // Try different positions in order of preference
+            const positions = [
+              // Position 1: Above and to the right
+              {
+                left: pointX + 10,
+                top: pointY - labelHeight - 10,
+                transform: 'none'
+              },
+              // Position 2: Below and to the right
+              {
+                left: pointX + 10,
+                top: pointY + 10,
+                transform: 'none'
+              },
+              // Position 3: Above and to the left
+              {
+                left: pointX - labelWidth - 10,
+                top: pointY - labelHeight - 10,
+                transform: 'none'
+              },
+              // Position 4: Below and to the left
+              {
+                left: pointX - labelWidth - 10,
+                top: pointY + 10,
+                transform: 'none'
+              },
+              // Position 5: Above center (fallback)
+              {
+                left: pointX - labelWidth / 2,
+                top: pointY - labelHeight - 10,
+                transform: 'none'
+              },
+              // Position 6: Below center (fallback)
+              {
+                left: pointX - labelWidth / 2,
+                top: pointY + 10,
+                transform: 'none'
+              }
+            ]
+
+            // Find the first position that fits within the canvas bounds
+            const buffer = 10
+            for (const pos of positions) {
+              if (pos.left >= buffer &&
+                pos.left + labelWidth <= layoutParams.current.canvasWidth - buffer &&
+                pos.top >= buffer &&
+                pos.top + labelHeight <= layoutParams.current.canvasHeight - buffer) {
+                labelPosition = {
+                  ...pos,
+                  width: labelWidth,
+                  position: "absolute",
+                  zIndex: 10
+                }
+                break
+              }
+            }
+
+            // If no position fits, use the last position and let it be clipped
+            if (!labelPosition.left) {
+              labelPosition = {
+                ...positions[positions.length - 1],
+                width: labelWidth,
+                position: "absolute",
+                zIndex: 10
+              }
+            }
+          } else {
+            // For other region types (boxes, lines, polygons), use standard positioning
+            labelPosition = {
+              left: pbox.x,
+              top: highlightedRegion?.breakout ? pbox.y - 400 : pbox.y - 250,
+              width: Math.max(100, pbox.w),  // Minimum width for readability
+              position: "absolute",
+              zIndex: 10
+            }
+
+            // Ensure label doesn't go off-screen for non-point regions
+            const buffer = 10
+            if (labelPosition.left < buffer) labelPosition.left = buffer
+            if (labelPosition.top < buffer) labelPosition.top = buffer
+            if (labelPosition.left + (labelPosition.width || 200) > layoutParams.current.canvasWidth - buffer) {
+              labelPosition.left = layoutParams.current.canvasWidth - (labelPosition.width || 200) - buffer
+            }
+            if (labelPosition.top + 40 > layoutParams.current.canvasHeight - buffer) {
+              labelPosition.top = layoutParams.current.canvasHeight - 40 - buffer
+            }
           }
 
           return (
@@ -768,7 +848,7 @@ export const ImageCanvas = ({
           />
         </>
       </PreventScrollToParents>
-      <FloatingZoomControls 
+      <FloatingZoomControls
         zoomLevel={(1 / mat.a) * 100}
         onReset={resetMat}
       />
