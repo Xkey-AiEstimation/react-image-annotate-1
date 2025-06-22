@@ -623,7 +623,8 @@ export const ImageCanvas = ({
       )}
       {!showTags &&
         imageLoaded &&
-        highlightedRegion && (() => {
+        highlightedRegion &&
+        !state.mode && (() => {
           // Calculate position for the region label
           const pbox = projectRegionBox(highlightedRegion)
 
@@ -633,65 +634,13 @@ export const ImageCanvas = ({
           if (pbox.x + pbox.w < 0 || pbox.y + pbox.h < 0) return null
           if (pbox.x > layoutParams.current.canvasWidth || pbox.y > layoutParams.current.canvasHeight) return null
 
-          // Check if we're currently creating a line
-          const isCreatingLine = state.mode &&
-            state.mode.mode === "DRAW_LINE" &&
-            state.mode.regionId === highlightedRegion.id
-
-          // Improved positioning for line creation
-          let labelPosition = {}
-
-          if (isCreatingLine && highlightedRegion.type === "line") {
-            // For lines being created, position the label intelligently
-            // to avoid getting in the way of the drawing
-
-            // Get line endpoints
-            const { x1, y1, x2, y2 } = highlightedRegion
-
-            // Calculate line direction vector
-            const dx = x2 - x1
-            const dy = y2 - y1
-
-            // Determine if line is more horizontal or vertical
-            const isMoreHorizontal = Math.abs(dx) > Math.abs(dy)
-
-            // Position label perpendicular to the line direction
-            // and offset from the midpoint of the line
-            const midX = pbox.x + pbox.w / 2
-            const midY = pbox.y + pbox.h / 2
-
-            if (isMoreHorizontal) {
-              // For horizontal lines, position above or below
-              const positionAbove = y2 < 0.5 // If drawing in bottom half, position above
-
-              labelPosition = {
-                left: midX,
-                top: positionAbove ? midY - 60 : midY + 30,
-                transform: 'translateX(-50%)', // Center horizontally
-                position: "absolute",
-                zIndex: 10
-              }
-            } else {
-              // For vertical lines, position to the left or right
-              const positionLeft = x2 > 0.5 // If drawing in left half, position to the right
-
-              labelPosition = {
-                left: positionLeft ? midX + 30 : midX - 30,
-                top: midY,
-                transform: 'translateY(-50%)', // Center vertically
-                position: "absolute",
-                zIndex: 10
-              }
-            }
-          } else {
-            // Standard positioning for other regions or completed lines
-            labelPosition = {
-              left: pbox.x,
-              top: highlightedRegion?.breakout ? pbox.y - 400 : pbox.y - 250,
-              width: Math.max(100, pbox.w),  // Minimum width for readability
-              position: "absolute",
-              zIndex: 10
-            }
+          // Standard positioning for completed regions
+          const labelPosition = {
+            left: pbox.x,
+            top: highlightedRegion?.breakout ? pbox.y - 400 : pbox.y - 250,
+            width: Math.max(100, pbox.w),  // Minimum width for readability
+            position: "absolute",
+            zIndex: 10
           }
 
           // Ensure label doesn't go off-screen
@@ -746,7 +695,6 @@ export const ImageCanvas = ({
                 categoriesColorMap={categoriesColorMap}
                 imageWidth={imageDimensions?.naturalWidth}
                 imageHeight={imageDimensions?.naturalHeight}
-                simplifiedView={isCreatingLine}
                 ocrThreshold={ocrThreshold}
               />
             </div>
