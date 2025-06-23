@@ -486,10 +486,17 @@ export const ImageCanvas = ({
   }, [state.panToRegion, imageLoaded]);
 
   const hideRegions = state.hideRegions || false
+  const hideRegionLabels = state.hideRegionLabels || false
 
   const toggleRegionsVisibility = () => {
     dispatch({
       type: "TOGGLE_REGIONS_VISIBILITY"
+    })
+  }
+
+  const toggleRegionLabelsVisibility = () => {
+    dispatch({
+      type: "TOGGLE_REGION_LABELS_VISIBILITY"
     })
   }
 
@@ -624,7 +631,8 @@ export const ImageCanvas = ({
       {!showTags &&
         imageLoaded &&
         highlightedRegion &&
-        !state.mode && (() => {
+        !state.mode &&
+        !hideRegionLabels && (() => {
           // Calculate position for the region label
           const pbox = projectRegionBox(highlightedRegion)
 
@@ -854,7 +862,9 @@ export const ImageCanvas = ({
       />
       <FloatingHideButton
         hideRegions={hideRegions}
-        onToggle={toggleRegionsVisibility}
+        hideRegionLabels={hideRegionLabels}
+        onToggleRegions={toggleRegionsVisibility}
+        onToggleLabels={toggleRegionLabelsVisibility}
       />
     </div>
   )

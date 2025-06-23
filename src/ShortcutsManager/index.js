@@ -72,11 +72,16 @@ export const defaultHotkeys = [
     description: "Undo latest change",
     binding: "ctrl+z"
   },
-  // {
-  //   id: "hide",
-  //   description: "hide regions of current image",
-  //   binding: "h"
-  // },
+  {
+    id: "hide_region_labels",
+    description: "Hide/Show region labels",
+    binding: "j"
+  },
+  {
+    id: "hide",
+    description: "Hide regions of current image",
+    binding: "h"
+  },
 ]
 
 export const defaultKeyMap = {}
@@ -183,6 +188,11 @@ export const useDispatchHotkeyHandlers = ({ dispatch, state }) => {
       hide: () => {
         dispatch({
           type: "CHANGE_ALL_REGION_VISIBILITY"
+        })
+      },
+      hide_region_labels: () => {
+        dispatch({
+          type: "TOGGLE_REGION_LABELS_VISIBILITY"
         })
       },
       // TODO

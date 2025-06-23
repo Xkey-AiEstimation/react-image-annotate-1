@@ -2692,6 +2692,14 @@ export default (state: MainLayoutState, action: Action) => {
       newState = setIn(newState, ["images", currentImageIndex], newImage)
       return newState
     }
+    case "TOGGLE_REGION_LABELS_VISIBILITY": {
+      let newState = { ...state }
+      let hideRegionLabels = getIn(newState, ["hideRegionLabels"]) || false
+
+      // Toggle the hideRegionLabels state
+      newState = setIn(newState, ["hideRegionLabels"], !hideRegionLabels)
+      return newState
+    }
     default:
       break
   }
