@@ -289,7 +289,6 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   useAutoSave({
     state,
     onSave,
-    AUTOSAVE_INTERVAL,
     setAutoSaveIndicator,
     dispatchToReducer,
     without,

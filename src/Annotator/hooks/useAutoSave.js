@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
 
+const AUTOSAVE_INTERVAL = 5 * 60 * 1000 // 5 minutes in milliseconds    
+
 const useAutoSave = ({
     state,
     onSave,
-    AUTOSAVE_INTERVAL,
     setAutoSaveIndicator,
     dispatchToReducer,
     without,
