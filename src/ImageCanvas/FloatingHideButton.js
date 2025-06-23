@@ -76,7 +76,7 @@ export const FloatingHideButton = ({ hideRegions, hideRegionLabels, onToggleRegi
       </Tooltip>
       
       <Tooltip
-        title={hideRegionLabels ? "Show Region Labels (J)" : "Hide Region Labels (J)"}
+        title={hideRegionLabels ? "Show Device Label Pop-up (J)" : "Hide Device Label Pop-up (J)"}
         placement="right"
         arrow
         PopperProps={{

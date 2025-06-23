@@ -13,8 +13,16 @@ const RegionComponents = {
       <path
         d={"M0 8L8 0L0 -8L-8 0Z"}
         strokeWidth={2}
-        stroke={region.color}
-        fill="transparent"
+        stroke={
+          region.dimmed
+            ? "transparent"
+            : region.color
+        }
+        fill={
+          region.dimmed
+            ? "white"
+            : "transparent"
+        }
       />
     </g>
   )),
@@ -79,7 +87,7 @@ const RegionComponents = {
         height={Math.max(region.h * ih, 0)}
         stroke={region.dimmed ? "transparent" : colorAlpha(region.isOCR ? "#080808" : region.color, 0.75)}
         fill={
-          region.dimmed 
+          region.dimmed
             ? "white"  // Show white when dimmed
             : colorAlpha(region.color, 0.25)
         }
