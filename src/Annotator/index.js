@@ -27,6 +27,7 @@ import getActiveImage from "../Annotator/reducers/get-active-image"
 import DeviceList from "../RegionLabel/DeviceList.js"
 import { AIE_CATEGORIES } from "./constants.js"
 import UncategorizedRegionsModal from "../UncategorizedRegionsModal"
+import useAutoSave from "./hooks/useAutoSave.js"
 
 const getRandomId = () => Math.random().toString().split(".")[1]
 
@@ -285,33 +286,15 @@ export const Annotator = forwardRef < { focusRegion: (region: any) => void }, Pr
   }, [selectedImage, state.images])
 
   // Add autosave effect
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      console.log("Auto-saving annotations...")
-      setAutoSaveIndicator({ show: true, message: "Auto-saving..." })
+  useAutoSave({
+    state,
+    onSave,
+    setAutoSaveIndicator,
+    dispatchToReducer,
+    without,
+    setLastAutoSave,
+  });
 
-      try {
-        await onSave(without(state, "history"))
-        setLastAutoSave(Date.now())
-        setAutoSaveIndicator({ show: true, message: "Auto-save successful" })
-
-        dispatchToReducer({ type: "CLEAR_NEW_DEVICES_TO_SAVE" })
-
-        setTimeout(() => {
-          setAutoSaveIndicator({ show: false, message: "" })
-        }, 3000)
-      } catch (error) {
-        console.error("Auto-save failed:", error)
-        setAutoSaveIndicator({ show: true, message: "Auto-save failed" })
-
-        setTimeout(() => {
-          setAutoSaveIndicator({ show: false, message: "" })
-        }, 5000)
-      }
-    }, AUTOSAVE_INTERVAL) // Every 5 minutes = 300,000 ms
-
-    return () => clearInterval(interval)
-  }, [state, onSave])
 
 
   if (!images && !videoSrc)
