@@ -187,7 +187,7 @@ export const useDispatchHotkeyHandlers = ({ dispatch, state }) => {
       },
       hide: () => {
         dispatch({
-          type: "CHANGE_ALL_REGION_VISIBILITY"
+          type: "TOGGLE_REGIONS_VISIBILITY"
         })
       },
       hide_region_labels: () => {
