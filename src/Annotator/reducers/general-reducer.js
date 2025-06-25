@@ -275,7 +275,7 @@ export default (state: MainLayoutState, action: Action) => {
     if (newDevice) {
       return newDevice.category
     } else {
-      return undefined
+      return "NOT CLASSIFIED"
     }
   }
 
@@ -1138,6 +1138,8 @@ export default (state: MainLayoutState, action: Action) => {
           return setIn(state, [...pathToActiveImage, "regions"], updatedRegions)
         }
       }
+      
+      // Handle device name (cls) changes
       if (
         oldRegion.type !== "scale" &&
         oldRegion.cls !== action.region.cls) {
@@ -1151,6 +1153,72 @@ export default (state: MainLayoutState, action: Action) => {
           state = setIn(state, ["selectedCategory"], action.region.category)
         }
       }
+      
+      // Handle category changes (even when cls doesn't change)
+      if (oldRegion.category !== action.region.category) {
+        action.region.visible = true
+        action.region.color = getColorByCategory(state, action.region.category)
+        state = saveToHistory(state, "Change Region Category")
+        
+        // Update device list if this device exists
+        const deviceList = getIn(state, ["deviceList"])
+        const newDevicesToSave = getIn(state, ["newDevicesToSave"])
+        const deviceIndex = deviceList.findIndex(
+          (device) => device.symbol_name === action.region.cls
+        )
+        
+        if (deviceIndex !== -1) {
+          // Update existing device in device list
+          state = setIn(
+            state,
+            ["deviceList", deviceIndex, "category"],
+            action.region.category
+          )
+          
+          // Update in newDevicesToSave
+          const newDevicesToSaveIndex = newDevicesToSave.findIndex(
+            (device) => device.symbol_name === action.region.cls
+          )
+          if (newDevicesToSaveIndex !== -1) {
+            state = setIn(
+              state,
+              ["newDevicesToSave", newDevicesToSaveIndex, "category"],
+              action.region.category
+            )
+          } else {
+            // Add to newDevicesToSave if not already there
+            state = setIn(
+              state,
+              ["newDevicesToSave"],
+              [
+                ...newDevicesToSave,
+                {
+                  symbol_name: action.region.cls,
+                  category: action.region.category,
+                  user_defined: true,
+                },
+              ]
+            )
+          }
+        } else {
+          // Create new device entry if it doesn't exist
+          const newDevice = {
+            symbol_name: action.region.cls,
+            category: action.region.category,
+            user_defined: true,
+          }
+          state = setIn(state, ["deviceList"], [newDevice, ...deviceList])
+          state = setIn(
+            state,
+            ["newDevicesToSave"],
+            [...newDevicesToSave, newDevice]
+          )
+        }
+        
+        state = setIn(state, ["selectedCls"], action.region.cls)
+        state = setIn(state, ["selectedCategory"], action.region.category)
+      }
+      
       if (!isEqual(oldRegion.tags, action.region.tags)) {
         state = saveToHistory(state, "Change Region Tags")
       }
@@ -1719,7 +1787,7 @@ export default (state: MainLayoutState, action: Action) => {
           ? state.selectedCategory
           : defaultRegionCls
             ? getCategoryBySymbolName(defaultRegionCls)
-            : undefined
+            : "NOT CLASSIFIED"
       let defaultPointAndBoxColor = getColorByCategory(
         state,
         defaultRegionCategory
@@ -1777,6 +1845,18 @@ export default (state: MainLayoutState, action: Action) => {
               (breakout) => breakout.id === selectedBreakoutIdAutoAdd
             )
           }
+          
+          // Get the currently selected device's details
+          const selectedDevice = state.deviceList.find(
+            device => device.symbol_name === defaultRegionCls
+          )
+
+          // Use the selected device's category and color if available
+          const deviceCategory = selectedDevice ? selectedDevice.category : defaultRegionCategory
+          const deviceColor = selectedDevice ?
+            getColorByCategory(state, deviceCategory) :
+            defaultPointAndBoxColor
+            
           newRegion = {
             type: "box",
             x: x,
@@ -1785,10 +1865,10 @@ export default (state: MainLayoutState, action: Action) => {
             h: 0,
             highlighted: true,
             editingLabels: false,
-            color: defaultPointAndBoxColor,
+            color: deviceColor,
             cls: defaultRegionCls,
             id: getRandomId(),
-            category: defaultRegionCategory,
+            category: deviceCategory,
             visible: true,
             breakout: newRegionBreakout,
           }
@@ -2599,29 +2679,53 @@ export default (state: MainLayoutState, action: Action) => {
     case "BULK_EDIT_DEVICE_NAME_AND_CATEGORY": {
       const { oldName, newName, category } = action
       let newState = { ...state }
-      let newImage = getIn(newState, ["images", currentImageIndex])
-      let newRegions = getIn(newState, [
-        "images",
-        currentImageIndex,
-        "regions",
-      ])
-
+      
       // Get the color for this category
       const color = getColorByCategory(newState, category)
 
-      newRegions = newRegions.map(region => {
-        if (region.cls === oldName) {
-          return {
-            ...region,
-            cls: newName,
-            category: category,
-            color: color
+      // Update all images
+      let newImages = getIn(newState, ["images"]) || []
+      newImages = newImages.map((image) => {
+        let newRegions = image.regions || []
+        newRegions = newRegions.map(region => {
+          if (region.cls === oldName) {
+            return {
+              ...region,
+              cls: newName,
+              category: category,
+              color: color
+            }
           }
-        }
-        return region
+          return region
+        })
+        return setIn(image, ["regions"], newRegions)
       })
-      newImage = setIn(newImage, ["regions"], newRegions)
-      newState = setIn(newState, ["images", currentImageIndex], newImage)
+      
+      // Update device list
+      const deviceList = getIn(newState, ["deviceList"])
+      const newDevicesToSave = getIn(newState, ["newDevicesToSave"])
+      
+      // Remove old device from device list
+      const filteredDeviceList = deviceList.filter(device => device.symbol_name !== oldName)
+      const filteredNewDevicesToSave = newDevicesToSave.filter(device => device.symbol_name !== oldName)
+      
+      // Add new device to device list
+      const newDevice = {
+        symbol_name: newName,
+        category: category,
+        user_defined: true,
+      }
+      
+      newState = setIn(newState, ["deviceList"], [newDevice, ...filteredDeviceList])
+      newState = setIn(newState, ["newDevicesToSave"], [newDevice, ...filteredNewDevicesToSave])
+      newState = setIn(newState, ["images"], newImages)
+      
+      // Update selected device if it was the one being edited
+      if (newState.selectedCls === oldName) {
+        newState = setIn(newState, ["selectedCls"], newName)
+        newState = setIn(newState, ["selectedCategory"], category)
+      }
+      
       return newState
     }
 
