@@ -536,7 +536,6 @@ const customSelectStyles = {
 
 const pageOptions = useMemo(() => {
   const images = [state.images[0], ...state.images.slice(1)]
-  console.log(images)
   return images.map((img, i) => ({
     value: i,
     label: `Page ${i + 1}${img.name ? `: ${img.name}` : ''}`
