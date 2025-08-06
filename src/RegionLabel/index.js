@@ -1372,7 +1372,7 @@ export const RegionLabel = ({
     }
     const region_color = region.color
     const endpoint =
-      "https://6lufq8mux5.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-ocr-arbiter"
+      "https://hpuopkqtqb.execute-api.us-east-2.amazonaws.com/default/xkey-lambda-ocr-arbiter"
     const json_data = {
       image_url: imageSrc,
       page_index: page_properties["page_index"],
